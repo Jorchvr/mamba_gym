@@ -1,0 +1,63 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="card">
+  <h3 class="card-title mb-2">Editar Cliente</h3>
+
+  <%= form_with model: @client, url: client_path(@client), method: :patch, local: true, html: { multipart: true } do |f| %>
+    <div class="grid-2" style="gap: 1rem;">
+      <div>
+        <label class="label">Nombre completo</label>
+        <%= f.text_field :name, class: "form-input", required: true %>
+
+        <div class="grid-2" style="gap: .75rem; margin-top:.75rem;">
+          <div>
+            <label class="label">Edad</label>
+            <%= f.number_field :age, class: "form-input", min: 1 %>
+          </div>
+          <div>
+            <label class="label">Altura (m)</label>
+            <%= f.number_field :height, step: 0.01, class: "form-input" %>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap: .75rem; margin-top:.75rem;">
+          <div>
+            <label class="label">Peso (kg)</label>
+            <%= f.number_field :weight, step: 0.01, class: "form-input" %>
+          </div>
+          <div>
+            <label class="label">Tipo de membresía</label>
+            <%= f.select :membership_type,
+              [["Día $30", :day], ["Semana $70", :week], ["Mes $200", :month]],
+              {}, class: "form-input" %>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap: .75rem; margin-top:.75rem;">
+          <div>
+            <label class="label">Inscripción</label>
+            <%= f.date_field :enrolled_on, class: "form-input" %>
+          </div>
+          <div>
+            <label class="label">Próximo pago</label>
+            <%= f.date_field :next_payment_on, class: "form-input" %>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <label class="label">Cambiar foto</label>
+          <input type="file" name="client[photo]" accept="image/*" class="form-input" style="padding:.6rem;" />
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin:0;">
+          <p class="text-muted">No se cobra en edición. Para pagos posteriores, crearemos un flujo aparte.</p>
+          <div class="mt-6">
+            <%= f.submit "Guardar cambios", class: "btn btn-primary w-full" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

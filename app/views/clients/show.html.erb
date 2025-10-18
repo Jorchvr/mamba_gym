@@ -1,0 +1,32 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="card">
+  <div class="header-row" style="justify-content: space-between; align-items: center;">
+    <h2 class="title">Ficha de Cliente</h2>
+    <div class="btn-row">
+      <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
+      <%= link_to "Clientes", clients_path, class: "btn" %>
+      <%= link_to "Editar", edit_client_path(@client), class: "btn btn-primary" %>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <%= client_photo_tag(@client, size: 160, classes: "client-photo--xl") %>
+    </div>
+    <div>
+      <h3 class="result-name"><%= @client.name %></h3>
+      <p class="result-meta">#<%= @client.id %> • <%= @client.membership_type&.humanize || "Sin plan" %></p>
+
+      <div class="result-kv"><span>Inscripción</span><span><%= @client.enrolled_on || "-" %></span></div>
+      <div class="result-kv"><span>Próximo pago</span><span><%= @client.next_payment_on || "-" %></span></div>
+
+      <div class="mt-4 btn-row">
+        <%= link_to "Cobrar mensualidad", memberships_path(q: @client.id), class: "btn btn-accent" %>
+        <%= button_to "Eliminar", client_path(@client), method: :delete,
+              form: { data: { turbo_confirm: "¿Eliminar a #{@client.name}?" } },
+              class: "btn btn-danger" %>
+      </div>
+    </div>
+  </div>
+</div>

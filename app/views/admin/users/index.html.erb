@@ -1,0 +1,49 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="panel gym-panel allow-scroll">
+  <div class="header-row">
+    <h2 class="title">Usuarios (Administración)</h2>
+    <div style="display:flex; gap: .75rem;">
+      <%= link_to "Nuevo usuario", new_admin_user_path, class: "btn btn-primary" %>
+      <%= link_to "Ir a inicio", authenticated_root_path, class: "btn" %>
+    </div>
+  </div>
+
+  <% if flash[:notice].present? %>
+    <div class="card" style="border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); padding:.6rem 1rem;">
+      <%= flash[:notice] %>
+    </div>
+  <% elsif flash[:alert].present? %>
+    <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem;">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <div class="card">
+    <h3 class="card-title mb-2">Listado</h3>
+    <div style="overflow:auto;">
+      <table style="width:100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:.6rem; border-bottom:1px solid var(--border);">ID</th>
+            <th style="text-align:left; padding:.6rem; border-bottom:1px solid var(--border);">Nombre</th>
+            <th style="text-align:left; padding:.6rem; border-bottom:1px solid var(--border);">Email</th>
+            <th style="text-align:left; padding:.6rem; border-bottom:1px solid var(--border);">Rol</th>
+            <th style="text-align:left; padding:.6rem; border-bottom:1px solid var(--border);">Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @users.each do |u| %>
+            <tr>
+              <td style="padding:.6rem; border-bottom:1px solid var(--border);"><%= u.id %></td>
+              <td style="padding:.6rem; border-bottom:1px solid var(--border);"><%= u.name %></td>
+              <td style="padding:.6rem; border-bottom:1px solid var(--border);"><%= u.email %></td>
+              <td style="padding:.6rem; border-bottom:1px solid var(--border);"><%= u.role %></td>
+              <td style="padding:.6rem; border-bottom:1px solid var(--border);"><%= u.created_at&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

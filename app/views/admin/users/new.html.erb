@@ -1,0 +1,46 @@
+<!-- app/views/admin/users/new.html.erb -->
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="panel card" style="max-width:640px; margin:2rem auto;">
+  <h2 class="title">Crear usuario</h2>
+
+  <% if flash[:alert].present? %>
+    <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem;">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <%= form_with model: @user, url: admin_users_path, local: true do |f| %>
+    <div class="mb-3">
+      <label class="label">Nombre</label>
+      <%= f.text_field :name, class: "form-input" %>
+    </div>
+
+    <div class="mb-3">
+      <label class="label">Email</label>
+      <%= f.email_field :email, class: "form-input" %>
+    </div>
+
+    <div class="mb-3">
+      <label class="label">Contraseña</label>
+      <%= f.password_field :password, class: "form-input" %>
+    </div>
+
+    <div class="mb-3">
+      <label class="label">Confirmación</label>
+      <%= f.password_field :password_confirmation, class: "form-input" %>
+    </div>
+
+    <div class="mb-3" style="display:flex; gap:1rem; align-items:center;">
+      <label class="label" style="margin:0;">Superusuario</label>
+      <%= f.check_box :superuser %>
+    </div>
+
+    <div class="mb-3">
+      <label class="label">Código secreto (requerido si marcas superusuario)</label>
+      <%= f.password_field :secret_code, class: "form-input", placeholder: "SUPERUSER_SECRET" %>
+    </div>
+
+    <%= f.submit "Crear", class: "btn btn-primary" %>
+  <% end %>
+</div>

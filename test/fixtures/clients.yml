@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  age: 1
+  weight: 9.99
+  height: 9.99
+  membership_type: 1
+  enrolled_on: 2025-10-09
+  next_payment_on: 2025-10-09
+  user: one
+
+two:
+  name: MyString
+  age: 1
+  weight: 9.99
+  height: 9.99
+  membership_type: 1
+  enrolled_on: 2025-10-09
+  next_payment_on: 2025-10-09
+  user: two

@@ -1,0 +1,124 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="split-container">
+  <div class="panel gym-panel">
+    <div class="header-row">
+      <h2 class="title">Cobrar mensualidad</h2>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-card card">
+      <%= form_with url: memberships_path, method: :get, local: true do |f| %>
+        <div class="search-form" style="gap:.75rem;">
+          <%= f.text_field :q,
+                           value: params[:q],
+                           placeholder: "Buscar # Cliente o nombre",
+                           class: "form-input",
+                           autofocus: true %>
+          <%= f.submit "Buscar", class: "btn btn-accent" %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @query.present? %>
+      <% if @client.present? %>
+        <% overdue = @client.next_payment_on.present? && @client.next_payment_on < Date.current %>
+        <% active  = @client.next_payment_on.present? && @client.next_payment_on >= Date.current %>
+
+        <div class="card result-card" style="margin-top:1rem;">
+          <div class="result-left">
+            <div class="result-photo">
+              <%= client_photo_tag(@client, size: 120, classes: "client-photo--xl") %>
+            </div>
+            <div class="result-details">
+              <h3 class="result-name"><%= @client.name %></h3>
+              <p class="result-meta">#<%= @client.id %> • <%= @client.membership_type.humanize %></p>
+              <div class="result-kv">
+                <span>Inscripción</span>
+                <span><%= @client.enrolled_on || "-" %></span>
+              </div>
+              <div class="result-kv">
+                <span>Próximo pago</span>
+                <span><%= @client.next_payment_on || "-" %></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-right">
+            <% if overdue %>
+              <div class="status-panel status-panel--debt">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">ADEUDO</div>
+                <p class="status-sub">La fecha de pago ya pasó. Selecciona un plan para renovar.</p>
+              </div>
+            <% elsif active %>
+              <div class="status-panel status-panel--ok">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">ACTIVO</div>
+                <p class="status-sub">Puedes extender su membresía.</p>
+              </div>
+            <% else %>
+              <div class="status-panel">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">SIN FECHAS</div>
+                <p class="status-sub">No hay inscripción registrada. Puedes activar con un plan.</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Form de cobro -->
+        <div class="card" style="margin-top:1rem;">
+          <h3 class="card-title">Selecciona plan y método de pago</h3>
+
+          <%= form_with url: memberships_checkout_path, method: :post, local: true do |f| %>
+            <input type="hidden" name="client_id" value="<%= @client.id %>" />
+
+            <div class="mb-3">
+              <label class="label">Plan</label>
+              <div class="radio-row" style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <% @prices.each do |k, cents| %>
+                  <label>
+                    <input type="radio" name="plan" value="<%= k %>" <%= "checked" if k == :month %> />
+                    <%= k.to_s.humanize %> ($<%= (cents/100.0).round(2) %>)
+                  </label>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="label">Método de pago</label>
+              <div class="radio-row" style="display:flex; gap:1rem;">
+                <label><input type="radio" name="payment_method" value="cash" checked> Efectivo</label>
+                <label><input type="radio" name="payment_method" value="transfer"> Transferencia</label>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <%= f.submit "Cobrar y reactivar", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="card" style="margin-top:1rem;">
+          <p class="text-muted">No se encontró ningún cliente con “<strong><%= @query %></strong>”.</p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Panel derecho opcional: atajos -->
+  <div class="panel shop-panel">
+    <div class="header-row">
+      <h2 class="title">Atajos</h2>
+    </div>
+    <div class="quick-actions">
+      <%= link_to "Clientes", clients_path, class: "btn" %>
+      <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
+      <%= link_to "Ventas (registro)", sales_path, class: "btn" %>
+      <% if current_user.superuser? %>
+        <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
+      <% end %>
+    </div>
+  </div>
+</div>

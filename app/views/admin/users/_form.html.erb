@@ -1,0 +1,41 @@
+<%= form_with model: [:admin, @user], local: true do |f| %>
+  <div class="card" style="padding:1rem;">
+    <div class="grid-2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+      <div class="field">
+        <%= f.label :name, "Nombre" %>
+        <%= f.text_field :name, class: "form-input" %>
+      </div>
+
+      <div class="field">
+        <%= f.label :email, "Email" %>
+        <%= f.email_field :email, class: "form-input" %>
+      </div>
+
+      <div class="field">
+        <%= f.label :password, "Password" %>
+        <%= f.password_field :password, class: "form-input", autocomplete: "new-password" %>
+      </div>
+
+      <div class="field">
+        <%= f.label :password_confirmation, "Confirmación" %>
+        <%= f.password_field :password_confirmation, class: "form-input", autocomplete: "new-password" %>
+      </div>
+
+      <div class="field" style="display:flex; align-items:center; gap:.5rem;">
+        <%= f.check_box :superuser %>
+        <%= f.label :superuser, "Superusuario" %>
+      </div>
+
+      <div class="field">
+        <%= f.label :secret_code, "Código secreto (requerido si es superusuario)" %>
+        <%= f.password_field :secret_code, class: "form-input", placeholder: "Ingresa el código secreto", autocomplete: "off" %>
+        <small class="text-muted">Debe coincidir con <code>ENV['SUPERUSER_SECRET']</code>.</small>
+      </div>
+    </div>
+
+    <div class="mt-4" style="display:flex; gap:.75rem;">
+      <%= f.submit "Crear", class: "btn btn-primary" %>
+      <%= link_to "Cancelar", admin_users_path, class: "btn" %>
+    </div>
+  </div>
+<% end %>

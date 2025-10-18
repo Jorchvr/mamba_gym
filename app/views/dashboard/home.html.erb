@@ -1,0 +1,278 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="split-container">
+  <!-- ===================== Panel izquierdo: Gym Control ===================== -->
+  <div class="panel gym-panel">
+    <div class="header-row">
+      <h2 class="title">Gym Control</h2>
+      <%= image_tag "logo.png", alt: "Logo", class: "logo" %>
+    </div>
+
+    <p class="user-greeting"><strong>Usuario:</strong> <%= current_user.name %></p>
+
+    <div class="top-actions" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <%= button_to "Cerrar Sesión",
+                    destroy_user_session_path,
+                    method: :delete,
+                    form: { data: { turbo: false } },
+                    class: "btn btn-danger" %>
+
+      <%# Botón exclusivo para Griselle (mini-tienda de clases) %>
+      <% if current_user.email == "griselle@example.com" %>
+        
+      <% end %>
+    </div>
+
+    <!-- 🔎 Buscador de cliente -->
+    <div class="search-card card" style="margin-top:1rem;">
+      <%= form_with url: authenticated_root_path, method: :get, local: true do |f| %>
+        <div class="search-form" style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+          <%= f.text_field :search_number,
+                           value: params[:search_number],
+                           placeholder: "Buscar # Cliente o nombre",
+                           class: "form-input",
+                           style: "min-width:240px; flex:1;" %>
+          <%= f.submit "Buscar", class: "btn btn-accent" %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ===================== Resultado de búsqueda ===================== %>
+    <% if params[:search_number].present? %>
+      <% if @found_client.present? %>
+        <% overdue = @found_client.next_payment_on.present? && @found_client.next_payment_on < Date.current %>
+        <% active  = @found_client.next_payment_on.present? && @found_client.next_payment_on >= Date.current %>
+
+        <div class="card result-card">
+          <!-- Columna izquierda: foto + datos -->
+          <div class="result-left">
+            <div class="result-photo">
+              <%= client_photo_tag(@found_client, size: 160, classes: "client-photo--xl") %>
+            </div>
+
+            <div class="result-details">
+              <h3 class="result-name"><%= @found_client.name %></h3>
+              <p class="result-meta">#<%= @found_client.id %> • <%= @found_client.membership_type.humanize %></p>
+
+              <div class="result-kv">
+                <span>Inscripción</span>
+                <span><%= @found_client.enrolled_on || "-" %></span>
+              </div>
+              <div class="result-kv">
+                <span>Próximo pago</span>
+                <span><%= @found_client.next_payment_on || "-" %></span>
+              </div>
+
+              <div class="result-actions">
+                <%= link_to "Ver ficha", client_path(@found_client), class: "btn" %>
+                <% if overdue %>
+                  <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna derecha: panel de estado -->
+          <div class="result-right">
+            <% if overdue %>
+              <div class="status-panel status-panel--debt">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">ADEUDO</div>
+                <p class="status-sub">La fecha de pago ya pasó. ¿Deseas renovar la membresía?</p>
+                <div class="status-buttons">
+                  <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary btn-lg" %>
+                </div>
+              </div>
+            <% elsif active %>
+              <div class="status-panel status-panel--ok">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">¡BIENVENIDO!</div>
+                <p class="status-sub">Acceso concedido. Disfruta tu entrenamiento 💪</p>
+                <div class="status-badge-row">
+                  <span class="status-badge status-badge--ok">
+                    <span class="dot"></span> Bienvenido
+                  </span>
+                </div>
+              </div>
+            <% else %>
+              <div class="status-panel">
+                <div class="status-kicker">Estado</div>
+                <div class="status-big">SIN FECHAS</div>
+                <p class="status-sub">No hay inscripción registrada. Puedes registrarlo o renovar.</p>
+                <div class="status-buttons">
+                  <%= link_to "Registrar/Renovar", memberships_path(q: @found_client.id), class: "btn btn-accent btn-lg" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="card">
+          <p class="text-muted">No se encontró ningún cliente con “<strong><%= params[:search_number] %></strong>”.</p>
+        </div>
+      <% end %>
+    <% end %>
+
+    <!-- 📊 Métricas -->
+    <div class="grid-2 mt-6">
+      <div class="card">
+        <h3 class="card-title mb-2">Ventas de Hoy</h3>
+        <p class="metric-big">
+          $<%= (@today_total_cents.to_i / 100.0).round(2) %>
+        </p>
+        <p class="text-muted"><%= @today_sales_count.to_i %> operaciones</p>
+        <% if is_superuser? %>
+          <div class="mt-6" style="display:flex; gap: .75rem; flex-wrap: wrap;">
+            <%= link_to "Ver registro", sales_path, class: "btn" %>
+            <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title mb-2">Personas que han entrado (hoy)</h3>
+        <p class="metric-big"><%= @today_checkins %></p>
+        <p class="text-muted">Registro diario</p>
+      </div>
+    </div>
+
+    <!-- ⚙️ Acciones rápidas -->
+    <div class="quick-actions mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <%= link_to "Clientes", clients_path, class: "btn" %>
+      <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
+      <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
+      <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn" %>
+
+
+      <% if is_superuser? %>
+        <%= link_to "Ventas (registro)", sales_path, class: "btn" %>
+        <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- ===================== Panel derecho: Tienda ===================== -->
+  <div class="panel shop-panel">
+    <div class="header-row">
+      <h2 class="title">Tienda Online</h2>
+      <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+        <% if is_superuser? %>
+          <%= link_to "Backoffice", products_path, class: "btn" %>
+          <%= link_to "Crear usuario", new_admin_user_path, class: "btn btn-primary" %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Productos con botón + (agregar al carrito) -->
+    <div class="product-list">
+      <% @products.each do |p| %>
+        <div class="product-card">
+          <div class="product-grow"><h3 class="product-title"><%= p.name %></h3></div>
+          <div class="product-meta"><span class="price">$<%= (p.price_cents.to_i/100.0).round(2) %></span></div>
+          <div class="product-meta"><span class="text-muted">Stock: <%= p.stock %></span></div>
+
+          <%= button_to "+",
+                add_cart_path,
+                method: :post,
+                params: { product_id: p.id },
+                class: "btn btn-primary",
+                form: { data: { turbo: false }, style: "display:inline-block" } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Mini carrito (MISMO ANCHO, MENOS ALTO, con mensajes locales) -->
+    <div class="mini-cart mini-cart--short">
+      <div class="header-row">
+        <h3 class="card-title">Carrito</h3>
+        <% if is_superuser? %>
+          <%= link_to "Ventas hechas", sales_path, class: "btn" %>
+        <% end %>
+      </div>
+
+      <% if flash[:cart_notice].present? || flash[:cart_alert].present? %>
+        <div class="mb-4">
+          <% if flash[:cart_notice].present? %>
+            <div class="card" style="border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); padding:.6rem 1rem;">
+              <%= flash[:cart_notice] %>
+            </div>
+          <% end %>
+          <% if flash[:cart_alert].present? %>
+            <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem;">
+              <%= flash[:cart_alert] %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% cart = session[:cart] || {} %>
+      <% product_ids = cart.keys.map(&:to_i) %>
+      <% products_map = Product.where(id: product_ids).index_by(&:id) %>
+
+      <div class="mb-4">
+        <% if cart.blank? %>
+          <p class="text-muted">No hay productos en el carrito.</p>
+        <% else %>
+          <% total_cents = 0 %>
+          <% cart.each do |pid, qty| %>
+            <% p = products_map[pid.to_i] %>
+            <% next unless p %>
+            <% qty = qty.to_i %>
+            <% line_cents = p.price_cents.to_i * qty %>
+            <% total_cents += line_cents %>
+
+            <div class="cart-line">
+              <span><%= p.name %> <em>x<%= qty %></em></span>
+              <span>$<%= (line_cents/100.0).round(2) %></span>
+            </div>
+
+            <div class="qty-actions">
+              <%= button_to "−", decrement_cart_path, method: :post,
+                    params: { product_id: p.id },
+                    class: "btn btn-sm btn-icon",
+                    form: { data: { turbo: false }, style: "display:inline-block" } %>
+
+              <%= button_to "+", increment_cart_path, method: :post,
+                    params: { product_id: p.id },
+                    class: "btn btn-primary btn-sm btn-icon",
+                    form: { data: { turbo: false }, style: "display:inline-block" } %>
+
+              <%= button_to "Quitar", remove_cart_path, method: :post,
+                    params: { product_id: p.id },
+                    class: "btn btn-sm",
+                    form: { data: { turbo: false }, style: "display:inline-block" } %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Pago + Total + Checkout -->
+      <%= form_with url: checkout_cart_path, method: :post, local: true do |f| %>
+        <div class="mb-4">
+          <label class="label">Método de pago:</label>
+          <div class="radio-row">
+            <label><input type="radio" name="payment_method" value="cash" <%= "checked" unless params[:payment_method] == "transfer" %>> Efectivo</label>
+            <label style="margin-left:1rem;"><input type="radio" name="payment_method" value="transfer" <%= "checked" if params[:payment_method] == "transfer" %>> Transferencia</label>
+          </div>
+        </div>
+
+        <div class="cart-total-row">
+          <div class="total">
+            Total:
+            $<%= ((cart || {}).sum { |pid, q| (products_map[pid.to_i]&.price_cents.to_i || 0) * q.to_i } / 100.0).round(2) %>
+          </div>
+          <%= f.submit "Realizar Venta", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# ===================== JS específico (táctil) ===================== %>
+<% content_for :body_end do %>
+<script>
+  if ('ontouchstart' in window) {
+    document.querySelectorAll('.btn').forEach(btn => btn.classList.add('btn-touch'));
+  }
+</script>
+<% end %>

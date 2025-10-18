@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  payment_method: 1
+  total_cents: 1
+  occurred_at: 2025-10-13 13:12:20
+
+two:
+  user: two
+  payment_method: 1
+  total_cents: 1
+  occurred_at: 2025-10-13 13:12:20

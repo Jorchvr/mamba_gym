@@ -1,0 +1,11 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="header-row">
+  <h2 class="title">Editar producto</h2>
+  <div style="display:flex; gap:.6rem;">
+    <%= link_to "Ir a inicio", authenticated_root_path, class: "btn" %>
+    <%= link_to "Volver a productos", products_path, class: "btn" %>
+  </div>
+</div>
+
+<%= render "form" %>

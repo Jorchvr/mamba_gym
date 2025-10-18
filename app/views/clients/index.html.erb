@@ -1,0 +1,88 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="card">
+  <div class="header-row" style="justify-content: space-between; align-items: center;">
+    <h2 class="title">Clientes</h2>
+    <div class="btn-row">
+      <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
+      <%= link_to "Registrar Cliente", new_client_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+
+  <!-- 🔎 Buscador -->
+  <%= form_with url: clients_path, method: :get, local: true do %>
+    <div class="search-row">
+      <%= select_tag :filter,
+        options_for_select([["Número", "id"], ["Nombre", "name"]], params[:filter]),
+        class: "form-select" %>
+
+      <%= text_field_tag :q, params[:q],
+        placeholder: "Buscar por número o nombre…",
+        class: "form-input" %>
+
+      <%= submit_tag "Buscar", class: "btn btn-accent" %>
+    </div>
+  <% end %>
+
+  <!-- Tabla -->
+  <div class="table-wrap">
+    <table class="nice-table">
+      <thead>
+        <tr>
+          <th class="col-id">#</th>
+          <th class="col-name">Nombre</th>
+          <th class="col-membership">Membresía</th>
+          <th class="col-date">Inscripción</th>
+          <th class="col-date">Próximo pago</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @clients.each do |c| %>
+          <tr>
+            <td class="muted"><%= c.id %></td>
+            <td>
+              <div class="name-cell">
+                <%= link_to (c.name.presence || "(Sin nombre)"), client_path(c), class: "link-strong" %>
+                <% if c.next_payment_on.present? && c.next_payment_on < Date.current %>
+                  <span class="badge badge-danger">Vencida</span>
+                <% elsif c.next_payment_on.present? %>
+                  <span class="badge badge-ok">Activa</span>
+                <% else %>
+                  <span class="badge">Sin plan</span>
+                <% end %>
+              </div>
+              <div class="subtext">#<%= c.id %></div>
+            </td>
+            <td><span class="mono"><%= c.membership_type&.humanize || "-" %></span></td>
+            <td><span class="mono"><%= c.enrolled_on || "-" %></span></td>
+            <td><span class="mono"><%= c.next_payment_on || "-" %></span></td>
+            <td>
+              <div class="actions-stack">
+                <%= link_to "Ver", client_path(c), class: "btn btn-sm" %>
+                <%= link_to "Editar", edit_client_path(c), class: "btn btn-sm btn-primary" %>
+                <%= button_to "Eliminar", client_path(c),
+                      method: :delete,
+                      form: { data: { turbo_confirm: "¿Eliminar a #{c.name}? Esta acción no se puede deshacer?" } },
+                      class: "btn btn-sm btn-danger" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+
+        <% if @clients.blank? %>
+          <tr>
+            <td colspan="6" class="muted" style="text-align:center; padding: 1.25rem 0;">
+              No hay clientes que coincidan con la búsqueda.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación (Kaminari) -->
+  <div class="mt-4">
+    <%= paginate @clients %>
+  </div>
+</div>

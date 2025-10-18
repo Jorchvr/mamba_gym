@@ -1,0 +1,40 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="header-row">
+  <h2 class="title">Productos</h2>
+  <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+    <%= link_to "Ir a inicio", authenticated_root_path, class: "btn" %>
+    <%= link_to "Nuevo producto", new_product_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <%= form_with url: products_path, method: :get, local: true, class: "search-form", style: "grid-template-columns: 1fr auto;" do |f| %>
+      <%= text_field_tag :q, @q, class: "form-input", placeholder: "Buscar producto..." %>
+      <%= submit_tag "Buscar", class: "btn" %>
+    <% end %>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="product-list">
+    <% if @products.any? %>
+      <% @products.each do |p| %>
+        <div class="product-card">
+          <div class="product-grow">
+            <h3 class="product-title"><%= p.name %></h3>
+          </div>
+          <div class="product-meta"><span class="price">$<%= (p.price_cents.to_i/100.0).round(2) %></span></div>
+          <div class="product-meta"><span class="text-muted">Stock: <%= p.stock %></span></div>
+
+          <%= link_to "Ver", product_path(p), class: "btn" %>
+          <%= link_to "Editar", edit_product_path(p), class: "btn" %>
+          <%= button_to "Eliminar", product_path(p), method: :delete,
+                data: { confirm: "¿Eliminar #{p.name}?" }, class: "btn btn-danger" %>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="text-muted">No hay productos.</p>
+    <% end %>
+  </div>
+</div>

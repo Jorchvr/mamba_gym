@@ -1,0 +1,66 @@
+<%= stylesheet_link_tag "login", media: "all", "data-turbo-track": "reload" %>
+<%# ⬇️ Agregamos has-hero para mostrar imagen en login %>
+<% content_for :body_class, "login-page has-hero" %>
+
+<% content_for :head do %>
+  <style>
+    body.login-page { --bg-image: url("<%= asset_path('gym_bg.jpg') %>"); }
+  </style>
+<% end %>
+
+<div class="login-wrap">
+  <div class="login-card" role="dialog" aria-labelledby="login-title" aria-describedby="login-subtitle">
+    <header class="login-head">
+      <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+      <p id="login-subtitle" class="login-subtitle">Accede a tu panel del gimnasio</p>
+    </header>
+
+    <% if notice.present? %>
+      <div class="flash flash--notice"><%= notice %></div>
+    <% end %>
+    <% if alert.present? %>
+      <div class="flash flash--alert"><%= alert %></div>
+    <% end %>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "login-form" }) do |f| %>
+      <div class="form-row" data-focus-row>
+        <label class="label" for="user_email">Correo electrónico</label>
+        <%= f.email_field :email, id: "user_email", autofocus: true, autocomplete: "email", class: "input", placeholder: "tucorreo@ejemplo.com", required: true %>
+      </div>
+
+      <div class="form-row" data-focus-row>
+        <label class="label" for="user_password">Contraseña</label>
+        <%= f.password_field :password, id: "user_password", autocomplete: "current-password", class: "input", placeholder: "••••••••••", required: true %>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="row-inline">
+          <label class="checkbox">
+            <%= f.check_box :remember_me %> Recordarme
+          </label>
+          <%= link_to "¿Olvidaste tu contraseña?", new_password_path(resource_name), class: "link" %>
+        </div>
+      <% end %>
+
+      <div class="form-row">
+        <button type="submit" class="btn">Entrar</button>
+      </div>
+    <% end %>
+
+    <div class="login-footer">
+      <small>Protegido con 2º factor para superusuarios.</small>
+    </div>
+  </div>
+</div>
+
+<%# JS: si haces click en cualquier parte del renglón, enfoca el input %>
+<% content_for :body_end do %>
+<script>
+  document.querySelectorAll('[data-focus-row]').forEach(function(row){
+    row.addEventListener('click', function(){
+      const input = row.querySelector('input');
+      if (input) { input.focus(); if (input.select) input.select(); }
+    });
+  });
+</script>
+<% end %>

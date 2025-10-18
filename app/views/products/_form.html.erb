@@ -1,0 +1,30 @@
+<%= form_with model: @product, local: true do |f| %>
+  <div class="card">
+    <div class="grid-2" style="gap: 1rem;">
+      <div>
+        <label class="label">Nombre</label>
+        <%= f.text_field :name, class: "form-input", required: true, placeholder: "Ej. Proteína Whey" %>
+      </div>
+
+      <div>
+        <label class="label">Precio (MXN)</label>
+        <%= number_field_tag "product[price_mxn]",
+              (@product.price_cents.to_i > 0 ? (@product.price_cents.to_f/100.0) : nil),
+              step: 0.01,
+              class: "form-input",
+              placeholder: "Ej. 1200.00" %>
+        <small class="text-muted">Se guarda en centavos internamente.</small>
+      </div>
+
+      <div>
+        <label class="label">Stock</label>
+        <%= f.number_field :stock, class: "form-input", min: 0, step: 1, placeholder: "Ej. 10" %>
+      </div>
+    </div>
+
+    <div class="quick-actions" style="justify-content: flex-end; margin-top: 1rem;">
+      <%= link_to "Cancelar", products_path, class: "btn" %>
+      <%= f.submit "Guardar", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

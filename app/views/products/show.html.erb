@@ -1,0 +1,15 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="header-row">
+  <h2 class="title"><%= @product.name %></h2>
+  <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+    <%= link_to "Ir a inicio", authenticated_root_path, class: "btn" %>
+    <%= link_to "Editar", edit_product_path(@product), class: "btn" %>
+    <%= link_to "Volver a productos", products_path, class: "btn" %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="kv"><span>Precio</span><span>$<%= (@product.price_cents.to_i/100.0).round(2) %></span></div>
+  <div class="kv"><span>Stock</span><span><%= @product.stock %></span></div>
+</div>

@@ -1,0 +1,47 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="card">
+  <div class="header-row" style="justify-content: space-between; align-items:center;">
+    <h2 class="title">Ventas</h2>
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      <%= link_to "Dashboard", authenticated_root_path, class: "btn" %>
+      <%# si tienes export: %>
+      <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
+    </div>
+  </div>
+
+  <% if Array(@sales).empty? %>
+    <p class="text-muted" style="margin:.75rem 0;">
+      No hay ventas registradas.
+    </p>
+  <% else %>
+    <table class="table" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border); text-align:left;">
+          <th style="padding:.5rem;">Fecha</th>
+          <th style="padding:.5rem;">Cliente</th>
+          <th style="padding:.5rem;">Cajero</th>
+          <th style="padding:.5rem;">Monto</th>
+          <th style="padding:.5rem;">Pago</th>
+          <th style="padding:.5rem;">Tipo</th>
+          <th style="padding:.5rem;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% Array(@sales).each do |s| %>
+          <tr style="border-top:1px solid var(--border);">
+            <td style="padding:.5rem;"><%= l(s.occurred_at, format: :short) rescue s.occurred_at %></td>
+            <td style="padding:.5rem;"><%= s.client ? link_to(s.client.name, s.client) : "-" %></td>
+            <td style="padding:.5rem;"><%= s.user&.name || "-" %></td>
+            <td style="padding:.5rem;">$<%= (s.amount_cents.to_i / 100.0).round(2) %></td>
+            <td style="padding:.5rem;"><%= s.payment_method.to_s.humanize %></td>
+            <td style="padding:.5rem;"><%= s.membership_type.to_s.humanize.presence || "-" %></td>
+            <td style="padding:.5rem; text-align:right;">
+              <%= link_to "Ver", sale_path(s), class: "btn btn-sm" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

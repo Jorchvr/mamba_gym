@@ -1,0 +1,291 @@
+/* ===== Login minimalista con animación + fondo e identidad rojo mate ===== */
+
+/* Paleta y tokens */
+:root{
+  --bg: #0e0f12;
+  --card-bg: #14151b;
+  --text: #f0f2f5;
+  --muted: #a9b0b6;
+
+  /* Rojo mate */
+  --primary: #b8403b;
+  --accent:  #e15649;
+  --danger:  #ff6b6b;
+
+  --radius: 18px;
+  --shadow: 0 20px 40px rgba(0,0,0,.35);
+  --border: rgba(255,255,255,.08);
+
+  --ring: rgba(232, 86, 73, .30);
+
+  /* Se setea desde la vista con asset_path */
+  --bg-image: none;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+/* ======= Fondo con imagen + overlay rojizo mate ======= */
+body.login-page {
+  margin: 0;
+  background:
+    linear-gradient( to bottom right,
+      rgba(184, 64, 59, .25),
+      rgba(20, 21, 27, .65) 45%,
+      rgba(14, 15, 18, .85) 100%
+    ),
+    var(--bg-image) center / cover no-repeat fixed,
+    var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* Capa sutil con viñeteado para que el card resalte más (no capta clicks) */
+body.login-page::after{
+  content:"";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, rgba(184,64,59,.16), transparent 60%),
+    radial-gradient(1000px 600px at 110% 110%, rgba(225,86,73,.12), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: .7;
+}
+
+/* Contenedor centrado */
+.login-wrap { width: 100%; max-width: 430px; position: relative; }
+
+/* Tarjeta */
+.login-card {
+  position: relative; /* crea stacking context */
+  background: linear-gradient(180deg, var(--card-bg), #101117);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  padding: 28px;
+  animation: cardIn .5s ease-out both;
+  z-index: 0; /* base para ::before */
+}
+.login-card * { -webkit-tap-highlight-color: transparent; }
+
+@keyframes cardIn {
+  from { transform: translateY(10px) scale(.98); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* Borde luminoso (NO capta eventos) */
+.login-card::before {
+  content: "";
+  position: absolute; inset: -1px;
+  border-radius: calc(var(--radius) + 2px);
+  padding: 1px;
+  background: linear-gradient(130deg,
+    rgba(184, 64, 59, .50),
+    rgba(225, 86, 73, .45),
+    rgba(184, 64, 59, .50)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: borderShift 6s ease-in-out infinite;
+  opacity: .32;
+  pointer-events: none;      /* <-- CLAVE: no intercepta clicks */
+}
+@keyframes borderShift {
+  0%   { filter: hue-rotate(0deg);   opacity:.26; }
+  50%  { filter: hue-rotate(10deg);  opacity:.40; }
+  100% { filter: hue-rotate(0deg);   opacity:.26; }
+}
+
+/* Header */
+.login-head { display: grid; gap: 6px; margin-bottom: 18px; }
+.login-title { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+.login-subtitle { font-size: 13px; color: var(--muted); }
+
+/* Mensajes */
+.flash {
+  margin-bottom: 12px;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.02);
+}
+.flash--notice { color: #ffd1cc; border-color: rgba(225,86,73,.35); background: rgba(225,86,73,.10); }
+.flash--alert  { color: #ffd0d0; border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.10); }
+
+/* Form */
+.login-form { display: grid; gap: 14px; }
+.form-row { display: grid; gap: 8px; position: relative; }
+
+.label {
+  font-size: 12px; color: var(--muted); letter-spacing: .3px;
+}
+
+/* Inputs: cursor de texto y foco visible */
+.input {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  background: #0f1218;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+  cursor: text;                      /* <-- ayuda a UX y algunos browsers */
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .06s ease;
+}
+.input:hover { background: #121620; }
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 6px var(--ring);
+}
+
+/* Remember / enlaces */
+.row-inline {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+}
+.checkbox { display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  user-select: none; color: var(--muted); font-size: 13px; }
+.checkbox input { accent-color: var(--primary); }
+
+.link { color: var(--accent); text-decoration: none; font-size: 13px; }
+.link:hover { text-decoration: underline; }
+
+/* Botón principal en rojo mate */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 100%;
+  border: 0; border-radius: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white; font-weight: 600; letter-spacing: .2px;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+  box-shadow: 0 10px 24px rgba(184, 64, 59, .28);
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+
+/* Footer sutil */
+.login-footer {
+  margin-top: 12px; text-align: center; color: var(--muted); font-size: 12px;
+  opacity: .85;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-card { padding: 22px; border-radius: 16px; }
+  .login-title { font-size: 20px; }
+}
+/* ====== HERO solo en login (no en 2FA) ====== */
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.login-wrapper {
+  position: relative;
+  width: min(1100px, 92vw);
+  min-height: 70vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
+  margin: 0 auto;
+  width: min(420px, 92vw);
+  background: rgba(24,26,31,.62); /* combina con tu paleta oscura */
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 34px rgba(0,0,0,.35);
+  padding: 1.5rem;
+}
+
+/* Mostrar hero solo cuando el body tenga .has-hero */
+.has-hero .login-wrapper {
+  grid-template-columns: 1.2fr 0.8fr; /* imagen + tarjeta */
+  gap: 2rem;
+  align-items: center;
+}
+
+.has-hero .login-card {
+  width: 100%;
+  margin: 0;
+}
+
+.login-hero {
+  position: relative;
+  z-index: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.04);
+  min-height: 360px;
+}
+
+.login-hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.02);
+  transform: scale(1.001);
+}
+
+/* En 2FA no hay hero, solo centrado */
+.twofa-page .login-wrapper {
+  grid-template-columns: 1fr;
+}
+
+/* Inputs y botones (usa tus clases existentes, esto es por si faltaba) */
+.login-title { margin: 0 0 .25rem; font-size: 1.6rem; font-weight: 800; color: #f3f4f6; }
+.login-subtitle { margin: 0 0 1rem; color: #cbd5e1; }
+
+.login-form .label { display: block; margin-bottom: .4rem; color: #98a2b3; }
+.login-form .input {
+  width: 100%;
+  padding: .85rem 1rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .6rem;
+  background: rgba(255,255,255,.04);
+  color: #e8ecf1;
+  outline: none;
+}
+.login-form .input:focus {
+  border-color: rgba(239,68,68,.58);
+  box-shadow: 0 0 0 4px rgba(239,68,68,.28);
+}
+
+.form-actions { margin-top: 1rem; }
+.btn.btn-block { width: 100%; }
+
+.form-message--alert {
+  margin-top: 1rem;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+  padding: .6rem 1rem;
+  border-radius: .6rem;
+  color: #fca5a5;
+}
+
+/* Responsivo */
+@media (max-width: 860px) {
+  .has-hero .login-wrapper { grid-template-columns: 1fr; }
+  .login-hero { display: none; }
+}

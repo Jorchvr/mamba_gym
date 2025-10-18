@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gym Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%# CSS principal del proyecto %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+
+    <%# Punto de inserción para vistas (ej. login fija la imagen de fondo) %>
+    <%= yield :head %>
+  </head>
+
+  <%# Permitimos que las vistas definan clases del body: e.g. "login-page has-hero" %>
+  <body class="<%= content_for?(:body_class) ? yield(:body_class) : nil %>">
+    <%# ==== SIN barra superior global, SIN botón de Inicio, SIN flash global ==== %>
+
+    <%= yield %>
+
+    <%# Punto de inserción para JS específico de cada vista (ej. scripts de login o dashboard) %>
+    <%= yield :body_end %>
+  </body>
+</html>

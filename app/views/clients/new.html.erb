@@ -1,0 +1,152 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+<%# Habilitar scroll en esta página %>
+<% content_for :body_class, "allow-scroll" %>
+
+<div class="header-row">
+  <h2 class="title">Registrar Cliente</h2>
+  <%= link_to "Ir a inicio", authenticated_root_path, class: "btn" %>
+</div>
+
+<div class="card page-scroll">
+  <h3 class="card-title mb-2">Datos y pago</h3>
+
+  <% if alert.present? %><div class="flash flash--alert"><%= alert %></div><% end %>
+  <% if notice.present? %><div class="flash flash--notice"><%= notice %></div><% end %>
+
+  <%# ======== Sugerencia del siguiente número de cliente ======== %>
+  <% suggested_client_number =
+        @suggested_client_number ||
+        @client&.client_number ||
+        (Client.maximum(:client_number).to_i + 1) %>
+
+  <%= form_with model: @client, url: clients_path, local: true, html: { multipart: true } do |f| %>
+    <div class="grid-2" style="gap: 1rem;">
+      <!-- ==================== Columna izquierda: Datos del cliente ==================== -->
+      <div>
+        <label class="label">Nombre completo</label>
+        <%= f.text_field :name, class: "form-input", required: true, placeholder: "Nombre y apellidos" %>
+
+        <div class="grid-2" style="gap: .75rem; margin-top:.75rem;">
+          <div>
+            <label class="label">Edad</label>
+            <%= f.number_field :age, class: "form-input", min: 1, placeholder: "21" %>
+          </div>
+          <div>
+            <label class="label">Altura (m o cm)</label>
+            <%= f.number_field :height, step: 0.01, class: "form-input", placeholder: "1.69 o 169" %>
+            <small class="text-muted">Puedes escribir 1.69 (m) o 169 (cm)</small>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap: .75rem; margin-top:.75rem;">
+          <div>
+            <label class="label">Peso (kg)</label>
+            <%= f.number_field :weight, step: 0.01, class: "form-input", placeholder: "82" %>
+          </div>
+          <div>
+            <label class="label">Tipo de membresía</label>
+            <%= f.select :membership_type,
+              [["Día $30", :day], ["Semana $70", :week], ["Mes $200", :month]],
+              {}, class: "form-input" %>
+          </div>
+        </div>
+
+        <%# ======== Número de cliente (debajo de Peso) ======== %>
+        <div class="form-row" style="margin-top:.75rem;">
+          <label class="label">Número de cliente</label>
+          <%= f.number_field :client_number,
+                class: "form-input",
+                min: 1,
+                value: suggested_client_number %>
+          <small class="text-muted">Se sugiere el siguiente consecutivo, pero puedes editarlo.</small>
+        </div>
+
+        <!-- === Foto: Cámara (selección de dispositivo) + Inventario === -->
+        <div class="mt-6" data-controller="camera">
+          <label class="label">Foto del cliente</label>
+
+          <!-- Controles de cámara -->
+          <div class="card" style="margin: 0 0 .75rem 0;">
+            <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary"
+                      data-camera-target="openBtn"
+                      data-action="camera#open">Abrir cámara</button>
+
+              <button type="button" class="btn"
+                      data-camera-target="refreshBtn"
+                      data-action="camera#refresh"
+                      title="Actualizar lista de cámaras">Actualizar</button>
+
+              <select data-camera-target="select"
+                      data-action="change->camera#changeDevice"
+                      class="filter-select" style="min-width: 260px;">
+                <option value="">Selecciona una cámara…</option>
+              </select>
+
+              <span class="text-muted" data-camera-target="status"></span>
+            </div>
+
+            <div data-camera-target="panel" style="display:none; margin-top:.75rem;">
+              <video data-camera-target="video" autoplay playsinline muted
+                     style="max-width: 520px; width:100%; border-radius:12px; border:1px solid var(--border); background:#000;"></video>
+              <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.6rem;">
+                <button type="button" class="btn btn-accent"
+                        data-camera-target="captureBtn"
+                        data-action="camera#capture">Tomar foto</button>
+                <button type="button" class="btn btn-danger"
+                        data-camera-target="closeBtn"
+                        data-action="camera#close">Cerrar cámara</button>
+              </div>
+              <canvas data-camera-target="canvas" style="display:none;"></canvas>
+            </div>
+          </div>
+
+          <!-- Alternativa: Inventario (archivo) -->
+          <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
+            <button type="button" class="btn" id="inventory-open-btn"
+                    onclick="document.getElementById('client_photo_input').click()">Elegir del inventario</button>
+
+            <!-- Input real que se enviará al servidor -->
+            <%= file_field_tag "client[photo]",
+                  accept: "image/*",
+                  id: "client_photo_input",
+                  class: "form-input",
+                  style: "padding:.6rem; display:none;",
+                  data: { camera_target: "fileInput" } %>
+          </div>
+
+          <!-- Vista previa -->
+          <div id="photo-preview" data-camera-target="previewBox" style="margin-top:.5rem; display:none;">
+            <img id="photo-img" data-camera-target="previewImg"
+                 alt="Vista previa"
+                 style="max-width: 260px; height: auto; border-radius: 12px; border:1px solid var(--border);" />
+          </div>
+
+          <small class="text-muted">Puedes tomar una foto con tu cámara externa/interna o elegir una desde tu inventario.</small>
+        </div>
+      </div>
+
+      <!-- ==================== Columna derecha: Pago ==================== -->
+      <div>
+        <div class="card" style="margin:0;">
+          <h4 class="card-title mb-2">Pago de inscripción</h4>
+
+          <div class="mb-4">
+            <label class="label">Método de pago</label>
+            <div class="radio-row" style="display:flex; gap:1rem; color:#e5e7eb;">
+              <label><input type="radio" name="payment_method" value="cash" checked> Efectivo</label>
+              <label><input type="radio" name="payment_method" value="transfer"> Transferencia</label>
+            </div>
+          </div>
+
+          <p class="text-muted">El monto se asigna automáticamente según la membresía (Día $30, Semana $70, Mes $200).</p>
+
+          <div class="mt-6">
+            <%= f.submit "Registrar y cobrar", class: "btn btn-primary w-full" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+  
