@@ -1,7 +1,11 @@
-# app/models/client.rb
 class Client < ApplicationRecord
   belongs_to :user, optional: true
   has_one_attached :photo
+
+  # Ventas quedan con client_id = NULL si se borra el cliente
+  has_many :sales,     dependent: :nullify
+  # Check-ins quedan con client_id = NULL si se borra el cliente
+  has_many :check_ins, dependent: :nullify
 
   enum :membership_type, { day: 0, week: 1, month: 2 }
 
@@ -11,7 +15,7 @@ class Client < ApplicationRecord
   validates :height, numericality: { greater_than: 0 }, allow_nil: true
   validates :membership_type, presence: true
 
-  # Nuevo: número de cliente sugerido y único
+  # Número de cliente sugerido y único
   validates :client_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :client_number, uniqueness: true, allow_nil: true
 
@@ -54,7 +58,6 @@ class Client < ApplicationRecord
   def ensure_client_number
     return if client_number.present?
 
-    # buscamos el máximo existente (en client_number si hay, si no, caemos a id)
     max_existing =
       self.class.maximum(:client_number) ||
       self.class.maximum(:id) ||

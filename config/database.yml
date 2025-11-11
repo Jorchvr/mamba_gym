@@ -20,5 +20,6 @@ test:
 # En producción usa DATABASE_URL (recomendado).
 # Ejemplo: postgres://user:pass@host:5432/gym_control_production
 production:
-  <<: *default
   url: <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+

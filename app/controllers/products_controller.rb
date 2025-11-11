@@ -1,14 +1,20 @@
 # app/controllers/products_controller.rb
 class ProductsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_product, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_product, only: [:show, :edit, :update, :destroy]
   # Solo superusuarios pueden crear/editar/borrar; todos pueden ver el listado y el show
-  before_action :require_superuser!, except: [ :index, :show ]
+  before_action :require_superuser!, except: [:index, :show]
 
   # GET /products
   def index
-    # Backoffice y/o catálogo sencillo
-    @products = Product.order(:id)
+    @q = params[:q].to_s.strip
+    scope = Product.order(:id)
+
+    if @q.present?
+      scope = scope.where("LOWER(name) LIKE ?", "%#{@q.downcase}%")
+    end
+
+    @products = scope
   end
 
   # GET /products/:id
@@ -27,7 +33,10 @@ class ProductsController < ApplicationController
   # POST /products
   def create
     @product = Product.new(product_params)
+
     if @product.save
+      # Registramos evento de inventario si hay stock inicial
+      register_inventory_event!(@product, @product.stock.to_i, note: "Stock inicial") if @product.stock.to_i > 0
       redirect_to products_path, notice: "Producto creado correctamente."
     else
       flash.now[:alert] = @product.errors.full_messages.to_sentence
@@ -37,7 +46,13 @@ class ProductsController < ApplicationController
 
   # PATCH/PUT /products/:id
   def update
+    old_stock = @product.stock.to_i
+
     if @product.update(product_params)
+      new_stock = @product.stock.to_i
+      delta = new_stock - old_stock
+      # Solo registramos evento si AUMENTÓ el stock
+      register_inventory_event!(@product, delta, note: "Reabastecido en edición de producto") if delta > 0
       redirect_to products_path, notice: "Producto actualizado correctamente."
     else
       flash.now[:alert] = @product.errors.full_messages.to_sentence
@@ -59,14 +74,33 @@ class ProductsController < ApplicationController
     redirect_to products_path, alert: "Producto no encontrado."
   end
 
-  # Ajusta la lista según los atributos reales de tu modelo Product
+  # Permitimos los campos reales de la tabla + virtuales en MXN.
+  # Los virtuales (price_mxn, cost_mxn) se convierten a *_cents en el modelo.
   def product_params
     params.require(:product).permit(
       :name,
-      :price_cents,
       :stock,
-      :description,
-      :active
+      :price_cents,
+      :cost_cents,
+      :price_mxn,
+      :cost_mxn
     )
+  end
+
+  # Crea un InventoryEvent si el modelo existe
+  def register_inventory_event!(product, quantity, note:)
+    return unless defined?(InventoryEvent)
+    return if quantity.to_i <= 0
+
+    InventoryEvent.create!(
+      product: product,
+      user: current_user,
+      kind: :in,                 # reabastecimiento
+      quantity: quantity.to_i,
+      note: note,
+      happened_at: Time.current
+    )
+  rescue => e
+    Rails.logger.warn("[InventoryEvent] No se pudo registrar: #{e.class} #{e.message}")
   end
 end

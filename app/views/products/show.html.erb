@@ -10,6 +10,29 @@
 </div>
 
 <div class="card">
-  <div class="kv"><span>Precio</span><span>$<%= (@product.price_cents.to_i/100.0).round(2) %></span></div>
-  <div class="kv"><span>Stock</span><span><%= @product.stock %></span></div>
+  <div class="kv">
+    <span>Precio</span>
+    <span><%= number_to_currency(@product.price, unit: "$", precision: 2) %></span>
+  </div>
+
+  <div class="kv">
+    <span>Costo</span>
+    <span><%= number_to_currency(@product.cost, unit: "$", precision: 2) %></span>
+  </div>
+
+  <div class="kv">
+    <span>Ganancia</span>
+    <span><%= number_to_currency(@product.profit, unit: "$", precision: 2) %></span>
+  </div>
+
+  <div class="kv">
+    <span>Margen</span>
+    <span><%= @product.margin_percentage %>%</span>
+  </div>
+
+  <div class="kv">
+    <span>Stock</span>
+    <span><%= @product.stock %></span>
+  </div>
 </div>
+  

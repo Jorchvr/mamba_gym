@@ -1,6 +1,11 @@
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
-<%# Habilitar scroll en esta página %>
 <% content_for :body_class, "allow-scroll" %>
+
+<% # Precios por defecto desde Client::PRICES (centavos) con fallback %>
+<% prices = (defined?(Client) && Client.const_defined?(:PRICES)) ? Client::PRICES : { "day" => 3000, "week" => 7000, "month" => 20000 } %>
+<% d = (prices["day"].to_i   / 100.0) %>
+<% w = (prices["week"].to_i  / 100.0) %>
+<% m = (prices["month"].to_i / 100.0) %>
 
 <div class="header-row">
   <h2 class="title">Registrar Cliente</h2>
@@ -13,15 +18,15 @@
   <% if alert.present? %><div class="flash flash--alert"><%= alert %></div><% end %>
   <% if notice.present? %><div class="flash flash--notice"><%= notice %></div><% end %>
 
-  <%# ======== Sugerencia del siguiente número de cliente ======== %>
+  <%# Sugerencia del siguiente número de cliente %>
   <% suggested_client_number =
         @suggested_client_number ||
         @client&.client_number ||
         (Client.maximum(:client_number).to_i + 1) %>
 
-  <%= form_with model: @client, url: clients_path, local: true, html: { multipart: true } do |f| %>
+  <%= form_with model: (@client || ::Client.new), url: clients_path, local: true, html: { multipart: true, id: "client-form" } do |f| %>
     <div class="grid-2" style="gap: 1rem;">
-      <!-- ==================== Columna izquierda: Datos del cliente ==================== -->
+      <!-- ==================== Columna izquierda: Datos ==================== -->
       <div>
         <label class="label">Nombre completo</label>
         <%= f.text_field :name, class: "form-input", required: true, placeholder: "Nombre y apellidos" %>
@@ -43,15 +48,55 @@
             <label class="label">Peso (kg)</label>
             <%= f.number_field :weight, step: 0.01, class: "form-input", placeholder: "82" %>
           </div>
+
+          <!-- ===== 1) Plan como BOTONES-RADIO seguros ===== -->
           <div>
-            <label class="label">Tipo de membresía</label>
-            <%= f.select :membership_type,
-              [["Día $30", :day], ["Semana $70", :week], ["Mes $200", :month]],
-              {}, class: "form-input" %>
+            <label class="label label-strong">Tipo de membresía</label>
+
+            <div class="plan-button-row">
+              <label class="plan-option">
+                <input type="radio"
+                       name="client[membership_type]"
+                       value="day"
+                       data-price="<%= d %>" />
+                <span class="plan-btn">Día ($<%= '%.2f' % d %>)</span>
+              </label>
+
+              <label class="plan-option">
+                <input type="radio"
+                       name="client[membership_type]"
+                       value="week"
+                       data-price="<%= w %>" />
+                <span class="plan-btn">Semana ($<%= '%.2f' % w %>)</span>
+              </label>
+
+              <label class="plan-option">
+                <input type="radio"
+                       name="client[membership_type]"
+                       value="month"
+                       data-price="<%= m %>"
+                       checked />
+                <span class="plan-btn">Mes ($<%= '%.2f' % m %>)</span>
+              </label>
+            </div>
+            <small class="text-muted">Elige el plan; el precio se llena abajo y puedes editarlo.</small>
           </div>
         </div>
 
-        <%# ======== Número de cliente (debajo de Peso) ======== %>
+        <!-- ===== 2) Precio editable ===== -->
+        <div class="form-row" style="margin-top:.75rem;">
+          <label class="label label-strong">Precio (MXN)</label>
+          <%= number_field_tag :registration_price_mxn,
+                ('%.2f' % m),
+                step: 0.01,
+                min: 0.01,
+                class: "form-input form-input--xl",
+                id: "registration_price_mxn",
+                placeholder: "Ej. 265.00" %>
+          <small class="text-muted">Se autollenará según el plan, pero puedes editarlo.</small>
+        </div>
+
+        <!-- Número de cliente -->
         <div class="form-row" style="margin-top:.75rem;">
           <label class="label">Número de cliente</label>
           <%= f.number_field :client_number,
@@ -61,11 +106,10 @@
           <small class="text-muted">Se sugiere el siguiente consecutivo, pero puedes editarlo.</small>
         </div>
 
-        <!-- === Foto: Cámara (selección de dispositivo) + Inventario === -->
+        <!-- Foto (cámara / archivo) -->
         <div class="mt-6" data-controller="camera">
           <label class="label">Foto del cliente</label>
 
-          <!-- Controles de cámara -->
           <div class="card" style="margin: 0 0 .75rem 0;">
             <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
               <button type="button" class="btn btn-primary"
@@ -74,8 +118,7 @@
 
               <button type="button" class="btn"
                       data-camera-target="refreshBtn"
-                      data-action="camera#refresh"
-                      title="Actualizar lista de cámaras">Actualizar</button>
+                      data-action="camera#refresh">Actualizar</button>
 
               <select data-camera-target="select"
                       data-action="change->camera#changeDevice"
@@ -101,28 +144,17 @@
             </div>
           </div>
 
-          <!-- Alternativa: Inventario (archivo) -->
           <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; margin-bottom:.5rem;">
-            <button type="button" class="btn" id="inventory-open-btn"
-                    onclick="document.getElementById('client_photo_input').click()">Elegir del inventario</button>
-
-            <!-- Input real que se enviará al servidor -->
-            <%= file_field_tag "client[photo]",
-                  accept: "image/*",
-                  id: "client_photo_input",
-                  class: "form-input",
-                  style: "padding:.6rem; display:none;",
-                  data: { camera_target: "fileInput" } %>
+            <button type="button" class="btn" onclick="document.getElementById('client_photo_input').click()">Elegir del inventario</button>
+            <%= file_field_tag "client[photo]", accept: "image/*", id: "client_photo_input", class: "form-input", style: "padding:.6rem; display:none;" %>
           </div>
 
-          <!-- Vista previa -->
-          <div id="photo-preview" data-camera-target="previewBox" style="margin-top:.5rem; display:none;">
-            <img id="photo-img" data-camera-target="previewImg"
-                 alt="Vista previa"
+          <div id="photo-preview" style="margin-top:.5rem; display:none;">
+            <img id="photo-img" alt="Vista previa"
                  style="max-width: 260px; height: auto; border-radius: 12px; border:1px solid var(--border);" />
           </div>
 
-          <small class="text-muted">Puedes tomar una foto con tu cámara externa/interna o elegir una desde tu inventario.</small>
+          <small class="text-muted">Puedes tomar una foto o elegir una desde tu inventario.</small>
         </div>
       </div>
 
@@ -134,12 +166,10 @@
           <div class="mb-4">
             <label class="label">Método de pago</label>
             <div class="radio-row" style="display:flex; gap:1rem; color:#e5e7eb;">
-              <label><input type="radio" name="payment_method" value="cash" checked> Efectivo</label>
-              <label><input type="radio" name="payment_method" value="transfer"> Transferencia</label>
+              <label><input type="radio" name="client[payment_method]" value="cash" checked> Efectivo</label>
+              <label><input type="radio" name="client[payment_method]" value="transfer"> Transferencia</label>
             </div>
           </div>
-
-          <p class="text-muted">El monto se asigna automáticamente según la membresía (Día $30, Semana $70, Mes $200).</p>
 
           <div class="mt-6">
             <%= f.submit "Registrar y cobrar", class: "btn btn-primary w-full" %>
@@ -149,4 +179,32 @@
     </div>
   <% end %>
 </div>
-  
+
+<!-- JS: actualizar precio al cambiar el plan (sin depender del hidden) -->
+<script>
+(function(){
+  function bind() {
+    var priceInput = document.getElementById('registration_price_mxn');
+    var radios = document.querySelectorAll('input[name="client[membership_type]"]');
+    if (!radios.length || !priceInput) return;
+
+    radios.forEach(function(radio){
+      radio.addEventListener('change', function(){
+        var p = radio.getAttribute('data-price');
+        if (p && !priceInput.dataset.userEdited) {
+          priceInput.value = parseFloat(p).toFixed(2);
+        }
+      });
+    });
+
+    ['input','change','keyup'].forEach(function(ev){
+      priceInput.addEventListener(ev, function(){
+        priceInput.dataset.userEdited = '1';
+      });
+    });
+  }
+
+  document.addEventListener('turbo:load', bind);
+  document.addEventListener('DOMContentLoaded', bind);
+})();
+</script>

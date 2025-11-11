@@ -1,3 +1,4 @@
+<!-- app/views/products/index.html.erb -->
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
 <div class="header-row">
@@ -10,27 +11,69 @@
 
 <div class="card">
   <div class="toolbar">
-    <%= form_with url: products_path, method: :get, local: true, class: "search-form", style: "grid-template-columns: 1fr auto;" do |f| %>
-      <%= text_field_tag :q, @q, class: "form-input", placeholder: "Buscar producto..." %>
-      <%= submit_tag "Buscar", class: "btn" %>
+    <!-- Buscador con input y botón separados -->
+    <%= form_with url: products_path,
+                  method: :get,
+                  local: true,
+                  html: { style: "display:flex; gap:.6rem; align-items:center; width:100%; max-width:520px;" } do |f| %>
+      <%= text_field_tag :q, @q,
+            class: "form-input",
+            placeholder: "Buscar producto...",
+            style: "flex:1 1 auto; height:40px; padding:0 .9rem; border-radius:10px;" %>
+
+      <%= submit_tag "Buscar",
+            class: "btn btn-primary",
+            style: "height:40px; padding:0 1rem; border-radius:10px; white-space:nowrap;" %>
     <% end %>
     <div class="spacer"></div>
   </div>
 
-  <div class="product-list">
+  <div class="product-list" style="max-height:68vh; overflow:auto; padding-right:4px;">
     <% if @products.any? %>
       <% @products.each do |p| %>
         <div class="product-card">
           <div class="product-grow">
             <h3 class="product-title"><%= p.name %></h3>
           </div>
-          <div class="product-meta"><span class="price">$<%= (p.price_cents.to_i/100.0).round(2) %></span></div>
-          <div class="product-meta"><span class="text-muted">Stock: <%= p.stock %></span></div>
 
-          <%= link_to "Ver", product_path(p), class: "btn" %>
-          <%= link_to "Editar", edit_product_path(p), class: "btn" %>
-          <%= button_to "Eliminar", product_path(p), method: :delete,
-                data: { confirm: "¿Eliminar #{p.name}?" }, class: "btn btn-danger" %>
+          <div class="product-meta">
+            <span class="text-muted">Precio:</span>
+            <span class="price"><%= number_to_currency(p.price, unit: "$", precision: 2) %></span>
+          </div>
+
+          <div class="product-meta">
+            <span class="text-muted">Costo:</span>
+            <span><%= number_to_currency(p.cost, unit: "$", precision: 2) %></span>
+          </div>
+
+          <div class="product-meta">
+            <span class="text-muted">Ganancia:</span>
+            <span><%= number_to_currency(p.profit, unit: "$", precision: 2) %></span>
+          </div>
+
+          <div class="product-meta">
+            <span class="text-muted">Margen:</span>
+            <span><%= p.margin_percentage %>%</span>
+          </div>
+
+          <div class="product-meta">
+            <span class="text-muted">Stock:</span>
+            <span><%= p.stock %></span>
+          </div>
+
+          <!-- Acciones en UNA SOLA FILA con separación -->
+          <div class="product-actions mt-2"
+               style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
+            <%= link_to "Ver", product_path(p), class: "btn", style: "height:32px; padding:0 .65rem; font-size:.85rem; line-height:1; border-radius:10px; white-space:nowrap;" %>
+            <%= link_to "Editar", edit_product_path(p), class: "btn", style: "height:32px; padding:0 .65rem; font-size:.85rem; line-height:1; border-radius:10px; white-space:nowrap;" %>
+            <%= button_to "Eliminar",
+                  product_path(p),
+                  method: :delete,
+                  data: { confirm: "¿Eliminar #{p.name}?" },
+                  class: "btn btn-danger",
+                  form: { class: "inline-form", style: "display:inline-flex; margin:0; padding:0; width:auto;" },
+                  params: {} %>
+          </div>
         </div>
       <% end %>
     <% else %>

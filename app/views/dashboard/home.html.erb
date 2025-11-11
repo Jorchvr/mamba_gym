@@ -11,16 +11,14 @@
     <p class="user-greeting"><strong>Usuario:</strong> <%= current_user.name %></p>
 
     <div class="top-actions" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <!-- 🔹 Accesos rápidos visibles para todos -->
+      
+
       <%= button_to "Cerrar Sesión",
                     destroy_user_session_path,
                     method: :delete,
                     form: { data: { turbo: false } },
                     class: "btn btn-danger" %>
-
-      <%# Botón exclusivo para Griselle (mini-tienda de clases) %>
-      <% if current_user.email == "griselle@example.com" %>
-        
-      <% end %>
     </div>
 
     <!-- 🔎 Buscador de cliente -->
@@ -121,12 +119,15 @@
           $<%= (@today_total_cents.to_i / 100.0).round(2) %>
         </p>
         <p class="text-muted"><%= @today_sales_count.to_i %> operaciones</p>
-        <% if is_superuser? %>
-          <div class="mt-6" style="display:flex; gap: .75rem; flex-wrap: wrap;">
-            <%= link_to "Ver registro", sales_path, class: "btn" %>
+
+        <div class="mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <%= link_to "Ver registro", sales_path, class: "btn" %>
+          <%= link_to "Historial (por día)", history_path, class: "btn" %>
+          <%= link_to "Corte del día", closeout_path, class: "btn" %>
+          <% if is_superuser? %>
             <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
 
       <div class="card">
@@ -141,12 +142,14 @@
       <%= link_to "Clientes", clients_path, class: "btn" %>
       <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
       <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
-      <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn" %>
-
+      <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn btn-accent" %>
+      <%= link_to "Historial de transacciones", history_path, class: "btn" %>
+      <%= link_to "Corte del día (ticket)", closeout_path, class: "btn" %>
 
       <% if is_superuser? %>
         <%= link_to "Ventas (registro)", sales_path, class: "btn" %>
-        <%= link_to "Descargar Excel del día", reports_daily_export_path, class: "btn" %>
+        <%= link_to "Descargar Excel del día", reports_daily_export_excel_path, class: "btn" %>
+
       <% end %>
     </div>
   </div>

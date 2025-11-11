@@ -1,3 +1,4 @@
+# app/controllers/dashboard_controller.rb
 class DashboardController < ApplicationController
   before_action :authenticate_user!
 
@@ -13,14 +14,11 @@ class DashboardController < ApplicationController
           Client.where("LOWER(name) LIKE ?", "%#{q.downcase}%").order(:id).first
         end
 
-      # (Opcional) registrar check-in si encontró cliente
-      if @found_client.present?
-        ensure_check_in!(@found_client)
-      end
+      # ✅ Registrar check-in si encontró cliente (una sola vez por día)
+      ensure_check_in!(@found_client) if @found_client.present?
     end
 
     # ==== Métrica: personas que han entrado (hoy) ====
-    # Usa tu modelo CheckIn si existe; si no, queda en 0
     if defined?(CheckIn)
       @today_checkins = CheckIn.where(occurred_at: Time.zone.today.all_day).count
     else
@@ -30,20 +28,19 @@ class DashboardController < ApplicationController
     # ==== Productos para la tienda (panel derecho) ====
     @products = Product.order(:name)
 
-    # ==== Ventas de HOY (todas: tienda + membresías) ====
+    # ==== Ventas de HOY (solo del usuario actual) ====
+    day_range = Time.zone.today.all_day
     @today_sales_count = 0
     @today_total_cents = 0
 
-    # StoreSale (tienda)
     if defined?(StoreSale)
-      store_sales_today = StoreSale.where(occurred_at: Time.zone.today.all_day)
+      store_sales_today = StoreSale.where(user_id: current_user.id, occurred_at: day_range)
       @today_sales_count += store_sales_today.count
       @today_total_cents += store_sales_today.sum(:total_cents).to_i
     end
 
-    # Sale (membresías/inscripciones)
     if defined?(Sale)
-      membership_sales_today = Sale.where(occurred_at: Time.zone.today.all_day)
+      membership_sales_today = Sale.where(user_id: current_user.id, occurred_at: day_range)
       @today_sales_count += membership_sales_today.count
       @today_total_cents += membership_sales_today.sum(:amount_cents).to_i
     end
@@ -51,13 +48,20 @@ class DashboardController < ApplicationController
 
   private
 
-  # Marca un check-in del cliente si tienes el modelo CheckIn
+  # Marca un check-in del cliente SOLO una vez por día.
+  # Importante: tu tabla check_ins requiere user_id NOT NULL, así que pasamos current_user.
   def ensure_check_in!(client)
     return unless defined?(CheckIn)
-    # Evita duplicar múltiples check-ins en el mismo día si no quieres
-    unless CheckIn.exists?(client_id: client.id, occurred_at: Time.zone.today.all_day)
-      CheckIn.create!(client_id: client.id, occurred_at: Time.current)
-    end
+    today = Time.zone.today.all_day
+
+    exists = CheckIn.where(client_id: client.id, occurred_at: today).exists?
+    return if exists
+
+    CheckIn.create!(
+      client_id:   client.id,
+      user_id:     current_user.id,
+      occurred_at: Time.current
+    )
   rescue => e
     Rails.logger.warn("[CHECKIN] No se pudo registrar check-in: #{e.class} #{e.message}")
   end

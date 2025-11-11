@@ -704,4 +704,145 @@
   flex: 0 0 140px;     /* ancho fijo razonable para el select */
 }
 
+/* ====== buscador: input y botón separados, misma altura ====== */
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: .6rem;            /* ← separación visible */
+  width: 100%;
+  max-width: 520px;
+}
+.search-form .form-input {
+  flex: 1 1 auto;
+  height: 40px;
+  padding: 0 .9rem;
+  border-radius: 10px;
+}
+.search-form .btn,
+.search-form input[type="submit"] {
+  height: 40px;
+  padding: 0 1rem;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* ====== acciones: Ver / Editar / Eliminar en línea con espacio ====== */
+.btn-group,
+.product-card .btn-group,
+.product-card [style*="btn-group"] { /* por si viene inline-style en la vista */
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;             /* ← espacio entre botones */
+}
+.btn-group form {         /* button_to genera un <form> */
+  display: inline-block;
+  margin: 0;
+}
+.btn-group .btn,
+.btn-group form .btn {
+  height: 36px;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ====== lista con scroll ====== */
+.product-list {
+  max-height: 68vh;       /* ajusta si quieres más/menos alto */
+  overflow: auto;
+  padding-right: 4px;     /* espacio para el scroll */
+}
+
+/* scroll bar (opcional, visual) */
+.product-list::-webkit-scrollbar {
+  width: 8px;
+}
+.product-list::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+.product-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 8px;
+}
+/* --- Acciones de producto: una sola fila, sí o sí --- */
+.product-actions{
+  display:flex !important;
+  flex-wrap:nowrap !important;         /* evita salto de línea */
+  gap:8px !important;
+  align-items:center;
+}
+
+/* El form que genera button_to NO debe comportarse como bloque */
+.product-actions .inline-form{
+  display:inline-flex !important;
+  margin:0 !important;
+  padding:0 !important;
+  width:auto !important;
+}
+
+/* Forzar botones compactos y en línea (a y button/input) */
+.product-actions .btn,
+.product-actions .inline-form .btn,
+.product-actions .inline-form button.btn,
+.product-actions .inline-form input.btn{
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  height:32px;
+  padding:0 .65rem;
+  font-size:.85rem;
+  line-height:1;
+  border-radius:10px;
+  white-space:nowrap;
+  width:auto !important;           /* anula temas que ponen 100% */
+  min-width:0;
+}
+
+/* Por si algún tema mete display:block o width:100% en móviles */
+@media (max-width: 800px){
+  .product-actions .btn,
+  .product-actions .inline-form .btn{
+    width:auto !important;
+    display:inline-flex !important;
+  }
+}
+.clients-scroll {
+  max-height: 70vh;      /* ajusta si quieres más o menos alto */
+  overflow-y: auto;
+  margin-top: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+/* Opcional: scroll más bonito */
+.clients-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.clients-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.clients-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 253, 0.6);
+  border-radius: 999px;
+}
+.clients-scroll {
+  max-height: 75vh;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.clients-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.clients-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.clients-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 253, 0.6);
+  border-radius: 999px;
+}
 

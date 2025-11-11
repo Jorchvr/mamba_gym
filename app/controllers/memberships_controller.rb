@@ -1,74 +1,128 @@
 class MembershipsController < ApplicationController
   before_action :authenticate_user!
 
-  # Ajusta precios aquí (centavos): $15.00 = 1500
+  # Precios en centavos ($265.00 => 26500)
   PRICES = {
-    day:   1500,   # 1 día
-    week:  5000,   # 1 semana
-    month: 15000   # 1 mes
+    day:            1500,    # $15.00
+    week:           5000,    # $50.00
+    month:          26500,   # $265.00 (compatibilidad si en algún lugar aún se usa "month")
+    month_late:     26500,   # $265.00  (Mes atraso)
+    month_on_time:  25000    # $250.00  (Mensualidad puntual)
   }.freeze
 
+  # GET /memberships?q=...
   def new
-    @query   = params[:q].to_s.strip
-    @client  = lookup_client(@query) if @query.present?
-    @prices  = PRICES
+    @query  = params[:q].to_s.strip
+    @client = lookup_client(@query) if @query.present?
+    @prices = PRICES
   end
 
   # POST /memberships/checkout
-  # params: client_id, plan (day|week|month), payment_method (cash|transfer)
+  # plan = day|week|month_late|month_on_time|custom
+  # payment_method = cash|transfer
+  # custom_price_mxn, custom_description (si plan=custom)
   def checkout
     client = Client.find(params[:client_id])
 
-    plan = params[:plan].to_s
-    unless %w[day week month].include?(plan)
-      return redirect_to memberships_path(q: client.id), alert: "Plan inválido."
+    plan = (params[:plan].presence || params[:membership_type].presence).to_s
+    pm   = params[:payment_method].to_s
+    payment_method = %w[cash transfer].include?(pm) ? pm : "cash"
+
+    # ======= PERSONALIZADO =======
+    if plan == "custom" || params[:use_custom_price].to_s == "1"
+      amount_cents = parse_money_to_cents(params[:custom_price_mxn])
+      raise ArgumentError, "Monto personalizado inválido." if amount_cents.nil? || amount_cents <= 0
+
+      Sale.create!(
+        client:          client,
+        user:            current_user,
+        membership_type: nil,  # venta libre (no mueve fechas)
+        payment_method:  payment_method,
+        amount_cents:    amount_cents,
+        occurred_at:     Time.current,
+        metadata:        { custom: true, description: params[:custom_description].to_s.presence }
+      )
+
+      return redirect_to memberships_path(q: client.id),
+             notice: "Pago personalizado guardado por $#{format('%.2f', amount_cents / 100.0)}."
     end
 
-    payment_method = params[:payment_method].in?(%w[cash transfer]) ? params[:payment_method] : "cash"
-    amount_cents   = PRICES.fetch(plan.to_sym)
-
-    # Base: si ya tiene próxima en el futuro, extendemos desde ahí; si no, desde hoy.
-    base_date = [ Date.current, client.next_payment_on ].compact.max
-
-    new_next =
+    # ======= PLANES FIJOS (día, semana, mes atraso/puntual) =======
+    amount_cents, plan_for_enum, month_variant =
       case plan
+      when "day"           then [ PRICES[:day],           "day",   nil ]
+      when "week"          then [ PRICES[:week],          "week",  nil ]
+      when "month_late"    then [ PRICES[:month_late],    "month", "late" ]
+      when "month_on_time" then [ PRICES[:month_on_time], "month", "on_time" ]
+      else
+        return redirect_to memberships_path(q: client.id), alert: "Plan inválido."
+      end
+
+    new_next = nil
+    ApplicationRecord.transaction do
+      Sale.create!(
+        client:          client,
+        user:            current_user,
+        membership_type: plan_for_enum,   # enum day|week|month
+        payment_method:  payment_method,  # enum cash|transfer
+        amount_cents:    amount_cents,
+        occurred_at:     Time.current,
+        metadata:        (month_variant ? { month_variant: month_variant } : {})
+      )
+
+      base_date = [ Date.current, client.next_payment_on ].compact.max
+      new_next  = case plan_for_enum
       when "day"   then base_date + 1.day
       when "week"  then base_date + 1.week
       when "month" then base_date + 1.month
       end
 
-    # Venta (usa tus enums en Sale)
-    Sale.create!(
-      client:          client,
-      user:            current_user,
-      membership_type: plan,            # enum :membership_type (day|week|month)
-      payment_method:  payment_method,  # enum :payment_method  (cash|transfer)
-      amount_cents:    amount_cents,
-      occurred_at:     Time.current
-    )
+      client.update!(
+        enrolled_on:     (client.enrolled_on || Date.current),
+        next_payment_on: new_next
+      )
+    end
 
-    # Reactivar/Extender membresía
-    client.update!(
-      enrolled_on:     (client.enrolled_on || Date.current),
-      next_payment_on: new_next
-    )
+    label = case plan
+    when "month_late"     then "Mes (atraso)"
+    when "month_on_time"  then "Mensualidad (puntual)"
+    else plan.humanize
+    end
 
     redirect_to memberships_path(q: client.id),
-      notice: "Pago registrado (#{plan.humanize}) por $#{(amount_cents / 100.0).round(2)}. Próximo pago: #{new_next}."
+      notice: "Pago registrado (#{label}) por $#{format('%.2f', amount_cents / 100.0)}. Próximo pago: #{new_next}."
+
   rescue ActiveRecord::RecordNotFound
     redirect_to memberships_path, alert: "Cliente no encontrado."
+  rescue ActiveRecord::RecordInvalid, ArgumentError => e
+    redirect_to memberships_path(q: params[:client_id] || params[:q]),
+      alert: "No se pudo completar el cobro: #{e.message}"
   rescue => e
-    redirect_to memberships_path(q: params[:q]), alert: "No se pudo completar el cobro: #{e.message}"
+    redirect_to memberships_path(q: params[:client_id] || params[:q]),
+      alert: "Error inesperado: #{e.message}"
   end
 
   private
 
-  # Busca por #ID exacto o por nombre (primer match)
+  # Busca por ID exacto o por nombre (primer match)
   def lookup_client(q)
     if q.to_i.to_s == q
       Client.find_by(id: q.to_i)
     else
       Client.where("LOWER(name) LIKE ?", "%#{q.downcase}%").first
     end
+  end
+
+  # "1,200.50" / "1200,50" / "$1200.50" => centavos
+  def parse_money_to_cents(input)
+    s = input.to_s.strip
+    return nil if s.blank?
+    s = s.gsub(/[^\d.,-]/, "")
+    if s.include?(",") && s.include?(".")
+      s = s.delete(",")
+    else
+      s = s.tr(",", ".")
+    end
+    (s.to_f * 100).round
   end
 end

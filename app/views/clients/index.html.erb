@@ -11,38 +11,39 @@
 
   <!-- 🔎 Buscador -->
   <%= form_with url: clients_path, method: :get, local: true do %>
-    <div class="search-row">
+    <div class="search-row" style="display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.75rem;">
       <%= select_tag :filter,
-        options_for_select([["Número", "id"], ["Nombre", "name"]], params[:filter]),
+        options_for_select([["Número", "id"], ["Nombre", "name"]], params[:filter].presence || "name"),
         class: "form-select" %>
 
       <%= text_field_tag :q, params[:q],
         placeholder: "Buscar por número o nombre…",
-        class: "form-input" %>
+        class: "form-input",
+        style: "min-width:260px; flex:1 1 260px;" %>
 
       <%= submit_tag "Buscar", class: "btn btn-accent" %>
     </div>
   <% end %>
 
-  <!-- Tabla -->
-  <div class="table-wrap">
-    <table class="nice-table">
+  <!-- Tabla con scroll -->
+  <div class="table-wrap clients-scroll">
+    <table class="nice-table" style="width:100%; border-collapse:collapse;">
       <thead>
         <tr>
-          <th class="col-id">#</th>
-          <th class="col-name">Nombre</th>
-          <th class="col-membership">Membresía</th>
-          <th class="col-date">Inscripción</th>
-          <th class="col-date">Próximo pago</th>
-          <th class="col-actions">Acciones</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">#</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Nombre</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Membresía</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Inscripción</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Próximo pago</th>
+          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <% @clients.each do |c| %>
-          <tr>
-            <td class="muted"><%= c.id %></td>
-            <td>
-              <div class="name-cell">
+          <tr style="border-top:1px solid var(--border);">
+            <td class="muted" style="padding:.5rem;"><%= c.id %></td>
+            <td style="padding:.5rem;">
+              <div class="name-cell" style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
                 <%= link_to (c.name.presence || "(Sin nombre)"), client_path(c), class: "link-strong" %>
                 <% if c.next_payment_on.present? && c.next_payment_on < Date.current %>
                   <span class="badge badge-danger">Vencida</span>
@@ -52,19 +53,14 @@
                   <span class="badge">Sin plan</span>
                 <% end %>
               </div>
-              <div class="subtext">#<%= c.id %></div>
             </td>
-            <td><span class="mono"><%= c.membership_type&.humanize || "-" %></span></td>
-            <td><span class="mono"><%= c.enrolled_on || "-" %></span></td>
-            <td><span class="mono"><%= c.next_payment_on || "-" %></span></td>
-            <td>
-              <div class="actions-stack">
+            <td style="padding:.5rem;"><span class="mono"><%= c.membership_type&.humanize || "-" %></span></td>
+            <td style="padding:.5rem;"><span class="mono"><%= c.enrolled_on || "-" %></span></td>
+            <td style="padding:.5rem;"><span class="mono"><%= c.next_payment_on || "-" %></span></td>
+            <td style="padding:.5rem;">
+              <div class="actions-stack" style="display:flex; gap:.4rem; flex-wrap:wrap;">
                 <%= link_to "Ver", client_path(c), class: "btn btn-sm" %>
                 <%= link_to "Editar", edit_client_path(c), class: "btn btn-sm btn-primary" %>
-                <%= button_to "Eliminar", client_path(c),
-                      method: :delete,
-                      form: { data: { turbo_confirm: "¿Eliminar a #{c.name}? Esta acción no se puede deshacer?" } },
-                      class: "btn btn-sm btn-danger" %>
               </div>
             </td>
           </tr>
@@ -72,17 +68,12 @@
 
         <% if @clients.blank? %>
           <tr>
-            <td colspan="6" class="muted" style="text-align:center; padding: 1.25rem 0;">
+            <td colspan="6" class="muted" style="text-align:center; padding:1.25rem 0;">
               No hay clientes que coincidan con la búsqueda.
             </td>
           </tr>
         <% end %>
       </tbody>
     </table>
-  </div>
-
-  <!-- Paginación (Kaminari) -->
-  <div class="mt-4">
-    <%= paginate @clients %>
   </div>
 </div>

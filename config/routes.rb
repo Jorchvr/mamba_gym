@@ -1,3 +1,4 @@
+# config/routes.rb
 Rails.application.routes.draw do
   # ================== Devise (Usuarios) ==================
   devise_for :users
@@ -27,7 +28,10 @@ Rails.application.routes.draw do
   end
 
   # ================== Reports ==================
-  get "reports/daily_export", to: "reports#daily_export", as: :reports_daily_export
+  get "reports/daily_export",        to: "reports#daily_export",        as: :reports_daily_export   # CSV
+  get "reports/daily_export_excel",  to: "reports#daily_export_excel",  as: :reports_daily_export_excel # XLSX (2 hojas)
+  get "history",                     to: "reports#history",             as: :history
+  get "closeout",                    to: "reports#closeout",            as: :closeout
 
   # ================== Admin: gestión de usuarios ==================
   namespace :admin do
@@ -45,7 +49,7 @@ Rails.application.routes.draw do
 
   # ================== Cobrar Mensualidad ==================
   # GET  /memberships → pantalla de búsqueda/cobro
-  # POST /memberships/checkout → procesa el cobro y extiende fechas
-  get  "memberships",            to: "memberships#new",      as: :memberships
-  post "memberships/checkout",   to: "memberships#checkout", as: :memberships_checkout
+  # POST /memberships/checkout → procesa el cobro (incluye precio personalizado)
+  get  "memberships",          to: "memberships#new",      as: :memberships
+  post "memberships/checkout", to: "memberships#checkout", as: :memberships_checkout
 end

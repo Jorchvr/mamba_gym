@@ -8,11 +8,19 @@
 
       <div>
         <label class="label">Precio (MXN)</label>
-        <%= number_field_tag "product[price_mxn]",
-              (@product.price_cents.to_i > 0 ? (@product.price_cents.to_f/100.0) : nil),
+        <%= f.number_field :price_mxn,
               step: 0.01,
               class: "form-input",
               placeholder: "Ej. 1200.00" %>
+        <small class="text-muted">Se guarda en centavos internamente.</small>
+      </div>
+
+      <div>
+        <label class="label">Costo (MXN)</label>
+        <%= f.number_field :cost_mxn,
+              step: 0.01,
+              class: "form-input",
+              placeholder: "Ej. 800.00" %>
         <small class="text-muted">Se guarda en centavos internamente.</small>
       </div>
 
@@ -21,6 +29,14 @@
         <%= f.number_field :stock, class: "form-input", min: 0, step: 1, placeholder: "Ej. 10" %>
       </div>
     </div>
+
+    <% if @product.persisted? %>
+      <div class="mt-3">
+        <strong>Ganancia estimada:</strong>
+        $<%= sprintf('%.2f', @product.profit) %>
+        (<%= @product.margin_percentage %>% de margen)
+      </div>
+    <% end %>
 
     <div class="quick-actions" style="justify-content: flex-end; margin-top: 1rem;">
       <%= link_to "Cancelar", products_path, class: "btn" %>

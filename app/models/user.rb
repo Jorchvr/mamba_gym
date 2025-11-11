@@ -3,6 +3,9 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+  # Un usuario (cajero/superusuario) genera muchas ventas
+  has_many :sales, dependent: :nullify
+
   # “Enum” manual basado en entero: 0=normal, 1=superuser
   ROLE_NORMAL    = 0
   ROLE_SUPERUSER = 1
@@ -23,9 +26,4 @@ class User < ApplicationRecord
     end
     false
   end
-
-  # 🔴 IMPORTANTE: Eliminamos por completo el 2FA/código secreto:
-  # - No hay attr_accessor :secret_code
-  # - No hay validate :require_secret_code_for_superuser
-  # - No existe el método require_secret_code_for_superuser
 end

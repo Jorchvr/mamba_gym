@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_17_223113) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,7 +50,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_223113) do
   end
 
   create_table "check_ins", force: :cascade do |t|
-    t.bigint "client_id", null: false
+    t.bigint "client_id"
     t.bigint "user_id", null: false
     t.datetime "occurred_at"
     t.datetime "created_at", null: false
@@ -75,12 +75,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_223113) do
     t.index ["user_id"], name: "index_clients_on_user_id"
   end
 
+  create_table "inventory_events", force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.bigint "user_id", null: false
+    t.integer "kind", default: 0, null: false
+    t.integer "quantity", null: false
+    t.datetime "happened_at"
+    t.string "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["happened_at"], name: "index_inventory_events_on_happened_at"
+    t.index ["product_id"], name: "index_inventory_events_on_product_id"
+    t.index ["user_id"], name: "index_inventory_events_on_user_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.string "name"
     t.integer "price_cents"
     t.integer "stock"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "cost_cents", default: 0, null: false
+    t.index ["cost_cents"], name: "index_products_on_cost_cents"
   end
 
   create_table "sales", force: :cascade do |t|
@@ -143,10 +159,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_17_223113) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "check_ins", "clients"
+  add_foreign_key "check_ins", "clients", on_delete: :nullify
   add_foreign_key "check_ins", "users"
   add_foreign_key "clients", "users"
-  add_foreign_key "sales", "clients"
+  add_foreign_key "inventory_events", "products"
+  add_foreign_key "inventory_events", "users"
+  add_foreign_key "sales", "clients", on_delete: :nullify
   add_foreign_key "sales", "users"
   add_foreign_key "store_sale_items", "products"
   add_foreign_key "store_sale_items", "store_sales"

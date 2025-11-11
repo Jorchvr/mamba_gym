@@ -1,0 +1,166 @@
+<%= stylesheet_link_tag "main_panel", media: "all" %>
+<%= stylesheet_link_tag "history",    media: "all", "data-turbo-track": "reload" %>
+
+<div class="header-row">
+  <h2 class="title">Historial (<%= @range.to_s.humanize %>)</h2>
+  <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+    <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
+  </div>
+</div>
+
+<div class="card history-toolbar">
+  <div class="toolbar" style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+    <%= form_with url: history_path, method: :get, local: true, class: "search-form", style: "display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;" do |f| %>
+      <label>Fecha:</label>
+      <%= date_field_tag :date, @date, class: "form-input" %>
+      <label>Rango:</label>
+      <%= select_tag :range,
+            options_for_select([["Día","day"],["Semana","week"],["Mes","month"],["Año","year"]], @range.to_s),
+            class: "form-input" %>
+      <%= submit_tag "Filtrar", class: "btn btn-primary" %>
+    <% end %>
+
+    <div class="spacer"></div>
+    <div class="summary" style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <div><strong>Ingresos:</strong> <%= number_to_currency(@money_total_cents/100.0, unit: "MXN $", precision: 2) %></div>
+      <div><strong>Efectivo:</strong> <%= number_to_currency(@money_by_method["cash"]/100.0, unit: "MXN $", precision: 2) %></div>
+      <div><strong>Transfer:</strong> <%= number_to_currency(@money_by_method["transfer"]/100.0, unit: "MXN $", precision: 2) %></div>
+      <div><strong>Stock total:</strong> <%= @stock_total_units %> uds</div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔽 Todo el contenido grande scrolleable -->
+<div class="history-scroll">
+  <div class="grid-2" style="gap:1rem; margin-top:1rem;">
+    <!-- Ventas de Membresía -->
+    <div class="card">
+      <h3 class="card-title">Ventas de Membresía</h3>
+      <% if @sales.any? %>
+        <table class="table">
+          <thead><tr><th>Fecha/Hora</th><th>Usuario</th><th>Cliente</th><th>Tipo</th><th>Método</th><th>Monto</th></tr></thead>
+          <tbody>
+            <% @sales.each do |s| %>
+              <tr>
+                <td><%= (s.occurred_at || s.created_at)&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td><%= s.user&.name %></td>
+                <td><%= s.client&.name || "-" %></td>
+                <td><%= s.membership_type %></td>
+                <td><%= s.payment_method %></td>
+                <td><%= number_to_currency(s.amount_cents.to_i / 100.0, unit: "MXN $", precision: 2) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">Sin ventas de membresía en el rango.</p>
+      <% end %>
+    </div>
+
+    <!-- Ventas de Tienda -->
+    <div class="card">
+      <h3 class="card-title">Ventas de Tienda</h3>
+      <% if @store_sales.any? %>
+        <table class="table">
+          <thead><tr><th>Fecha/Hora</th><th>Usuario</th><th>ID</th><th>Método</th><th>Total</th></tr></thead>
+          <tbody>
+            <% @store_sales.each do |ss| %>
+              <tr>
+                <td><%= (ss.occurred_at || ss.created_at)&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td><%= ss.user&.name %></td>
+                <td>#<%= ss.id %></td>
+                <td><%= ss.payment_method %></td>
+                <td><%= number_to_currency(ss.total_cents.to_i / 100.0, unit: "MXN $", precision: 2) %></td>
+              </tr>
+              <% if ss.store_sale_items.any? %>
+                <tr>
+                  <td colspan="5">
+                    <div class="subtable">
+                      <strong>Items:</strong>
+                      <ul>
+                        <% ss.store_sale_items.each do |it| %>
+                          <li>
+                            <%= it.product&.name %> x<%= it.quantity %> —
+                            <%= number_to_currency(it.unit_price_cents.to_i / 100.0, unit: "MXN $", precision: 2) %> (c/u)
+                          </li>
+                        <% end %>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">Sin ventas de tienda en el rango.</p>
+      <% end %>
+    </div>
+
+    <!-- Reabastecimientos de stock -->
+    <div class="card">
+      <h3 class="card-title">Reabastecimientos de Stock</h3>
+      <% if @inventory_events.any? %>
+        <table class="table">
+          <thead><tr><th>Fecha/Hora</th><th>Producto</th><th>Cant.</th><th>Usuario</th><th>Nota</th></tr></thead>
+          <tbody>
+            <% @inventory_events.each do |ev| %>
+              <tr>
+                <td><%= ev.happened_at&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td><%= ev.product&.name %></td>
+                <td><%= ev.quantity %></td>
+                <td><%= ev.user&.name %></td>
+                <td><%= ev.note.presence || "-" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">No hay reabastecimientos en el rango.</p>
+      <% end %>
+    </div>
+
+    <!-- Check-ins -->
+    <div class="card">
+      <h3 class="card-title">Entradas (Check-ins)</h3>
+      <% if @check_ins.any? %>
+        <table class="table">
+          <thead><tr><th>Hora</th><th>Cliente</th><th>Usuario</th></tr></thead>
+          <tbody>
+            <% @check_ins.each do |ci| %>
+              <tr>
+                <td><%= (ci.occurred_at || ci.created_at)&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td><%= ci.client&.name %></td>
+                <td><%= ci.user&.name %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">Sin entradas en el rango.</p>
+      <% end %>
+    </div>
+
+    <!-- Nuevos clientes -->
+    <div class="card">
+      <h3 class="card-title">Altas de Clientes</h3>
+      <% if @new_clients.any? %>
+        <table class="table">
+          <thead><tr><th>Fecha/Hora</th><th>Cliente</th><th>Registró</th></tr></thead>
+          <tbody>
+            <% @new_clients.each do |c| %>
+              <tr>
+                <td><%= c.created_at&.in_time_zone&.strftime("%Y-%m-%d %H:%M") %></td>
+                <td><%= c.name %></td>
+                <td><%= c.user&.name %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted">Sin altas en el rango.</p>
+      <% end %>
+    </div>
+  </div>
+</div>
+  
