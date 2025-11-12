@@ -837,3 +837,36 @@
   background: rgba(148,163,253,.6);
   border-radius: 999px;
 }
+/* ===== FORCE GLOBAL SCROLL (fix definitivo) ===== */
+html, body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+/* Anula contenedores que bloquean scroll con 100vh/overflow:hidden */
+#app, .app, .page, .content, .split-container, .main, .container, .layout, .wrapper {
+  height: auto !important;
+  min-height: unset !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Las tarjetas/tablas pueden crecer y la página scrollea */
+.card, .panel, .grid-2, .grid-3 {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Si el layout tenía body fijo, lo liberamos */
+body[class*="fixed"], body.fixed {
+  position: static !important;
+}
+
+/* Si hay headers fijos que tapen, mantenlos pero deja scroll en página */
+.header, .header-row, header[style*="position:fixed"] {
+  position: sticky !important;
+  top: 0;
+  z-index: 50;
+}
