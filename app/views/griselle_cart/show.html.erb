@@ -49,21 +49,25 @@
     <% else %>
       <% total_cents = 0 %>
       <% @cart.each do |l| %>
-        <% unit_cents = l[:price_cents].to_i
-           qty        = l[:qty].to_i
+        <%# --- Ajuste mínimo de robustez --- %>
+        <% item = l.is_a?(Array) ? l.last : l
+           item = item.respond_to?(:symbolize_keys) ? item.symbolize_keys : item %>
+
+        <% unit_cents = (item[:price_cents] || item["price_cents"]).to_i
+           qty        = (item[:qty]         || item["qty"]).to_i
            line_cents = unit_cents * qty
            total_cents += line_cents %>
 
         <div class="cart-line" style="display:flex; justify-content:space-between; align-items:center; padding:.4rem 0; border-bottom:1px dashed rgba(255,255,255,.06);">
           <div>
-            <strong><%= l[:name] %></strong> <em>x<%= qty %></em>
+            <strong><%= (item[:name] || item["name"]).to_s %></strong> <em>x<%= qty %></em>
             <div class="text-muted">($<%= (unit_cents/100.0).round(2) %> c/u)</div>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
             <span>$<%= (line_cents/100.0).round(2) %></span>
-            <%= button_to "−", decrement_griselle_cart_path, method: :post, params: { line_id: l[:id] }, class: "btn btn-sm btn-icon", form: { data: { turbo: false } } %>
-            <%= button_to "+", increment_griselle_cart_path, method: :post, params: { line_id: l[:id] }, class: "btn btn-primary btn-sm btn-icon", form: { data: { turbo: false } } %>
-            <%= button_to "Quitar", remove_griselle_cart_path, method: :post, params: { line_id: l[:id] }, class: "btn btn-sm", form: { data: { turbo: false } } %>
+            <%= button_to "−", decrement_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-sm btn-icon", form: { data: { turbo: false } } %>
+            <%= button_to "+", increment_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-primary btn-sm btn-icon", form: { data: { turbo: false } } %>
+            <%= button_to "Quitar", remove_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-sm", form: { data: { turbo: false } } %>
           </div>
         </div>
       <% end %>
