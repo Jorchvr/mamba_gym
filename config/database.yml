@@ -1,5 +1,4 @@
 # config/database.yml
-
 default: &default
   adapter: postgresql
   encoding: unicode
@@ -17,13 +16,19 @@ test:
   username: jorch
   host: /var/run/postgresql
 
-# En producción usa DATABASE_URL (Render).
+# En producción definimos TRES roles de conexión:
+# - primary  -> tu app (ActiveRecord)
+# - cable    -> Solid Cable (ActionCable)
+# - queue    -> Solid Queue (jobs)
 production:
   primary:
     <<: *default
-    url: <%= ENV.fetch("DATABASE_URL") %>
+    url: <%= ENV["DATABASE_URL"] %>
 
   cable:
     <<: *default
-    # Usa la misma DB que primary (suficiente para empezar).
-    url: <%= ENV.fetch("DATABASE_URL") %>
+    url: <%= ENV.fetch("CABLE_DATABASE_URL", ENV["DATABASE_URL"]) %>
+
+  queue:
+    <<: *default
+    url: <%= ENV.fetch("QUEUE_DATABASE_URL", ENV["DATABASE_URL"]) %>
