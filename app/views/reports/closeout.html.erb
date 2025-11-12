@@ -29,48 +29,52 @@
 <div class="card" style="margin-top:1rem;">
   <h3 class="card-title">Movimientos del turno</h3>
   <% if @transactions.any? %>
-    <table class="table">
-      <thead><tr><th>Hora</th><th>Detalle</th><th>Método</th><th>Monto</th></tr></thead>
-      <tbody>
-        <% @transactions.each do |t| %>
-          <tr>
-            <td><%= t[:at]&.in_time_zone&.strftime("%H:%M") %></td>
-            <td><%= t[:label] %></td>
-            <td><%= t[:payment_method] %></td>
-            <td><%= number_to_currency(t[:amount_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+    <div class="corte-scroll">
+      <table class="table">
+        <thead><tr><th>Hora</th><th>Detalle</th><th>Método</th><th>Monto</th></tr></thead>
+        <tbody>
+          <% @transactions.each do |t| %>
+            <tr>
+              <td><%= t[:at]&.in_time_zone&.strftime("%H:%M") %></td>
+              <td><%= t[:label] %></td>
+              <td><%= t[:payment_method] %></td>
+              <td><%= number_to_currency(t[:amount_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% else %>
     <p class="text-muted">Sin movimientos en el turno.</p>
   <% end %>
 </div>
 
-<!-- ===== NUEVO: Detalle por producto vendido en el turno ===== -->
+<!-- ===== Detalle por producto vendido en el turno ===== -->
 <div class="card" style="margin-top:1rem;">
   <h3 class="card-title">Productos vendidos (detalle del turno)</h3>
   <% if @sold_by_product.present? && @sold_by_product.any? %>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th style="text-align:right;">Vendido (uds)</th>
-          <th style="text-align:right;">Ingresos</th>
-          <th style="text-align:right;">Stock restante</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @sold_by_product.each do |row| %>
+    <div class="corte-scroll">
+      <table class="table">
+        <thead>
           <tr>
-            <td><%= row[:product_name] %></td>
-            <td style="text-align:right;"><%= row[:sold_qty] %></td>
-            <td style="text-align:right;"><%= number_to_currency(row[:revenue_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
-            <td style="text-align:right;"><%= row[:remaining_stock] %></td>
+            <th>Producto</th>
+            <th style="text-align:right;">Vendido (uds)</th>
+            <th style="text-align:right;">Ingresos</th>
+            <th style="text-align:right;">Stock restante</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @sold_by_product.each do |row| %>
+            <tr>
+              <td><%= row[:product_name] %></td>
+              <td style="text-align:right;"><%= row[:sold_qty] %></td>
+              <td style="text-align:right;"><%= number_to_currency(row[:revenue_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
+              <td style="text-align:right;"><%= row[:remaining_stock] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% else %>
     <p class="text-muted">No se vendieron productos en el turno.</p>
   <% end %>

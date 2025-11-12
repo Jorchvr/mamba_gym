@@ -845,4 +845,25 @@
   background: rgba(148, 163, 253, 0.6);
   border-radius: 999px;
 }
+.corte-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 6px; /* evita que el scroll tape el contenido */
+}
+.corte-scroll{
+  max-height: 420px;         /* ajusta el alto visible */
+  overflow-y: auto;          /* activa scroll vertical */
+  overscroll-behavior: none; /* evita rebotes raros */
+  padding-right: .25rem;     /* separa del scrollbar */
+  margin-top: .5rem;
+  border-radius: .5rem;
+}
+
+/* Opcional: cabecera “pegada” para tablas largas */
+.corte-scroll thead th{
+  position: sticky;
+  top: 0;
+  background: rgba(0,0,0,.15); /* se integra con tu tema oscuro */
+  backdrop-filter: blur(2px);
+}
 
