@@ -1,3 +1,46 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="panel card" style="max-width:960px; margin:0 auto;">
+  <div class="header-row" style="display:flex;justify-content:space-between;align-items:center;">
+    <h2 class="title">Clases (Griselle)</h2>
+    <%= link_to "Volver al panel", authenticated_root_path, class: "btn" %>
+  </div>
+
+  <% if flash[:cart_notice] %>
+    <div class="card" style="border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); padding:.6rem 1rem; margin-bottom:.75rem;">
+      <%= flash[:cart_notice] %>
+    </div>
+  <% end %>
+  <% if flash[:cart_alert] %>
+    <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem; margin-bottom:.75rem;">
+      <%= flash[:cart_alert] %>
+    </div>
+  <% end %>
+
+  <!-- Botones rápidos -->
+  <div class="grid-3" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:12px;">
+    <% [["jumping","Jumping"],["baile","Baile"],["zumba","Zumba"]].each do |id, label| %>
+      <%= button_to "#{label} ($15)", add_griselle_cart_path,
+            method: :post,
+            params: { id: id },
+            class: "btn btn-primary",
+            form: { data: { turbo: false } } %>
+    <% end %>
+  </div>
+
+  <!-- Precio personalizado -->
+  <div class="card" style="margin-top:16px;">
+    <h3 class="card-title mb-2">Precio personalizado</h3>
+    <%= form_with url: add_griselle_cart_path, method: :post, local: true, class: "search-form" do |f| %>
+      <input type="hidden" name="id" value="custom" />
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" name="description" placeholder="Descripción (ej. Clase privada)" class="form-input" style="flex:2; min-width:220px;">
+        <input type="number" step="0.01" name="amount" placeholder="Monto en pesos (ej. 15)" class="form-input" style="flex:1; min-width:160px;">
+        <%= f.submit "Agregar", class: "btn" %>
+      </div>
+    <% end %>
+  </div>
+
   <!-- Carrito -->
   <div class="mini-cart mini-cart--short" style="margin-top:16px;">
     <h3 class="card-title">Carrito</h3>
@@ -5,53 +48,26 @@
       <p class="text-muted">No hay items.</p>
     <% else %>
       <% total_cents = 0 %>
+      <% @cart.each do |l| %>
+        <%# --- Ajuste mínimo de robustez --- %>
+        <% item = l.is_a?(Array) ? l.last : l
+           item = item.respond_to?(:symbolize_keys) ? item.symbolize_keys : item %>
 
-      <% collection = @cart.is_a?(Hash) ? @cart.values : Array(@cart) %>
-      <% collection.each do |li| %>
-        <% li = li.is_a?(Hash) ? li.with_indifferent_access : {} %>
-
-        <% # precio en centavos: usa :price_cents; si no hay, convierte :amount (pesos) a centavos %>
-        <% unit_cents =
-             if li[:price_cents].present?
-               li[:price_cents].to_i
-             else
-               (BigDecimal(li[:amount].to_s) * 100).to_i rescue 0
-             end %>
-
-        <% qty = (li[:qty].presence || 1).to_i %>
-        <% line_cents = unit_cents * qty
+        <% unit_cents = (item[:price_cents] || item["price_cents"]).to_i
+           qty        = (item[:qty]         || item["qty"]).to_i
+           line_cents = unit_cents * qty
            total_cents += line_cents %>
-
-        <% line_id = li[:id] || li[:line_id] || li[:product_id] || li[:key] || li[:sku] %>
-        <% name    = li[:name] || li[:description] || "Item" %>
 
         <div class="cart-line" style="display:flex; justify-content:space-between; align-items:center; padding:.4rem 0; border-bottom:1px dashed rgba(255,255,255,.06);">
           <div>
-            <strong><%= name %></strong> <em>x<%= qty %></em>
+            <strong><%= (item[:name] || item["name"]).to_s %></strong> <em>x<%= qty %></em>
             <div class="text-muted">($<%= (unit_cents/100.0).round(2) %> c/u)</div>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
             <span>$<%= (line_cents/100.0).round(2) %></span>
-            <%= button_to "−",
-                  decrement_griselle_cart_path,
-                  method: :post,
-                  params: { line_id: line_id },
-                  class: "btn btn-sm btn-icon",
-                  form: { data: { turbo: false } } %>
-
-            <%= button_to "+",
-                  increment_griselle_cart_path,
-                  method: :post,
-                  params: { line_id: line_id },
-                  class: "btn btn-primary btn-sm btn-icon",
-                  form: { data: { turbo: false } } %>
-
-            <%= button_to "Quitar",
-                  remove_griselle_cart_path,
-                  method: :post,
-                  params: { line_id: line_id },
-                  class: "btn btn-sm",
-                  form: { data: { turbo: false } } %>
+            <%= button_to "−", decrement_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-sm btn-icon", form: { data: { turbo: false } } %>
+            <%= button_to "+", increment_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-primary btn-sm btn-icon", form: { data: { turbo: false } } %>
+            <%= button_to "Quitar", remove_griselle_cart_path, method: :post, params: { line_id: (item[:id] || item["id"]) }, class: "btn btn-sm", form: { data: { turbo: false } } %>
           </div>
         </div>
       <% end %>
@@ -73,3 +89,4 @@
       <% end %>
     <% end %>
   </div>
+</div>
