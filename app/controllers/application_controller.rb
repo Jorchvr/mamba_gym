@@ -2,6 +2,9 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
+  # 👇 Usa un layout distinto para controladores de Devise
+  layout :layout_by_resource
+
   before_action :enforce_boot_session
   before_action :configure_permitted_parameters, if: :devise_controller?
 
@@ -29,6 +32,11 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # 👇 Selección de layout: "devise" para sesiones/registro, "application" para lo demás
+  def layout_by_resource
+    devise_controller? ? "devise" : "application"
+  end
+
   def require_superuser!
     unless current_user&.superuser?
       redirect_to authenticated_root_path, alert: "No autorizado."
@@ -36,7 +44,8 @@ class ApplicationController < ActionController::Base
   end
 
   def enforce_boot_session
-    boot_id = Rails.application.config.x.boot_id
+    # Si definiste config.x.boot_id en initializers, esto fuerza nueva sesión por release
+    boot_id  = Rails.application.config.x.boot_id
     sess_boot = session[:boot_id]
 
     if sess_boot.nil?

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gym Control – Acceso</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= yield :head %>
+  </head>
+  <body class="<%= content_for?(:body_class) ? yield(:body_class) : nil %>">
+    <% if flash.any? %>
+      <div class="flash-stack" style="position:fixed;top:8px;right:8px;z-index:9999;">
+        <% flash.each do |k,v| %>
+          <div class="flash <%= k %>" style="margin-bottom:6px;padding:10px 14px;border-radius:10px;background:#111;color:#fff;opacity:.95;">
+            <%= v %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= yield %>
+    <%= yield :body_end %>
+  </body>
+</html>
