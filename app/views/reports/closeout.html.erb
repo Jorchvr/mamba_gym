@@ -1,23 +1,5 @@
 <%= stylesheet_link_tag "main_panel", media: "all" %>
 
-<!-- Sólo para esta vista: scroll y encabezado sticky -->
-<style>
-  .scroll-y {
-    max-height: 380px;       /* ajusta el alto del área scrolleable */
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable; /* evita salto de layout al aparecer scrollbar */
-  }
-  /* Encabezado fijo por columna (mejor compatibilidad) */
-  .table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: rgba(0,0,0,.15); /* contraste con el body */
-    backdrop-filter: blur(2px);
-  }
-</style>
-
 <div class="header-row">
   <h2 class="title">Corte del Día</h2>
   <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
@@ -26,7 +8,7 @@
 </div>
 
 <div class="grid-2" style="gap:1rem;">
-  <div class="card" style="overflow: visible;">
+  <div class="card">
     <h3 class="card-title">Resumen</h3>
     <div class="kv"><span>Usuario</span><span><%= @user_name %></span></div>
     <div class="kv"><span>Fecha</span><span><%= @date.to_s %></span></div>
@@ -36,7 +18,7 @@
     <div class="kv"><span>Transferencia</span><span><%= number_to_currency(@by_method["transfer"]/100.0, unit: "MXN $", precision: 2) %></span></div>
   </div>
 
-  <div class="card" style="overflow: visible;">
+  <div class="card">
     <h3 class="card-title">Indicadores del día</h3>
     <div class="kv"><span>Nuevos clientes</span><span><%= @new_clients_today %></span></div>
     <div class="kv"><span>Entradas (check-ins)</span><span><%= @checkins_today %></span></div>
@@ -46,13 +28,10 @@
 
 <div class="card" style="margin-top:1rem; overflow: visible;">
   <h3 class="card-title">Movimientos del turno</h3>
-  <!-- ⬇️ Área con scroll -->
-  <div class="scroll-y">
+  <div class="corte-scroll"><!-- ← scroll aquí -->
     <% if @transactions.any? %>
       <table class="table">
-        <thead>
-          <tr><th>Hora</th><th>Detalle</th><th>Método</th><th>Monto</th></tr>
-        </thead>
+        <thead><tr><th>Hora</th><th>Detalle</th><th>Método</th><th>Monto</th></tr></thead>
         <tbody>
           <% @transactions.each do |t| %>
             <tr>
@@ -73,8 +52,7 @@
 <!-- ===== Detalle por producto vendido en el turno ===== -->
 <div class="card" style="margin-top:1rem; overflow: visible;">
   <h3 class="card-title">Productos vendidos (detalle del turno)</h3>
-  <!-- ⬇️ Área con scroll -->
-  <div class="scroll-y">
+  <div class="corte-scroll"><!-- ← scroll aquí -->
     <% if @sold_by_product.present? && @sold_by_product.any? %>
       <table class="table">
         <thead>
