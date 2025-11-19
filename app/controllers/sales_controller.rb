@@ -1,4 +1,3 @@
-# app/controllers/sales_controller.rb
 class SalesController < ApplicationController
   before_action :authenticate_user!
 
@@ -12,7 +11,9 @@ class SalesController < ApplicationController
       else
         Time.zone.today
       end
-    from, to = @date.beginning_of_day, @date.end_of_day
+
+    from = @date.beginning_of_day
+    to   = @date.end_of_day
 
     # Por defecto filtra por usuario actual
     user_scope_id = current_user.id
@@ -26,8 +27,21 @@ class SalesController < ApplicationController
       end
     end
 
-    sales_scope      = defined?(Sale)      ? Sale.where(occurred_at: from..to)      : Sale.none
-    store_sales_scope= defined?(StoreSale) ? StoreSale.where(occurred_at: from..to) : StoreSale.none
+    # Ventas de membresía (Sale)
+    sales_scope =
+      if defined?(Sale)
+        Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to)
+      else
+        Sale.none
+      end
+
+    # Ventas de tienda (StoreSale), incluyendo las de Griselle
+    store_sales_scope =
+      if defined?(StoreSale)
+        StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", from, to)
+      else
+        StoreSale.none
+      end
 
     if user_scope_id
       sales_scope       = sales_scope.where(user_id: user_scope_id)
@@ -68,7 +82,6 @@ class SalesController < ApplicationController
     @selected_user = user_scope_id ? User.find_by(id: user_scope_id) : nil
   end
 
-  # Si tienes show, lo dejas como estaba
   def show
     # ...
   end
