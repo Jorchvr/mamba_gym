@@ -156,21 +156,20 @@ class SalesController < ApplicationController
     reason = params[:reason].to_s.strip
 
     StoreSale.transaction do
-      extra_metadata =
-        if original.respond_to?(:metadata)
-          (original.metadata || {}).merge(reversal_of_id: original.id, reason: reason)
-        else
-          { reversal_of_id: original.id, reason: reason }
-        end
-
-      # Venta negativa principal
-      reversal = StoreSale.create!(
+      # Atributos básicos de la venta negativa
+      attrs = {
         user:           current_user,
         payment_method: original.payment_method,
         total_cents:    -original.total_cents.to_i,
-        occurred_at:    Time.current,
-        metadata:       extra_metadata
-      )
+        occurred_at:    Time.current
+      }
+
+      # Solo si ALGÚN DÍA agregas columna metadata en store_sales
+      if StoreSale.column_names.include?("metadata")
+        attrs[:metadata] = { reversal_of_id: original.id, reason: reason }
+      end
+
+      reversal = StoreSale.create!(attrs)
 
       # Items espejo en negativo
       original.store_sale_items.find_each do |item|
