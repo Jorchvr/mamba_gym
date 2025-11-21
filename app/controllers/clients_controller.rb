@@ -7,28 +7,44 @@ class ClientsController < ApplicationController
   def index
     @q      = params[:q].to_s.strip
     @filter = params[:filter].presence || "name"
+    @status = params[:status].to_s      # "" o "active"
 
-    scope = ::Client.order(:id)
+    base_scope = ::Client.order(:id)
+    scope      = base_scope
 
+    # 🔎 Búsqueda por número o nombre
     if @q.present?
       case @filter
       when "id"
-        # Si es número exacto, busca por ID
         if @q.to_i.to_s == @q
           scope = scope.where(id: @q.to_i)
         else
-          # Si escriben algo raro, permitimos buscar por coincidencia en texto de id
           scope = scope.where("CAST(id AS TEXT) LIKE ?", "%#{@q}%")
         end
-      else # "name" o cualquier otro -> nombre
+      else
         query = "%#{@q.downcase}%"
-        # 🔥 Simplificamos: solo LOWER(name), así no depende de UNACCENT en la BD
-        scope = scope.where("LOWER(name) LIKE ?", query)
+        begin
+          scope = scope.where("UNACCENT(LOWER(name)) LIKE UNACCENT(?)", query)
+        rescue
+          scope = scope.where("LOWER(name) LIKE ?", query)
+        end
       end
     end
 
-    # Todos los clientes, el scroll lo hace la vista
+    # ✅ Filtro: solo clientes activos
+    # Activo = tiene next_payment_on y es hoy o futuro
+    if @status == "active"
+      scope = scope.where.not(next_payment_on: nil)
+                   .where(::Client.arel_table[:next_payment_on].gteq(Date.current))
+    end
+
+    # Lista mostrada en la tabla
     @clients = scope
+
+    # Contador global de activos (independiente de filtros de búsqueda)
+    active_scope = base_scope.where.not(next_payment_on: nil)
+                             .where(::Client.arel_table[:next_payment_on].gteq(Date.current))
+    @active_clients_count = active_scope.count
   end
 
   # GET /clients/:id
@@ -55,20 +71,16 @@ class ClientsController < ApplicationController
     amount_cents = nil
 
     ActiveRecord::Base.transaction do
-      # Define enrolled_on y next_payment_on según el tipo de membresía
       @client.set_enrollment_dates!(from: Date.current)
       @client.save!
 
-      # Precio enviado (opcional) o precio por defecto
       sent_price_cents = parse_money_to_cents(params[:registration_price_mxn])
       default_price    = default_registration_price_cents(plan)
       amount_cents     = (sent_price_cents && sent_price_cents > 0) ? sent_price_cents : default_price
 
-      # Método de pago (no es campo de Client)
       pm = params.dig(:client, :payment_method).presence || params[:payment_method].presence
       payment_method = %w[cash transfer].include?(pm) ? pm : "cash"
 
-      # Registrar venta de inscripción
       Sale.create!(
         user:            current_user,
         client:          @client,
@@ -110,7 +122,6 @@ class ClientsController < ApplicationController
   end
 
   def client_params
-    # No incluimos :payment_method porque es solo para Sale
     params.require(:client).permit(
       :name,
       :age,
@@ -122,18 +133,16 @@ class ClientsController < ApplicationController
     )
   end
 
-  # Precio por defecto (centavos) según el plan
   def default_registration_price_cents(plan)
     return nil if plan.blank?
 
     if defined?(Client) && Client.const_defined?(:PRICES)
-      Client::PRICES[plan.to_s] # "day" / "week" / "month"
+      Client::PRICES[plan.to_s]
     else
-      # Fallback si no existe la constante
       {
-        "day"   => 3_000,   # $30
-        "week"  => 7_000,   # $70
-        "month" => 20_000   # $200
+        "day"   => 3_000,
+        "week"  => 7_000,
+        "month" => 20_000
       }[plan.to_s]
     end
   end
@@ -146,10 +155,8 @@ class ClientsController < ApplicationController
     s = s.gsub(/[^\d.,-]/, "")
 
     if s.include?(",") && s.include?(".")
-      # Asumimos que la coma es separador de miles -> la quitamos
       s = s.delete(",")
     else
-      # Reemplaza coma por punto si es decimal
       s = s.tr(",", ".")
     end
 
