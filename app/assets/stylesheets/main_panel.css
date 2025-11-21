@@ -996,3 +996,180 @@ body[class*="fixed"], body.fixed {
   cursor: default;
   opacity: 0.25;
 }
+/* ===========================
+   Nombres de clientes (lista)
+   =========================== */
+.client-name-link {
+  font-size: 1.02rem;              /* un poquito más grande */
+  font-weight: 600;
+  color: #f9fafb;                  /* blanco suave */
+  text-decoration: none;
+  letter-spacing: 0.03em;
+  position: relative;
+  display: inline-block;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(248, 113, 113, 0.35); /* glow suave rojo */
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.client-name-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.18rem;
+  width: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f97373, #fb7185, #facc15);
+  opacity: 0.9;
+  transition: width 0.25s ease-out;
+}
+
+.client-name-link:hover {
+  color: #fee2e2;                  /* un blanco más cálido al hover */
+  transform: translateY(-1px);     /* pequeño levantamiento */
+}
+
+.client-name-link:hover::after {
+  width: 100%;                     /* subrayado animado */
+}
+/* ==========================
+   Sección de clientes
+   ========================== */
+
+.clients-card {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.85);
+  padding: 1.5rem 1.9rem;
+  background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.12), transparent 55%),
+              radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.10), transparent 55%),
+              var(--panel-bg, #020617);
+}
+
+.clients-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.clients-subtitle {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  margin-top: 0.15rem;
+}
+
+.clients-stat-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  font-size: 0.78rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #e5e7eb;
+}
+
+.stat-pill--ok {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.27), rgba(15, 23, 42, 0.95));
+}
+
+/* Filtros de la parte superior */
+.clients-filters-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.6fr) auto auto;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .clients-filters-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.clients-filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.clients-filter-block--grow {
+  min-width: 220px;
+}
+
+.clients-filter-block--button {
+  align-items: flex-end;
+}
+
+.label-small {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Tabla de clientes */
+
+.nice-table--clients thead th {
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.nice-table--clients tbody tr.client-row {
+  border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+  transition:
+    background 0.16s ease-out,
+    transform 0.12s ease-out,
+    box-shadow 0.16s ease-out,
+    border-color 0.16s ease-out;
+}
+
+.nice-table--clients tbody tr.client-row:hover {
+  background: radial-gradient(circle at left, rgba(248, 113, 113, 0.18), transparent 60%);
+  border-color: rgba(248, 113, 113, 0.8);
+  transform: translateX(2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.9);
+}
+
+.nice-table--clients tbody td {
+  padding: 0.55rem 0.6rem;
+  vertical-align: middle;
+}
+
+/* Celda de nombre + badge */
+.name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.client-meta-mini {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+/* Ya tenías .client-name-link, lo respetamos y se ve mejor con estas filas */
+.actions-stack {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}

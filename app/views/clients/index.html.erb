@@ -1,64 +1,118 @@
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
-<div class="card">
-  <div class="header-row" style="justify-content: space-between; align-items: center;">
-    <h2 class="title">Clientes</h2>
+<div class="card clients-card">
+  <div class="header-row clients-header" style="align-items:flex-start;">
+    <div>
+      <h2 class="title">Clientes</h2>
+
+
+      <div class="clients-stat-row">
+        <span class="stat-pill">
+          Registrados: <strong><%= @clients.size %></strong>
+        </span>
+        <span class="stat-pill stat-pill--ok">
+          Activos: <strong><%= @active_clients_count %></strong>
+        </span>
+      </div>
+    </div>
+
     <div class="btn-row">
       <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
       <%= link_to "Registrar Cliente", new_client_path, class: "btn btn-primary" %>
     </div>
   </div>
 
-  <!-- 🔎 Buscador -->
+  <!-- 🔎 Buscador + filtros -->
   <%= form_with url: clients_path, method: :get, local: true do %>
-    <div class="search-row" style="display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.75rem;">
-      <%= select_tag :filter,
-        options_for_select([["Número", "id"], ["Nombre", "name"]], @filter),
-        class: "form-select" %>
+    <div class="clients-filters-row">
+      <div class="clients-filter-block">
+        <label class="label-small">Buscar por:</label>
+        <%= select_tag :filter,
+          options_for_select([["Número", "id"], ["Nombre", "name"]], params[:filter].presence || "name"),
+          class: "form-select" %>
+      </div>
 
-      <%= text_field_tag :q, @q,
-        placeholder: "Buscar por número o nombre…",
-        class: "form-input",
-        style: "min-width:260px; flex:1 1 260px;" %>
+      <div class="clients-filter-block clients-filter-block--grow">
+        <label class="label-small">Texto de búsqueda</label>
+        <%= text_field_tag :q, params[:q],
+          placeholder: "Escribe número de cliente o nombre…",
+          class: "form-input",
+          style: "width:100%;" %>
+      </div>
 
-      <%= submit_tag "Buscar", class: "btn btn-accent" %>
+      <div class="clients-filter-block">
+        <label class="label-small">Estado</label>
+        <%= select_tag :status,
+          options_for_select(
+            [
+              ["Todos", ""],
+              ["Solo activos", "active"]
+            ],
+            params[:status].presence
+          ),
+          class: "form-select" %>
+      </div>
+
+      <div class="clients-filter-block clients-filter-block--button">
+        <label class="label-small">&nbsp;</label>
+        <%= submit_tag "Buscar", class: "btn btn-accent btn-block" %>
+      </div>
     </div>
   <% end %>
 
   <!-- Tabla con scroll -->
   <div class="table-wrap clients-scroll">
-    <table class="nice-table" style="width:100%; border-collapse:collapse;">
+    <table class="nice-table nice-table--clients" style="width:100%; border-collapse:collapse;">
       <thead>
         <tr>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">#</th>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Nombre</th>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Membresía</th>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Inscripción</th>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Próximo pago</th>
-          <th style="text-align:left; padding:.5rem; border-bottom:1px solid var(--border);">Acciones</th>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Membresía</th>
+          <th>Inscripción</th>
+          <th>Próximo pago</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         <% @clients.each do |c| %>
-          <tr style="border-top:1px solid var(--border);">
-            <td class="muted" style="padding:.5rem;"><%= c.id %></td>
-            <td style="padding:.5rem;">
-              <div class="name-cell" style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
-                <%= link_to (c.name.presence || "(Sin nombre)"), client_path(c), class: "link-strong" %>
+          <tr class="client-row">
+            <td class="muted">
+              <span class="mono">#<%= c.id %></span>
+            </td>
+
+            <td>
+              <div class="name-cell">
+                <%= link_to (c.name.presence || "(Sin nombre)"),
+                            client_path(c),
+                            class: "client-name-link" %>
+
                 <% if c.next_payment_on.present? && c.next_payment_on < Date.current %>
                   <span class="badge badge-danger">Vencida</span>
-                <% elsif c.next_payment_on.present? %>
+                <% elsif c.next_payment_on.present? && c.next_payment_on >= Date.current %>
                   <span class="badge badge-ok">Activa</span>
                 <% else %>
                   <span class="badge">Sin plan</span>
                 <% end %>
               </div>
+              <div class="client-meta-mini">
+                <span class="mono">Membresía: <%= c.membership_type&.humanize || "-" %></span>
+              </div>
             </td>
-            <td style="padding:.5rem;"><span class="mono"><%= c.membership_type&.humanize || "-" %></span></td>
-            <td style="padding:.5rem;"><span class="mono"><%= c.enrolled_on || "-" %></span></td>
-            <td style="padding:.5rem;"><span class="mono"><%= c.next_payment_on || "-" %></span></td>
-            <td style="padding:.5rem;">
-              <div class="actions-stack" style="display:flex; gap:.4rem; flex-wrap:wrap;">
+
+            <td>
+              <span class="mono"><%= c.membership_type&.humanize || "-" %></span>
+            </td>
+
+            <td>
+              <span class="mono"><%= c.enrolled_on || "-" %></span>
+            </td>
+
+            <td>
+              <span class="mono"><%= c.next_payment_on || "-" %></span>
+            </td>
+
+            <td>
+              <div class="actions-stack">
                 <%= link_to "Ver", client_path(c), class: "btn btn-sm" %>
                 <%= link_to "Editar", edit_client_path(c), class: "btn btn-sm btn-primary" %>
               </div>
