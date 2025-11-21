@@ -1,9 +1,9 @@
 # app/controllers/products_controller.rb
 class ProductsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_product, only: [:show, :edit, :update, :destroy]
+  before_action :set_product, only: [ :show, :edit, :update, :destroy ]
   # Solo superusuarios pueden crear/editar/borrar; todos pueden ver el listado y el show
-  before_action :require_superuser!, except: [:index, :show]
+  before_action :require_superuser!, except: [ :index, :show ]
 
   # GET /products
   def index
@@ -62,8 +62,23 @@ class ProductsController < ApplicationController
 
   # DELETE /products/:id
   def destroy
-    @product.destroy
-    redirect_to products_path, notice: "Producto eliminado."
+    if @product.destroy
+      redirect_to products_path, notice: "Producto eliminado correctamente."
+    else
+      # Cuando dependent: :restrict_with_error bloquea
+      if @product.errors.details[:base].any? { |e| e[:error] == :restrict_dependent_destroy }
+        msg = "No puedes eliminar este producto porque tiene movimientos de inventario o ventas registradas."
+      else
+        msg = "No se pudo eliminar el producto: #{@product.errors.full_messages.to_sentence}"
+      end
+
+      redirect_to products_path, alert: msg
+    end
+
+  rescue ActiveRecord::InvalidForeignKey
+    # Respaldo por si el error viene directo de la base
+    redirect_to products_path,
+                alert: "No puedes eliminar este producto porque tiene movimientos de inventario asociados."
   end
 
   private
