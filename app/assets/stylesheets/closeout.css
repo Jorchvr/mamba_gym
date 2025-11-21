@@ -1,0 +1,173 @@
+/* ===== Ticket corte del día ===== */
+
+.ticket-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.ticket {
+  background: #fafafa;
+  color: #111827;
+  width: 340px;
+  max-width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  padding: 1.2rem 1.4rem 1.4rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  position: relative;
+}
+
+/* “Onditas” de la parte superior */
+.ticket-perforation {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background-image: radial-gradient(circle at 10px 10px, #f9fafb 10px, transparent 10px);
+  background-size: 20px 20px;
+}
+
+/* ===== Encabezado ===== */
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.75rem;
+  margin-top: 0.3rem;
+}
+
+.ticket-logo-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  object-fit: contain;
+  background: #111827;
+  padding: 4px;
+}
+
+.ticket-header-text {
+  flex: 1;
+}
+
+.ticket-gym-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.ticket-subtitle {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0.1rem 0 0;
+}
+
+.ticket-date {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0.15rem 0 0;
+}
+
+/* ===== Secciones ===== */
+
+.ticket-section {
+  margin: 0.45rem 0;
+}
+
+.ticket-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  margin: 0.15rem 0;
+}
+
+.ticket-row-small {
+  font-size: 0.8rem;
+}
+
+.ticket-row-strong {
+  font-weight: 700;
+}
+
+.ticket-row-total {
+  margin-top: 0.35rem;
+}
+
+.ticket-row-negative {
+  color: #b91c1c;
+}
+
+.ticket-label {
+  font-weight: 600;
+}
+
+.ticket-value {
+  font-weight: 500;
+}
+
+/* Separadores */
+.ticket-divider {
+  border-bottom: 1px solid #e5e7eb;
+  margin: 0.4rem 0;
+}
+
+.ticket-divider.dotted {
+  border-bottom-style: dotted;
+}
+
+/* Notas pequeñas */
+.ticket-note {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+}
+
+/* ===== Footer y “código de barras” ===== */
+
+.ticket-footer {
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+.ticket-thanks {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 0.15rem;
+}
+
+.ticket-footer-text {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0 0 0.4rem;
+}
+
+/* Fake barcode */
+.ticket-barcode {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 0.35rem 0;
+}
+
+.barcode-line {
+  display: inline-block;
+  width: 2px;
+  height: 26px;
+  background: #111827;
+}
+
+.barcode-line.thick {
+  width: 3px;
+}

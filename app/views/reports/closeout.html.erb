@@ -1,81 +1,153 @@
-<%= stylesheet_link_tag "main_panel", media: "all" %>
+<%= stylesheet_link_tag "closeout", media: "all", "data-turbo-track": "reload" %>
 
-<div class="header-row">
-  <h2 class="title">Corte del Día</h2>
-  <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
-    <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
-  </div>
-</div>
+<div class="ticket-wrapper">
+  <div class="ticket">
 
-<div class="grid-2" style="gap:1rem;">
-  <div class="card">
-    <h3 class="card-title">Resumen</h3>
-    <div class="kv"><span>Usuario</span><span><%= @user_name %></span></div>
-    <div class="kv"><span>Fecha</span><span><%= @date.to_s %></span></div>
-    <div class="kv"><span>Operaciones</span><span><%= @ops_count %></span></div>
-    <div class="kv"><span>Total</span><span><%= number_to_currency(@total_cents/100.0, unit: "MXN $", precision: 2) %></span></div>
-    <div class="kv"><span>Efectivo</span><span><%= number_to_currency(@by_method["cash"]/100.0, unit: "MXN $", precision: 2) %></span></div>
-    <div class="kv"><span>Transferencia</span><span><%= number_to_currency(@by_method["transfer"]/100.0, unit: "MXN $", precision: 2) %></span></div>
-  </div>
+    <!-- “Onditas” arriba del ticket -->
+    <div class="ticket-perforation"></div>
 
-  <div class="card">
-    <h3 class="card-title">Indicadores del día</h3>
-    <div class="kv"><span>Nuevos clientes</span><span><%= @new_clients_today %></span></div>
-    <div class="kv"><span>Entradas (check-ins)</span><span><%= @checkins_today %></span></div>
-    <div class="kv"><span>Stock total actual</span><span><%= @stock_total_units %> uds</span></div>
-  </div>
-</div>
+    <!-- Encabezado -->
+    <div class="ticket-header">
+      <div class="ticket-logo">
+        <%= image_tag "logo.png", alt: "Logo", class: "ticket-logo-img" %>
+      </div>
+      <div class="ticket-header-text">
+        <h1 class="ticket-gym-name">PowerGym</h1>
+        <p class="ticket-subtitle">Corte del día</p>
+        <p class="ticket-date">
+          <%= (@date || Time.current.to_date).strftime("%Y-%m-%d") %>
+          ·
+          <%= Time.current.strftime("%H:%M") %>
+        </p>
+      </div>
+    </div>
 
-<div class="card" style="margin-top:1rem; overflow: visible;">
-  <h3 class="card-title">Movimientos del turno</h3>
-  <div class="corte-scroll"><!-- ← scroll aquí -->
-    <% if @transactions.any? %>
-      <table class="table">
-        <thead><tr><th>Hora</th><th>Detalle</th><th>Método</th><th>Monto</th></tr></thead>
-        <tbody>
-          <% @transactions.each do |t| %>
-            <tr>
-              <td><%= t[:at]&.in_time_zone&.strftime("%H:%M") %></td>
-              <td><%= t[:label] %></td>
-              <td><%= t[:payment_method] %></td>
-              <td><%= number_to_currency(t[:amount_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <p class="text-muted">Sin movimientos en el turno.</p>
+    <div class="ticket-divider dotted"></div>
+
+    <!-- Usuario -->
+    <div class="ticket-section">
+      <div class="ticket-row">
+        <span class="ticket-label">Usuario</span>
+        <span class="ticket-value"><%= current_user&.name || "-" %></span>
+      </div>
+    </div>
+
+    <div class="ticket-divider dotted"></div>
+
+    <!-- Resumen general -->
+    <div class="ticket-section">
+      <h2 class="ticket-section-title">Resumen general</h2>
+
+      <div class="ticket-row">
+        <span>Operaciones totales</span>
+        <span><%= (@operations_count || @today_sales_count || 0).to_i %></span>
+      </div>
+
+      <div class="ticket-row">
+        <span>Ventas de membresía</span>
+        <span>
+          MXN $<%= sprintf("%.2f", (@membership_total_cents || 0).to_i / 100.0) %>
+        </span>
+      </div>
+
+      <div class="ticket-row">
+        <span>Ventas de tienda</span>
+        <span>
+          MXN $<%= sprintf("%.2f", (@store_total_cents || 0).to_i / 100.0) %>
+        </span>
+      </div>
+
+      <% if defined?(@negative_total_cents) && @negative_total_cents.to_i != 0 %>
+        <div class="ticket-row ticket-row-negative">
+          <span>Ajustes / ventas negativas</span>
+          <span>
+            MXN $<%= sprintf("%.2f", @negative_total_cents.to_i / 100.0) %>
+          </span>
+        </div>
+      <% end %>
+
+      <div class="ticket-row ticket-row-strong ticket-row-total">
+        <span>Total del día</span>
+        <span>
+          MXN $<%= sprintf("%.2f", (@money_total_cents || @today_total_cents || 0).to_i / 100.0) %>
+        </span>
+      </div>
+    </div>
+
+    <div class="ticket-divider dotted"></div>
+
+    <!-- Métodos de pago -->
+    <div class="ticket-section">
+      <h2 class="ticket-section-title">Métodos de pago</h2>
+
+      <% money_by_method = @money_by_method || {} %>
+      <div class="ticket-row">
+        <span>Efectivo</span>
+        <span>MXN $<%= sprintf("%.2f", money_by_method["cash"].to_i / 100.0) %></span>
+      </div>
+      <div class="ticket-row">
+        <span>Transferencia</span>
+        <span>MXN $<%= sprintf("%.2f", money_by_method["transfer"].to_i / 100.0) %></span>
+      </div>
+      <% if money_by_method.except("cash","transfer").any? %>
+        <% money_by_method.except("cash","transfer").each do |method, cents| %>
+          <div class="ticket-row">
+            <span><%= method.to_s.humanize %></span>
+            <span>MXN $<%= sprintf("%.2f", cents.to_i / 100.0) %></span>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="ticket-divider dotted"></div>
+
+    <!-- Actividad de clientes -->
+    <div class="ticket-section">
+      <h2 class="ticket-section-title">Actividad de clientes</h2>
+
+      <div class="ticket-row">
+        <span>Entradas (check-ins)</span>
+        <span><%= (@check_ins_count || (@check_ins&.size) || @today_checkins || 0).to_i %></span>
+      </div>
+
+      <div class="ticket-row">
+        <span>Nuevos clientes</span>
+        <span><%= (@new_clients_count || (@new_clients&.size) || 0).to_i %></span>
+      </div>
+    </div>
+
+    <% if defined?(@sold_by_product) && @sold_by_product.present? %>
+      <div class="ticket-divider dotted"></div>
+
+      <!-- Resumen por producto -->
+      <div class="ticket-section">
+        <h2 class="ticket-section-title">Productos vendidos</h2>
+        <% @sold_by_product.first(5).each do |row| %>
+          <div class="ticket-row ticket-row-small">
+            <span><%= row[:product_name] %> x<%= row[:sold_qty] %></span>
+            <span>MXN $<%= sprintf("%.2f", row[:revenue_cents].to_i / 100.0) %></span>
+          </div>
+        <% end %>
+        <% if @sold_by_product.size > 5 %>
+          <p class="ticket-note">… y <%= @sold_by_product.size - 5 %> productos más</p>
+        <% end %>
+      </div>
     <% end %>
-  </div>
-</div>
 
-<!-- ===== Detalle por producto vendido en el turno ===== -->
-<div class="card" style="margin-top:1rem; overflow: visible;">
-  <h3 class="card-title">Productos vendidos (detalle del turno)</h3>
-  <div class="corte-scroll"><!-- ← scroll aquí -->
-    <% if @sold_by_product.present? && @sold_by_product.any? %>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th style="text-align:right;">Vendido (uds)</th>
-            <th style="text-align:right;">Ingresos</th>
-            <th style="text-align:right;">Stock restante</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @sold_by_product.each do |row| %>
-            <tr>
-              <td><%= row[:product_name] %></td>
-              <td style="text-align:right;"><%= row[:sold_qty] %></td>
-              <td style="text-align:right;"><%= number_to_currency(row[:revenue_cents].to_i / 100.0, unit: "MXN $", precision: 2) %></td>
-              <td style="text-align:right;"><%= row[:remaining_stock] %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <p class="text-muted">No se vendieron productos en el turno.</p>
-    <% end %>
+    <div class="ticket-divider dotted"></div>
+
+    <!-- Footer y “código de barras” -->
+    <div class="ticket-footer">
+      <p class="ticket-thanks">¡Gracias por tu trabajo hoy! 💪</p>
+      <p class="ticket-footer-text">
+        Corte generado el <%= Time.current.strftime("%Y-%m-%d %H:%M") %>
+      </p>
+
+      <div class="ticket-barcode">
+        <% 40.times do |i| %>
+          <span class="barcode-line <%= 'thick' if i % 5 == 0 %>"></span>
+        <% end %>
+      </div>
+    </div>
   </div>
 </div>
