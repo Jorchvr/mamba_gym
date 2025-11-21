@@ -13,7 +13,13 @@ Rails.application.routes.draw do
   resources :clients
 
   # ================== Ventas de membresías (registro/consulta) ==================
-  resources :sales, only: [ :index, :show ]
+  resources :sales, only: [ :index, :show ] do
+    collection do
+      get  :adjustments           # pantalla protegida con código
+      post :unlock_adjustments    # POST para validar código
+      post :reverse_transaction   # crea venta negativa
+    end
+  end
 
   # ================== Productos (Backoffice CRUD) ==================
   resources :products

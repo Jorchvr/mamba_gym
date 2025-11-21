@@ -1,0 +1,91 @@
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="header-row" style="margin-bottom:.75rem;">
+  <h2 class="title">Ajustes / Ventas negativas</h2>
+  <%= link_to "Volver a ventas", sales_path, class: "btn" %>
+</div>
+
+<% if flash[:alert].present? %>
+  <div class="flash flash--alert"><%= flash[:alert] %></div>
+<% end %>
+<% if flash[:notice].present? %>
+  <div class="flash flash--notice"><%= flash[:notice] %></div>
+<% end %>
+
+<% if @needs_unlock %>
+  <!-- Paso 1: pedir código de seguridad -->
+  <div class="card">
+    <h3 class="card-title mb-2">Código de seguridad</h3>
+    <p class="text-muted">Ingresa el código para acceder a los ajustes del día.</p>
+
+    <%= form_with url: unlock_adjustments_sales_path, method: :post, local: true do |f| %>
+      <div class="form-row">
+        <label class="label">Código</label>
+        <%= f.password_field :security_code, class: "form-input form-input--xl", autofocus: true %>
+      </div>
+      <div class="mt-4">
+        <%= f.submit "Desbloquear", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+<% else %>
+  <!-- Paso 2: listado de ventas del día, con botón de venta negativa -->
+  <div class="card">
+    <h3 class="card-title mb-2">
+      Ventas de membresía del día
+      <small style="font-weight:normal; opacity:.8;">(<%= @date.to_s %>)</small>
+    </h3>
+
+    <% if @sales.blank? %>
+      <p class="text-muted">No hay ventas de membresía para ajustar.</p>
+    <% else %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Membresía</th>
+            <th>Monto</th>
+            <th>Método</th>
+            <th>Usuario</th>
+            <th>Ajuste</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sales.each do |s| %>
+            <% ts = (s.occurred_at || s.created_at)&.in_time_zone&.strftime("%H:%M") %>
+            <tr>
+              <td><%= ts %></td>
+              <td>#<%= s.id %></td>
+              <td><%= s.client&.name || "-" %></td>
+              <td><%= s.membership_type || "-" %></td>
+              <td>$<%= "%.2f" % (s.amount_cents.to_i / 100.0) %></td>
+              <td><%= s.payment_method || "-" %></td>
+              <td><%= s.user&.name || s.user&.email %></td>
+              <td>
+                <% if s.amount_cents.to_i > 0 %>
+                  <%= form_with url: reverse_transaction_sales_path, method: :post, local: true do |f| %>
+                    <%= hidden_field_tag :sale_id, s.id %>
+                    <div style="display:flex; flex-direction:column; gap:.25rem;">
+                      <%= text_field_tag :reason, nil,
+                            placeholder: "Motivo (opcional)",
+                            class: "form-input",
+                            style: "max-width:180px;" %>
+                      <%= f.submit "Venta negativa",
+                            class: "btn btn-danger btn-sm",
+                            data: { turbo_confirm: "¿Seguro que quieres crear una venta negativa que anule esta venta?" } %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted">Ya es negativa</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+<% end %>

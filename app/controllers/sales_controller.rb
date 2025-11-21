@@ -1,3 +1,4 @@
+# app/controllers/sales_controller.rb
 class SalesController < ApplicationController
   before_action :authenticate_user!
 
@@ -35,7 +36,7 @@ class SalesController < ApplicationController
         Sale.none
       end
 
-    # Ventas de tienda (StoreSale), incluyendo las de Griselle
+    # Ventas de tienda (StoreSale)
     store_sales_scope =
       if defined?(StoreSale)
         StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", from, to)
@@ -84,6 +85,88 @@ class SalesController < ApplicationController
 
   def show
     # ...
+  end
+
+  # ==========================
+  # SECCIÓN PROTEGIDA: AJUSTES / VENTAS NEGATIVAS
+  # ==========================
+
+  # GET /sales/adjustments
+  # 1) Si no está desbloqueado, muestra formulario de código.
+  # 2) Si ya está desbloqueado, muestra ventas del día del usuario + botón de venta negativa.
+  def adjustments
+    @date = Time.zone.today
+    @from = @date.beginning_of_day
+    @to   = @date.end_of_day
+
+    unless session[:sales_adjustments_unlocked]
+      # Solo mostrar el formulario de código
+      @needs_unlock = true
+      return
+    end
+
+    # Una vez desbloqueado: listamos SOLO ventas de membresía (Sale)
+    scope = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", @from, @to)
+
+    # Si no es superusuario, solo ve sus propias ventas
+    scope = scope.where(user_id: current_user.id) unless superuser?
+
+    @sales = scope.includes(:user, :client).order("COALESCE(occurred_at, created_at) ASC")
+  end
+
+  # POST /sales/unlock_adjustments
+  def unlock_adjustments
+    code = params[:security_code].to_s.strip
+    expected = ENV.fetch("NEGATIVE_SALE_CODE", "8421") # puedes cambiar el default
+
+    if ActiveSupport::SecurityUtils.secure_compare(code, expected)
+      session[:sales_adjustments_unlocked] = true
+      redirect_to adjustments_sales_path, notice: "Sección de ajustes desbloqueada."
+    else
+      session[:sales_adjustments_unlocked] = false
+      redirect_to adjustments_sales_path, alert: "Código de seguridad incorrecto."
+    end
+  end
+
+  # POST /sales/reverse_transaction
+  # Crea una venta negativa para anular una venta de membresía.
+  def reverse_transaction
+    unless session[:sales_adjustments_unlocked]
+      redirect_to adjustments_sales_path, alert: "Debes ingresar el código de seguridad."
+      return
+    end
+
+    sale_id = params[:sale_id].to_i
+    original = Sale.find_by(id: sale_id)
+
+    unless original
+      redirect_to adjustments_sales_path, alert: "Venta no encontrada."
+      return
+    end
+
+    # Si no es superuser, solo puede reversar ventas propias
+    if !superuser? && original.user_id != current_user.id
+      redirect_to adjustments_sales_path, alert: "No puedes ajustar ventas de otros usuarios."
+      return
+    end
+
+    reason = params[:reason].to_s.strip
+
+    Sale.transaction do
+      Sale.create!(
+        client:          original.client,
+        user:            current_user,
+        membership_type: original.membership_type,
+        payment_method:  original.payment_method,
+        amount_cents:    -original.amount_cents, # 🔴 Venta negativa
+        occurred_at:     Time.current,
+        metadata:        (original.respond_to?(:metadata) ? (original.metadata || {}).merge(reversal_of_id: original.id, reason: reason) : { reversal_of_id: original.id, reason: reason })
+      )
+    end
+
+    redirect_to adjustments_sales_path, notice: "Venta negativa creada para anular la venta ##{original.id}."
+  rescue => e
+    redirect_to adjustments_sales_path, alert: "No se pudo crear la venta negativa: #{e.message}"
   end
 
   private

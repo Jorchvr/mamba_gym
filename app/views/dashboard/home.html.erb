@@ -121,6 +121,7 @@
         <p class="text-muted"><%= @today_sales_count.to_i %> operaciones</p>
 
         <div class="mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <%= link_to "Ajustes / venta negativa", adjustments_sales_path, class: "btn btn-danger" %>
           <%= link_to "Historial (por día)", history_path, class: "btn" %>
           <%= link_to "Corte del día", closeout_path, class: "btn" %>
           <% if is_superuser? %>
