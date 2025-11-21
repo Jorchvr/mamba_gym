@@ -79,8 +79,16 @@
                       <strong>Items:</strong>
                       <ul>
                         <% ss.store_sale_items.each do |it| %>
+                          <% item_name =
+                               if it.respond_to?(:description) && it.description.present?
+                                 it.description
+                               elsif it.product.present?
+                                 it.product.name
+                               else
+                                 "Servicio Griselle"
+                               end %>
                           <li>
-                            <%= it.product&.name %> x<%= it.quantity %> —
+                            <%= item_name %> x<%= it.quantity %> —
                             <%= number_to_currency(it.unit_price_cents.to_i / 100.0, unit: "MXN $", precision: 2) %> (c/u)
                           </li>
                         <% end %>
@@ -163,4 +171,3 @@
     </div>
   </div>
 </div>
-  
