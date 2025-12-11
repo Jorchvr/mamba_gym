@@ -1371,3 +1371,48 @@ body[class*="fixed"], body.fixed {
   height: 18px;
   background: #4b5563;
 }
+/* ===========================
+   🔥 PRODUCT GRID RESPONSIVO
+   =========================== */
+.product-grid {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+
+  /* El truco: columnas auto-adaptables */
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+/* Cuadros individuales */
+.product-square-btn,
+.product-square-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: rgba(var(--card-bg-rgb), 0.45);
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Título del producto */
+.product-square-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: .75rem;
+}
+
+/* Pie del cuadro */
+.product-square-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
