@@ -1528,3 +1528,80 @@ body[class*="fixed"], body.fixed {
     grid-template-rows: auto;
   }
 }
+/* ===================== TIENDA – GRID DE PRODUCTOS ===================== */
+
+.product-grid {
+  display: grid;
+  grid-template-rows: repeat(2, 1fr); /* SIEMPRE 2 filas */
+  grid-auto-flow: column;             /* Se expande a lo ancho */
+  grid-auto-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+  overflow-x: auto;                   /* <–– evita que brinque a 3 filas y permite scroll */
+  padding-bottom: 0.5rem;
+}
+
+/* Cada cuadro de producto */
+.product-square-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  padding: 1.2rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+
+  transition: transform .15s ease, filter .15s ease;
+  min-width: 150px; /* <–– evita que se colapsen demasiado */
+  min-height: 140px;
+}
+
+.product-square-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+/* Nombre */
+.product-square-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Precio / Stock */
+.product-square-footer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* ========== AUTO-SCALING (si hay MUCHOS productos) ========== */
+
+@media (max-width: 1700px) {
+  .product-square-btn { padding: 1rem; font-size: 0.95rem; min-width: 140px; min-height: 130px; }
+  .product-square-name { font-size: 0.95rem; }
+}
+
+@media (max-width: 1500px) {
+  .product-square-btn { padding: 0.9rem; font-size: 0.88rem; min-width: 130px; min-height: 120px; }
+  .product-square-name { font-size: 0.88rem; }
+}
+
+@media (max-width: 1300px) {
+  .product-square-btn { padding: 0.8rem; font-size: 0.82rem; min-width: 120px; min-height: 110px; }
+  .product-square-name { font-size: 0.82rem; }
+}
+
+@media (max-width: 1100px) {
+  .product-square-btn { padding: 0.75rem; font-size: 0.78rem; min-width: 110px; min-height: 100px; }
+  .product-square-name { font-size: 0.78rem; }
+}
