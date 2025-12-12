@@ -23,14 +23,9 @@ class ClientsController < ApplicationController
         end
       else
         query = "%#{@q.downcase}%"
-        # CORRECCIÓN PARA EL ERROR 500: Se añade la captura de excepción 'e' y un log
-        # para que el sistema no falle y caiga a la búsqueda simple si UNACCENT falla.
-        begin
-          scope = scope.where("UNACCENT(LOWER(name)) LIKE UNACCENT(?)", query)
-        rescue => e
-          Rails.logger.warn "Client search UNACCENT failed. Falling back to simple search: #{e.message}"
-          scope = scope.where("LOWER(name) LIKE ?", query)
-        end
+        # MODIFICACIÓN DEFINITIVA: Se elimina el bloque begin/rescue y la función UNACCENT
+        # para evitar el error PG::UndefinedFunction que causaba el 500.
+        scope = scope.where("LOWER(name) LIKE ?", query)
       end
     end
 
