@@ -164,8 +164,8 @@
           <p class="text-muted" style="margin-bottom:.75rem;">Toca un cuadro para agregar al carrito.</p>
 
           <div class="product-grid">
-            <% squares = 10 %>
-            <% products_for_grid = @products.first(squares) %>
+
+            <% products_for_grid = @products %> <!-- 🔥 YA NO LIMITA A 10 -->
 
             <% products_for_grid.each do |p| %>
               <%= button_to add_cart_path,
@@ -187,11 +187,6 @@
               <% end %>
             <% end %>
 
-            <% if products_for_grid.size < squares %>
-              <% (squares - products_for_grid.size).times do %>
-                <div class="product-square-empty"></div>
-              <% end %>
-            <% end %>
           </div>
         </div>
       </div>

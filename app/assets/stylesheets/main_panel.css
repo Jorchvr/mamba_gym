@@ -1605,3 +1605,78 @@ body[class*="fixed"], body.fixed {
   .product-square-btn { padding: 0.75rem; font-size: 0.78rem; min-width: 110px; min-height: 100px; }
   .product-square-name { font-size: 0.78rem; }
 }
+/* ======= GRID DE PRODUCTOS – SIEMPRE 2 FILAS, AUTO-SCALE ======= */
+.product-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  grid-template-rows: repeat(2, 1fr); /* SIEMPRE 2 FILAS */
+  gap: 1rem;
+  width: 100%;
+  height: 100%; /* Hace que la grid se expanda correctamente */
+}
+
+/* Cuadros individuales */
+.product-square-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  padding: 1.2rem;
+  text-align: center;
+
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.product-square-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.product-square-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+/* Footer precio + stock */
+.product-square-footer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* ========= AUTO-ESCALADO CUANDO HAY MUCHOS PRODUCTOS ========= */
+@media (max-width: 1800px) {
+  .product-square-btn { padding: 1rem; font-size: 0.95rem; }
+  .product-square-name { font-size: 0.95rem; }
+}
+
+@media (max-width: 1600px) {
+  .product-square-btn { padding: 0.85rem; font-size: 0.9rem; }
+  .product-square-name { font-size: 0.9rem; }
+}
+
+@media (max-width: 1400px) {
+  .product-square-btn { padding: 0.75rem; font-size: 0.85rem; }
+  .product-square-name { font-size: 0.85rem; }
+}
+
+@media (max-width: 1200px) {
+  .product-grid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-rows: auto;
+  }
+}
