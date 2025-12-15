@@ -1,72 +1,141 @@
-# /mnt/c/Users/ramoo/OneDrive/Documents/gym_control/script/import_clients_from_excel.rb
-require "roo"
+# frozen_string_literal: true
 
-# ==========================================================
-# 🚨 CONFIGURACIÓN NECESARIA
-# ==========================================================
-# Asigna el ID del usuario existente al que se asociarán todos los clientes importados.
-# **DEBES ASEGURARTE DE QUE ESTE ID EXISTA EN TU TABLA DE 'users'**
+require "spreadsheet"
+require "date"
+
+# --- CONFIGURACIÓN PARA PRODUCCIÓN (RENDER) ---
+# Busca el archivo dentro de la carpeta 'import_files' en la raíz del proyecto.
+EXCEL_FILE_PATH = Rails.root.join("import_files", "clientes_nuevo.xls").to_s
+
 DEFAULT_USER_ID = 1
-# ==========================================================
 
-file_path = "C:/Users/ramoo/OneDrive/Documents/clientes/clientes_nuevo.xlsx"
+# Nombres EXACTOS de los encabezados en tu Excel
+HEADER_CLIENTE = "Cliente"           # Columna del Nombre
+HEADER_ID_PAGO = "id_Pago"           # Columna del Plan
+HEADER_FECHA   = "FechaInscripcion"  # Columna de la Fecha
+# ---------------------
 
-unless File.exist?(file_path)
-  puts "❌ No se encontró el archivo: #{file_path}"
-  exit
-end
+# --- Funciones de Ayuda ---
 
-puts "✅ Clientes importados se asignarán al User ID: #{DEFAULT_USER_ID}"
-puts "📂 Abriendo archivo Excel..."
-
-xlsx = Roo::Excelx.new(file_path)
-sheet = xlsx.sheet(0)
-
-headers = sheet.row(1)
-
-idx = {
-  id_cliente: headers.index("IdCliente"),
-  nombre: headers.index("Cliente"),
-  tipo_pago: headers.index("id_Pago"),
-  fecha_inscripcion: headers.index("FechaInscripcion")
-}
-
-if idx.values.any?(&:nil?)
-  puts "❌ Error: falta una columna requerida en el Excel"
-  puts "Se esperaban las columnas: IdCliente, Cliente, id_Pago, FechaInscripcion"
-  puts "Índices encontrados: #{idx.inspect}"
-  exit
-end
-
-puts "🧹 Eliminando clientes actuales..."
-Client.delete_all
-
-created = 0
-
-puts "📥 Importando clientes..."
-
-# Recorre todas las filas comenzando desde la segunda (i=2)
-(2..sheet.last_row).each do |i|
-  row = sheet.row(i)
-
-  # Salta filas si no tienen ID de cliente o nombre
-  next if row[idx[:id_cliente]].blank? || row[idx[:nombre]].blank?
-
-  begin
-    Client.create!(
-      client_number: row[idx[:id_cliente]].to_s.strip,
-      name: row[idx[:nombre]].to_s.strip,
-      membership_type: row[idx[:tipo_pago]].to_s.strip.downcase,
-      registered_at: row[idx[:fecha_inscripcion]],
-      user_id: DEFAULT_USER_ID # <--- ¡SOLUCIÓN IMPLEMENTADA en este script!
-    )
-    created += 1
-  rescue => e
-    # Mostramos el error, pero el script se detendrá si es un error fatal (como NotNullViolation fuera de este rescue)
-    puts "⚠️ Error al crear cliente en la fila #{i} (Nombre: #{row[idx[:nombre]]}): #{e.message}"
-    next
+def normalize_membership_type(raw_value)
+  value = raw_value.to_s.strip.upcase
+  case value
+  when "MENSUALIDAD", "MES", "MONTH" then "month"
+  when "SEMANA", "SEMANAL", "WEEK"   then "week"
+  when "DIA", "DIARIO", "VISITA", "DAY" then "day"
+  else "day"
   end
 end
 
-puts "✅ Importación finalizada"
-puts "👥 Clientes importados: #{created}"
+def normalize_date(raw_date)
+  return nil if raw_date.blank? || raw_date.to_s.strip == "FALSE"
+  if raw_date.is_a?(Numeric)
+    # Excel dates start at 1899-12-30
+    Date.new(1899, 12, 30) + raw_date.round.days rescue nil
+  elsif raw_date.is_a?(Date) || raw_date.is_a?(Time)
+    raw_date.to_date
+  else
+    Date.parse(raw_date.to_s) rescue nil
+  end
+end
+
+# --- INICIO DEL SCRIPT ---
+
+puts "--- INICIO DE IMPORTACIÓN DE CLIENTES ---"
+puts "Buscando archivo en: #{EXCEL_FILE_PATH}"
+
+unless File.exist?(EXCEL_FILE_PATH)
+  puts "❌ ERROR CRÍTICO: No se encuentra el archivo."
+  puts "Asegúrate de haber creado la carpeta 'import_files' y subido 'clientes_nuevo.xls' ahí."
+  exit
+end
+
+begin
+  book = Spreadsheet.open(EXCEL_FILE_PATH)
+  sheet = book.worksheet(0)
+rescue => e
+  puts "❌ ERROR al abrir el Excel: #{e.message}"
+  puts "Asegúrate de que el archivo sea formato .xls (Excel 97-2003) y no .xlsx"
+  exit
+end
+
+# 1. ENCONTRAR ÍNDICES POR NOMBRE DE ENCABEZADO
+header_row = sheet.row(0)
+idx_nombre = nil
+idx_plan   = nil
+idx_fecha  = nil
+
+header_row.each_with_index do |cell, index|
+  val = cell.to_s.strip
+  idx_nombre = index if val == HEADER_CLIENTE
+  idx_plan   = index if val == HEADER_ID_PAGO
+  idx_fecha  = index if val == HEADER_FECHA
+end
+
+if idx_nombre.nil? || idx_plan.nil? || idx_fecha.nil?
+  puts "❌ ERROR CRÍTICO: No se encontraron los encabezados correctos."
+  puts "Se buscó: '#{HEADER_CLIENTE}', '#{HEADER_ID_PAGO}', '#{HEADER_FECHA}'"
+  puts "Se encontró: #{header_row.inspect}"
+  exit
+end
+
+# 2. LIMPIEZA
+puts "Eliminando clientes anteriores y reiniciando IDs..."
+Client.delete_all
+ActiveRecord::Base.connection.reset_pk_sequence!("clients")
+
+# 3. PROCESAMIENTO
+puts "Procesando filas..."
+created = 0
+failed = 0
+
+ActiveRecord::Base.transaction do
+  sheet.each_with_index do |row, index|
+    next if index == 0 # Saltar encabezado
+    next if row.nil? || row.all?(&:nil?)
+
+    nombre_raw = row[idx_nombre].to_s.strip
+    next if nombre_raw.blank? # Saltar si no hay nombre
+
+    # Normalizar datos
+    final_membership = normalize_membership_type(row[idx_plan])
+    final_enrolled_on = normalize_date(row[idx_fecha])
+
+    # --- CALCULAR PRÓXIMO PAGO ---
+    final_next_payment = nil
+
+    if final_enrolled_on.present?
+      final_next_payment = case final_membership
+      when "day"   then final_enrolled_on + 1.day
+      when "week"  then final_enrolled_on + 1.week
+      when "month" then final_enrolled_on + 1.month
+      else              final_enrolled_on + 1.month
+      end
+    end
+    # -----------------------------------------------
+
+    begin
+      Client.create!(
+        client_number: nil, # Dejar que Rails asigne 1, 2, 3...
+        name: nombre_raw,
+        membership_type: final_membership,
+        enrolled_on: final_enrolled_on,
+        next_payment_on: final_next_payment,
+        user_id: DEFAULT_USER_ID
+      )
+      created += 1
+
+      if created <= 5
+        puts "  -> ID #{created}: #{nombre_raw} | Plan: #{final_membership} | Vence: #{final_next_payment}"
+      end
+
+    rescue => e
+      failed += 1
+      puts "  [ERROR] Fila #{index + 1} (#{nombre_raw}): #{e.message}"
+    end
+  end
+end
+
+puts "--- FIN ---"
+puts "Clientes creados: #{created}"
+puts "¡ÉXITO! Datos importados correctamente."
