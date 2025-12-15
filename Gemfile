@@ -71,3 +71,12 @@ gem "kaminari-activerecord", "~> 1.2"
 gem "kaminari-actionview"
 gem "caxlsx"
 gem "roo"
+gem "spreadsheet"
+ # Gemfile
+
+ # Comenta o borra esta línea:
+ gem "spreadsheet"
+
+# Añade estas líneas:
+
+gem "roo-xls" # Necesario para archivos .xls (si los usas), no afecta .xlsx

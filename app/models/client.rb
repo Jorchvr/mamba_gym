@@ -7,6 +7,7 @@ class Client < ApplicationRecord
   # Check-ins quedan con client_id = NULL si se borra el cliente
   has_many :check_ins, dependent: :nullify
 
+  # Aquí se definen los tipos de membresía válidos (0, 1, 2)
   enum :membership_type, { day: 0, week: 1, month: 2 }
 
   validates :name, presence: true, length: { maximum: 120 }

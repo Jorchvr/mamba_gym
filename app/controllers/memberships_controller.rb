@@ -1,12 +1,7 @@
-# app/controllers/memberships_controller.rb
 class MembershipsController < ApplicationController
   before_action :authenticate_user!
 
   # Precios en centavos
-  # Día:   $30.00
-  # Semana:$120.00
-  # Mes atraso:     $265.00
-  # Mensualidad puntual: $250.00
   PRICES = {
     day:           3000,   # $30.00
     week:          12000,  # $120.00
@@ -20,14 +15,17 @@ class MembershipsController < ApplicationController
     @query  = params[:q].to_s.strip
     @client = lookup_client(@query) if @query.present?
     @prices = PRICES
+
+    # --- MODIFICACIÓN: Calcular fecha sugerida inicial ---
+    if @client
+      # Base: la mayor entre Hoy y su vencimiento actual (para no comerse días)
+      base_date = [ @client.next_payment_on, Date.current ].compact.max
+      # Por defecto sugerimos 1 mes más, pero será editable en la vista
+      @suggested_next_payment = base_date + 1.month
+    end
   end
 
   # POST /memberships/checkout
-  # plan = day|week|month_late|month_on_time|custom
-  # payment_method = cash|transfer
-  # custom_price_mxn, custom_description (si plan=custom o use_custom_price=1)
-  #
-  # 🔹 Precio personalizado ahora cuenta como 1 mes de membresía.
   def checkout
     client = Client.find(params[:client_id])
 
@@ -84,13 +82,19 @@ class MembershipsController < ApplicationController
         metadata:        metadata
       )
 
-      # Base: el mayor entre hoy y la fecha actual de próximo pago
-      base_date = [ Date.current, client.next_payment_on ].compact.max
-      new_next  = case plan_for_enum
-      when "day"   then base_date + 1.day
-      when "week"  then base_date + 1.week
-      when "month" then base_date + 1.month
+      # --- MODIFICACIÓN: Prioridad a fecha manual ---
+      if params[:custom_next_payment_date].present?
+        new_next = Date.parse(params[:custom_next_payment_date])
+      else
+        # Cálculo automático original (solo si no se envió fecha)
+        base_date = [ Date.current, client.next_payment_on ].compact.max
+        new_next  = case plan_for_enum
+        when "day"   then base_date + 1.day
+        when "week"  then base_date + 1.week
+        when "month" then base_date + 1.month
+        end
       end
+      # ---------------------------------------------
 
       client.update!(
         enrolled_on:     (client.enrolled_on || Date.current),

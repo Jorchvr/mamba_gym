@@ -1,4 +1,3 @@
-# app/controllers/clients_controller.rb
 class ClientsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_client, only: [ :show, :edit, :update ] # sin :destroy
@@ -23,23 +22,20 @@ class ClientsController < ApplicationController
         end
       else
         query = "%#{@q.downcase}%"
-        # MODIFICACIÓN DEFINITIVA: Se elimina el bloque begin/rescue y la función UNACCENT
-        # para evitar el error PG::UndefinedFunction que causaba el 500.
         scope = scope.where("LOWER(name) LIKE ?", query)
       end
     end
 
     # ✅ Filtro: solo clientes activos
-    # Activo = tiene next_payment_on y es hoy o futuro
     if @status == "active"
       scope = scope.where.not(next_payment_on: nil)
-                   .where(::Client.arel_table[:next_payment_on].gteq(Date.current))
+                     .where(::Client.arel_table[:next_payment_on].gteq(Date.current))
     end
 
     # Lista mostrada en la tabla
     @clients = scope
 
-    # Contador global de activos (independiente de filtros de búsqueda)
+    # Contador global de activos
     active_scope = base_scope.where.not(next_payment_on: nil)
                              .where(::Client.arel_table[:next_payment_on].gteq(Date.current))
     @active_clients_count = active_scope.count
@@ -69,7 +65,16 @@ class ClientsController < ApplicationController
     amount_cents = nil
 
     ActiveRecord::Base.transaction do
-      @client.set_enrollment_dates!(from: Date.current)
+      # --- MODIFICACIÓN: Respetar fecha manual si existe ---
+      if @client.next_payment_on.present?
+        # Si el usuario puso fecha manual, solo aseguramos la fecha de inscripción
+        @client.enrolled_on ||= Date.current
+      else
+        # Si está vacía, calculamos automático
+        @client.set_enrollment_dates!(from: Date.current)
+      end
+      # ----------------------------------------------------
+
       @client.save!
 
       sent_price_cents = parse_money_to_cents(params[:registration_price_mxn])
@@ -127,6 +132,8 @@ class ClientsController < ApplicationController
       :height,
       :membership_type,
       :client_number,
+      :next_payment_on, # Importante: Asegurar que este campo esté permitido
+      :enrolled_on,
       :photo
     )
   end
