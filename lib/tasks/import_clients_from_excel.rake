@@ -6,7 +6,7 @@ require "roo"
 # ==========================================================
 # Asigna el ID del usuario existente al que se asociarán todos los clientes importados.
 # **DEBES ASEGURARTE DE QUE ESTE ID EXISTA EN TU TABLA DE 'users'**
-DEFAULT_USER_ID = 1 
+DEFAULT_USER_ID = 1
 # ==========================================================
 
 file_path = "C:/Users/ramoo/OneDrive/Documents/clientes/clientes_nuevo.xlsx"
@@ -58,7 +58,7 @@ puts "📥 Importando clientes..."
       name: row[idx[:nombre]].to_s.strip,
       membership_type: row[idx[:tipo_pago]].to_s.strip.downcase,
       registered_at: row[idx[:fecha_inscripcion]],
-      **user_id: DEFAULT_USER_ID** # <--- ¡SOLUCIÓN IMPLEMENTADA en este script!
+      user_id: DEFAULT_USER_ID # <--- ¡SOLUCIÓN IMPLEMENTADA en este script!
     )
     created += 1
   rescue => e
