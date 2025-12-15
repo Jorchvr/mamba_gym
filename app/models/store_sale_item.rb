@@ -12,12 +12,12 @@ class StoreSaleItem < ApplicationRecord
   private
 
   def check_stock_availability
-    # Si no hay producto asociado, salimos (otra validación fallará antes)
+    # Si no hay producto asociado, salimos
     return unless product.present?
 
     # Si intentas vender más de lo que hay en inventario
     if product.stock < quantity
-      # Agregamos el error. Esto hace que 'save!' falle y lance la excepción que atraparemos en el controlador.
+      # Agregamos el error. Esto hace que 'save!' falle y el controlador muestre la alerta roja.
       errors.add(:base, "Stock insuficiente para '#{product.name}'. Disponible: #{product.stock}, Solicitado: #{quantity}.")
     end
   end

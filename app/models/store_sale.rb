@@ -1,7 +1,21 @@
 class StoreSalesController < ApplicationController
   before_action :authenticate_user!
 
-  # ... (tus otros métodos index, new, etc.) ...
+  # GET /store_sales
+  def index
+    # Muestra las ventas de tienda ordenadas por fecha
+    @store_sales = StoreSale.includes(:user, :store_sale_items).order(occurred_at: :desc).limit(50)
+  end
+
+  # GET /store_sales/new
+  def new
+    @store_sale = StoreSale.new
+    # Construimos un item vacío para que aparezca en el formulario
+    @store_sale.store_sale_items.build
+
+    # Cargamos productos activos para el select del formulario
+    @products = Product.where(active: true).order(:name)
+  end
 
   # POST /store_sales
   def create
@@ -11,15 +25,17 @@ class StoreSalesController < ApplicationController
 
     # Usamos una transacción para asegurar que todo se guarde o nada
     ActiveRecord::Base.transaction do
-      # 1. Intentamos guardar la venta (esto guardará los items también)
-      # Si no hay stock, el modelo StoreSaleItem lanzará un error aquí.
+      # 1. Intentamos guardar la venta.
+      # Si no hay stock, el modelo StoreSaleItem lanzará un error aquí y detendrá todo.
       @store_sale.save!
 
-      # 2. Si se guardó, descontamos el stock de los productos
+      # 2. Si se guardó (porque había stock), descontamos el inventario
       @store_sale.store_sale_items.each do |item|
         product = item.product
-        new_stock = product.stock - item.quantity
-        product.update!(stock: new_stock)
+        if product.present?
+          new_stock = product.stock - item.quantity
+          product.update!(stock: new_stock)
+        end
       end
     end
 
@@ -28,8 +44,6 @@ class StoreSalesController < ApplicationController
 
   rescue ActiveRecord::RecordInvalid => e
     # 🛑 AQUÍ ATRAPAMOS EL ERROR 500
-    # En lugar de tronar, mostramos el mensaje que escribió el modelo (ej: "Stock insuficiente...")
-
     # Recargamos productos para que el formulario no se rompa al volver a renderizar
     @products = Product.where(active: true).order(:name)
 
@@ -38,18 +52,18 @@ class StoreSalesController < ApplicationController
 
   rescue => e
     # Captura cualquier otro error inesperado
+    @products = Product.where(active: true).order(:name)
     flash.now[:alert] = "Error inesperado: #{e.message}"
     render :new, status: :unprocessable_entity
   end
 
   private
 
-  # Asegúrate de tener estos params definidos al final de tu archivo
   def store_sale_params
     params.require(:store_sale).permit(
       :payment_method,
-      :client_id, # Si asocias clientes a ventas de tienda
-      store_sale_items_attributes: [ :product_id, :quantity, :unit_price_cents, :_destroy ]
+      :client_id,
+      store_sale_items_attributes: [ :id, :product_id, :quantity, :unit_price_cents, :_destroy ]
     )
   end
 end
