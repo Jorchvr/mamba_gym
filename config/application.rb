@@ -20,8 +20,19 @@ module GymControl
     #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
+
+    # =========================================================
+    # ✅ CONFIGURACIÓN DE ZONA HORARIA (MONTERREY / MÉXICO)
+    # =========================================================
+    config.time_zone = "Mexico City"
+
+    # Esto asegura que Rails guarde en la BD en formato universal (UTC)
+    # pero te muestre la hora correcta en tu pantalla automáticamente.
+    config.active_record.default_timezone = :utc
+
+    # Opcional: Configurar idioma predeterminado a Español
+    config.i18n.default_locale = :es
+
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
