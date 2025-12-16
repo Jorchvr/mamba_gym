@@ -77,7 +77,6 @@ class SalesController < ApplicationController
   end
 
   def show
-    # Tu lógica de show si la tienes
   end
 
   # =====================================================
@@ -94,16 +93,15 @@ class SalesController < ApplicationController
       return
     end
 
-    # 1. Buscar Ventas de Tienda (StoreSale)
+    # Mostramos TODO para facilitar el debug, sin filtrar por usuario
     store_scope = StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", @from, @to)
-
-    # 2. Buscar Ventas de Membresías (Sale)
     membership_scope = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", @from, @to)
 
-    unless superuser?
-      store_scope      = store_scope.where(user_id: current_user.id)
-      membership_scope = membership_scope.where(user_id: current_user.id)
-    end
+    # COMENTADO: Filtro de usuario desactivado para que veas todas las ventas
+    # unless superuser?
+    #   store_scope      = store_scope.where(user_id: current_user.id)
+    #   membership_scope = membership_scope.where(user_id: current_user.id)
+    # end
 
     @store_sales = store_scope.includes(:user, store_sale_items: :product).order(id: :desc)
     @membership_sales = membership_scope.includes(:user, :client).order(id: :desc)
@@ -116,68 +114,87 @@ class SalesController < ApplicationController
 
     if code == expected || ActiveSupport::SecurityUtils.secure_compare(code, expected)
       session[:store_adjustments_unlocked] = true
-      redirect_to adjustments_sales_path, notice: "Sección de ajustes desbloqueada."
+      redirect_to adjustments_sales_path, notice: "Sección desbloqueada."
     else
       session[:store_adjustments_unlocked] = false
-      redirect_to adjustments_sales_path, alert: "Código de seguridad incorrecto."
+      redirect_to adjustments_sales_path, alert: "Código incorrecto."
     end
   end
 
   # POST /sales/reverse_transaction
   def reverse_transaction
+    # 1. Verificar desbloqueo
     unless session[:store_adjustments_unlocked]
-      redirect_to adjustments_sales_path, alert: "Debes ingresar el código de seguridad."
+      redirect_to adjustments_sales_path, alert: "Ingresa el código primero."
       return
     end
 
     reason = params[:reason].to_s.strip
+    puts ">>> INICIANDO REVERSIÓN. Params: #{params.inspect}"
 
-    # --- CASO A: REVERTIR MEMBRESÍA (Sale) ---
+    # ==========================================
+    # CASO A: REVERTIR MEMBRESÍA (Sale)
+    # ==========================================
     if params[:sale_id].present?
+      puts ">>> BUSCANDO SALE ID: #{params[:sale_id]}"
       original = Sale.find_by(id: params[:sale_id])
 
-      if original.nil? || original.amount_cents <= 0
-        redirect_to adjustments_sales_path, alert: "Membresía no encontrada o ya es negativa."
+      if original.nil?
+        redirect_to adjustments_sales_path, alert: "Error: No se encontró la venta #{params[:sale_id]}"
         return
       end
 
-      if !superuser? && original.user_id != current_user.id
-        redirect_to adjustments_sales_path, alert: "No puedes revertir ventas de otros usuarios."
-        return
-      end
+      # --- DESACTIVADO TEMPORALMENTE ---
+      # Si la venta ya es negativa, no dejarla hacer negativa otra vez
+      # if original.amount_cents <= 0
+      #   redirect_to adjustments_sales_path, alert: "Esa venta ya es una devolución."
+      #   return
+      # end
 
-      # Crear la venta negativa
+      # --- DESACTIVADO TEMPORALMENTE ---
+      # Restricción de usuario: Ahora cualquiera puede borrar lo de cualquiera
+      # if !superuser? && original.user_id != current_user.id
+      #   redirect_to adjustments_sales_path, alert: "No tienes permiso para borrar ventas de otros."
+      #   return
+      # end
+
+      puts ">>> INTENTANDO CREAR REVERSAL PARA SALE #{original.id}"
+
       reversal = Sale.new(
         user:           current_user,
         client_id:      original.client_id,
         payment_method: original.payment_method,
-        amount_cents:   -original.amount_cents.to_i,
+        amount_cents:   -original.amount_cents.to_i, # Negativo
         membership_type: "DEVOLUCIÓN - #{original.membership_type}",
         occurred_at:    Time.current
       )
 
-      # Evitar que active días de acceso
+      # Forzamos duration 0
       reversal.duration_days = 0 if reversal.respond_to?(:duration_days=)
 
-      # ✅ CAMBIO CRÍTICO AQUÍ: Usamos save! (con bang) para forzar el guardado
-      # Si falla, saltará al rescue de abajo y nos dirá exactamente por qué.
+      # GUARDADO FORZOSO SIN VALIDACIONES
       reversal.save!(validate: false)
 
-      redirect_to adjustments_sales_path, notice: "Devolución de membresía ##{original.id} registrada."
+      puts ">>> ÉXITO: Reversal creada con ID #{reversal.id}"
+      redirect_to adjustments_sales_path, notice: "Devolución de membresía exitosa."
 
-    # --- CASO B: REVERTIR TIENDA (StoreSale) ---
+    # ==========================================
+    # CASO B: REVERTIR TIENDA (StoreSale)
+    # ==========================================
     elsif params[:store_sale_id].present?
+      puts ">>> BUSCANDO STORE SALE ID: #{params[:store_sale_id]}"
       original = StoreSale.includes(store_sale_items: :product).find_by(id: params[:store_sale_id])
 
-      if original.nil? || original.total_cents.to_i <= 0
-        redirect_to adjustments_sales_path, alert: "Venta de tienda no válida para reversión."
+      if original.nil?
+        redirect_to adjustments_sales_path, alert: "Venta de tienda no encontrada."
         return
       end
 
-      if !superuser? && original.user_id != current_user.id
-        redirect_to adjustments_sales_path, alert: "No puedes ajustar ventas de otros usuarios."
-        return
-      end
+      # --- DESACTIVADO TEMPORALMENTE ---
+      # if !superuser? && original.user_id != current_user.id
+      #   redirect_to adjustments_sales_path, alert: "No tienes permiso."
+      #   return
+      # end
 
       StoreSale.transaction do
         attrs = {
@@ -187,6 +204,7 @@ class SalesController < ApplicationController
           occurred_at:    Time.current
         }
 
+        # Manejo flexible de nota/descripción
         if StoreSale.column_names.include?("note")
           attrs[:note] = "DEVOLUCIÓN ##{original.id}: #{reason}"
         elsif StoreSale.column_names.include?("description")
@@ -210,14 +228,15 @@ class SalesController < ApplicationController
         end
       end
 
-      redirect_to adjustments_sales_path, notice: "Devolución de tienda ##{original.id} creada y stock regresado."
+      redirect_to adjustments_sales_path, notice: "Devolución de tienda exitosa."
 
     else
-      redirect_to adjustments_sales_path, alert: "No se especificó qué venta revertir."
+      redirect_to adjustments_sales_path, alert: "No se seleccionó ninguna venta."
     end
 
   rescue => e
-    # Este rescue atrapará cualquier error de base de datos y te lo mostrará en pantalla
+    puts ">>> ERROR CRÍTICO: #{e.message}"
+    puts e.backtrace.join("\n")
     redirect_to adjustments_sales_path, alert: "Error crítico: #{e.message}"
   end
 
@@ -244,7 +263,7 @@ class SalesController < ApplicationController
     @member_cents = sales.sum(:amount_cents).to_i
     @store_cents  = store_sales.sum(:total_cents).to_i
 
-    # Cálculo informativo de devoluciones
+    # Cálculo informativo
     adjustments_store = store_sales.where("total_cents < 0").sum(:total_cents).to_i
     adjustments_mem   = sales.where("amount_cents < 0").sum(:amount_cents).to_i
     @adjustments_cents = adjustments_store + adjustments_mem
