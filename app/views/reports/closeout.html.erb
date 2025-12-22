@@ -5,7 +5,6 @@
   <div class="ticket">
     <div class="ticket-perforation"></div>
 
-    <!-- HEADER -->
     <div class="ticket-header">
       <%= image_tag "logo.png", alt: "PowerGym", class: "ticket-logo-img" %>
 
@@ -20,7 +19,6 @@
 
     <div class="ticket-divider"></div>
 
-    <!-- USUARIO -->
     <div class="ticket-section">
       <p class="ticket-section-title">Usuario</p>
 
@@ -32,7 +30,6 @@
 
     <div class="ticket-divider dotted"></div>
 
-    <!-- RESUMEN GENERAL -->
     <div class="ticket-section">
       <p class="ticket-section-title">Resumen general</p>
 
@@ -55,12 +52,23 @@
         </span>
       </div>
 
-      <div class="ticket-row ticket-row-negative">
-        <span>Ajustes / ventas negativas</span>
-        <span class="ticket-value">
-          MXN <%= number_to_currency(@adjustments_cents.to_i / 100.0, unit: "", precision: 2) %>
-        </span>
-      </div>
+      <% if @adjustments_cents.to_i < 0 %>
+        <div class="ticket-row ticket-row-negative">
+          <span>Ajustes / ventas negativas</span>
+          <span class="ticket-value">
+            MXN <%= number_to_currency(@adjustments_cents.to_i / 100.0, unit: "", precision: 2) %>
+          </span>
+        </div>
+      <% end %>
+
+      <% if @expenses_cents.to_i > 0 %>
+        <div class="ticket-row ticket-row-negative">
+          <span>Pago de Servicios (Salidas)</span>
+          <span class="ticket-value">
+            - MXN <%= number_to_currency(@expenses_cents.to_i / 100.0, unit: "", precision: 2) %>
+          </span>
+        </div>
+      <% end %>
 
       <div class="ticket-row ticket-row-strong ticket-row-total">
         <span>Total del día</span>
@@ -72,12 +80,11 @@
 
     <div class="ticket-divider"></div>
 
-    <!-- MÉTODOS DE PAGO -->
     <div class="ticket-section">
       <p class="ticket-section-title">Métodos de pago</p>
 
       <div class="ticket-row">
-        <span>Efectivo</span>
+        <span>Efectivo (en cajón)</span>
         <span class="ticket-value">
           MXN <%= number_to_currency(@by_method["cash"].to_i / 100.0, unit: "", precision: 2) %>
         </span>
@@ -93,7 +100,6 @@
 
     <div class="ticket-divider"></div>
 
-    <!-- ACTIVIDAD DE CLIENTES -->
     <div class="ticket-section">
       <p class="ticket-section-title">Actividad de clientes</p>
 
@@ -110,7 +116,6 @@
 
     <div class="ticket-divider"></div>
 
-    <!-- PRODUCTOS VENDIDOS -->
     <div class="ticket-section">
       <p class="ticket-section-title">Productos vendidos</p>
 
@@ -136,42 +141,21 @@
 
     <div class="ticket-divider"></div>
 
-    <!-- DETALLE DE PRODUCTOS -->
     <div class="ticket-section">
-      <p class="ticket-section-title">Detalle de productos</p>
-
-      <% if @sold_by_product.blank? %>
-        <p class="ticket-note">No hay productos vendidos en este turno.</p>
-      <% else %>
-        <table class="ticket-table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Vendidos</th>
-              <th>Stock</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <% @sold_by_product.each do |row| %>
-              <tr>
-                <td><%= row[:product_name] %></td>
-                <td><%= row[:sold_qty].to_i %></td>
-                <td><%= row[:stock_after].to_i %></td>
-                <td>
-                  MXN <%= number_to_currency(row[:revenue_cents].to_i / 100.0, unit: "", precision: 2) %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
+      <p class="ticket-section-title">Movimientos Detallados</p>
+      
+      <div class="ticket-mono" style="font-size: 0.7rem; font-family: monospace;">
+        <% @transactions.each do |t| %>
+          <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+            <span><%= t[:at].strftime("%H:%M") %> <%= t[:label].truncate(18) %></span>
+            <span><%= number_to_currency(t[:amount_cents] / 100.0, unit: "$") %></span>
+          </div>
+        <% end %>
+      </div>
     </div>
 
     <div class="ticket-divider dotted"></div>
 
-    <!-- FOOTER -->
     <div class="ticket-footer">
       <p class="ticket-thanks">¡Gracias por tu trabajo hoy! 💪</p>
       <p class="ticket-footer-text">
@@ -183,6 +167,11 @@
           <div class="barcode-line <%= 'thick' if i.even? %>"></div>
         <% end %>
       </div>
+    </div>
+
+    <div style="margin-top:2rem; text-align:center;">
+      <%= link_to "← Volver al Panel", authenticated_root_path, class: "btn btn-sm", style: "background:#eee; color:#333; text-decoration:none; padding: 8px 16px; border-radius:6px;" %>
+      <button onclick="window.print()" class="btn btn-sm btn-primary" style="margin-left:0.5rem; background:#ef4444; color:white; border:none; padding: 8px 16px; border-radius:6px; cursor:pointer;">Imprimir Ticket</button>
     </div>
 
   </div>

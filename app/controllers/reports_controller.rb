@@ -4,13 +4,10 @@ require "caxlsx"
 class ReportsController < ApplicationController
   before_action :authenticate_user!
   before_action :require_two_factor!, if: -> { respond_to?(:require_two_factor!) }
-
-  # ⚠️ OJO: Si quieres que tus empleados vean el historial, quita :history de aquí.
-  # Si solo es para ti, déjalo como está.
   before_action :require_superuser!, only: [ :daily_export, :history, :daily_export_excel ]
 
   # ==========================
-  # HISTORIAL (BLINDADO CONTRA ERRORES)
+  # HISTORIAL (BLINDADO)
   # ==========================
   def history
     @date  = params[:date].present? ? (Date.parse(params[:date]) rescue Time.zone.today) : Time.zone.today
@@ -19,7 +16,6 @@ class ReportsController < ApplicationController
 
     from, to = date_range_for(@date, @range)
 
-    # 1. Consultas a Base de Datos
     @sales = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to)
                  .includes(:user, :client).order(created_at: :desc)
 
@@ -40,58 +36,50 @@ class ReportsController < ApplicationController
                           []
     end
 
-    # 2. CÁLCULOS MATEMÁTICOS (El Fix Importante)
-    # Usamos .to_i para convertir cualquier 'nil' en 0 automáticamente.
-
+    # Cálculos seguros (.to_i evita errores de nil)
     sales_cents = @sales.sum(:amount_cents).to_i
     store_cents = @store_sales.sum(:total_cents).to_i
-    gross_income = sales_cents + store_cents # Ingreso Bruto
+    gross_income = sales_cents + store_cents
 
     expenses_cents = @expenses.sum(:amount_cents).to_i
 
-    # Total Neto (Ingresos - Gastos) -> Esta es la variable que te fallaba
+    # Total Neto
     @money_total_cents = gross_income - expenses_cents
 
-    # 3. Desglose por Método de Pago
-    # Efectivo
+    # Desglose efectivo vs transferencia
     cash_sales = @sales.where(payment_method: :cash).sum(:amount_cents).to_i
     cash_store = @store_sales.where(payment_method: :cash).sum(:total_cents).to_i
+    cash_net   = (cash_sales + cash_store) - expenses_cents
 
-    # Restamos gastos del efectivo
-    cash_net = (cash_sales + cash_store) - expenses_cents
-
-    # Transferencia
     transfer_sales = @sales.where(payment_method: :transfer).sum(:amount_cents).to_i
     transfer_store = @store_sales.where(payment_method: :transfer).sum(:total_cents).to_i
-    transfer_net   = transfer_sales + transfer_store
 
     @money_by_method = {
       "cash"     => cash_net,
-      "transfer" => transfer_net
+      "transfer" => transfer_sales + transfer_store
     }
 
-    # 4. Tabla de productos vendidos
+    # Productos visuales
     items_all = @store_sales.flat_map { |ss| ss.store_sale_items.to_a }
-    grouped   = items_all.group_by(&:product_id)
-
-    @sold_by_product = grouped.map do |product_id, arr|
+    @sold_by_product = items_all.group_by(&:product_id).map do |pid, arr|
       product = arr.first&.product
       {
-        product_name:    (product&.name.presence || "Producto ##{product_id}"),
-        sold_qty:        arr.sum { |it| it.quantity.to_i },
-        revenue_cents:   arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
+        product_name: product&.name || "Producto ##{pid}",
+        sold_qty: arr.sum { |it| it.quantity.to_i },
+        revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
         remaining_stock: product&.stock.to_i
       }
     end.sort_by { |h| -h[:sold_qty] }
   end
 
   # ==========================
-  # CORTE DEL DÍA
+  # CORTE DEL DÍA (TICKET)
   # ==========================
   def closeout
     date = Time.zone.today
     from, to = date_range_for(date, :day)
 
+    # 1. Consultas (solo usuario actual)
     sales = Sale.where(user_id: current_user.id)
                 .where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to)
                 .includes(:client)
@@ -103,15 +91,24 @@ class ReportsController < ApplicationController
     expenses = Expense.where(user_id: current_user.id)
                       .where("occurred_at BETWEEN ? AND ?", from, to)
 
-    # Cálculos
-    sales_cents = sales.sum(:amount_cents).to_i
-    store_cents = store_sales.sum(:total_cents).to_i
-    expenses_cents = expenses.sum(:amount_cents).to_i
+    # 2. Cálculos para el Ticket (Separando Ingresos de Ajustes)
+    # Ingresos (Positivos)
+    @member_cents = sales.where("amount_cents >= 0").sum(:amount_cents).to_i
+    @store_cents  = store_sales.where("total_cents >= 0").sum(:total_cents).to_i
 
-    @total_cents = (sales_cents + store_cents) - expenses_cents
+    # Ajustes (Negativos)
+    neg_sales = sales.where("amount_cents < 0").sum(:amount_cents).to_i
+    neg_store = store_sales.where("total_cents < 0").sum(:total_cents).to_i
+    @adjustments_cents = neg_sales + neg_store
+
+    # Gastos
+    @expenses_cents = expenses.sum(:amount_cents).to_i
+
+    # Total Final
+    @total_cents = (@member_cents + @store_cents + @adjustments_cents) - @expenses_cents
     @ops_count   = sales.count + store_sales.count + expenses.count
 
-    # Métodos de pago
+    # Métodos de Pago
     cash_in = sales.where(payment_method: :cash).sum(:amount_cents).to_i +
               store_sales.where(payment_method: :cash).sum(:total_cents).to_i
 
@@ -119,30 +116,29 @@ class ReportsController < ApplicationController
                   store_sales.where(payment_method: :transfer).sum(:total_cents).to_i
 
     @by_method = {
-      "cash"     => cash_in - expenses_cents,
+      "cash"     => cash_in - @expenses_cents,
       "transfer" => transfer_in
     }
 
     @user_name = current_user.name.presence || current_user.email
     @date      = date
-
-    @transactions = []
-    sales.each do |s|
-      @transactions << { at: (s.occurred_at || s.created_at), label: "Membresía #{s.membership_type}", amount_cents: s.amount_cents.to_i, payment_method: s.payment_method }
-    end
-    store_sales.each do |ss|
-      @transactions << { at: (ss.occurred_at || ss.created_at), label: "Tienda ##{ss.id}", amount_cents: ss.total_cents.to_i, payment_method: ss.payment_method }
-    end
-    expenses.each do |ex|
-      @transactions << { at: ex.occurred_at, label: "GASTO: #{ex.description}", amount_cents: -ex.amount_cents.to_i, payment_method: "Efectivo" }
-    end
-    @transactions.sort_by! { |h| h[:at] }
-
-    # Variables de soporte para la vista
     @new_clients_today = Client.where(created_at: from..to).count
     @checkins_today    = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).count
 
-    # Detalle productos (corte)
+    # 3. Transacciones Detalladas
+    @transactions = []
+    sales.each do |s|
+      @transactions << { at: (s.occurred_at || s.created_at), label: "Membresía #{s.membership_type}", amount_cents: s.amount_cents.to_i }
+    end
+    store_sales.each do |ss|
+      @transactions << { at: (ss.occurred_at || ss.created_at), label: "Tienda ##{ss.id}", amount_cents: ss.total_cents.to_i }
+    end
+    expenses.each do |ex|
+      @transactions << { at: ex.occurred_at, label: "GASTO: #{ex.description}", amount_cents: -ex.amount_cents.to_i }
+    end
+    @transactions.sort_by! { |h| h[:at] }
+
+    # 4. Detalle Productos
     items = store_sales.flat_map { |ss| ss.store_sale_items.to_a }
     @sold_by_product = items.group_by(&:product_id).map do |pid, arr|
       product = arr.first&.product
@@ -150,27 +146,22 @@ class ReportsController < ApplicationController
         product_name: product&.name || "Producto ##{pid}",
         sold_qty: arr.sum { |it| it.quantity.to_i },
         revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
-        remaining_stock: product&.stock.to_i
+        stock_after: product&.stock.to_i
       }
     end
   end
 
   # ==========================
-  # EXPORTACIONES (CSV / EXCEL)
+  # EXPORTACIONES
   # ==========================
   def daily_export
     day = Time.zone.today
     from, to = date_range_for(day, :day)
     filename = "reporte_#{day.strftime('%Y-%m-%d')}.csv"
-
-    expenses = Expense.where("occurred_at BETWEEN ? AND ?", from, to).includes(:user)
-    # (Aquí puedes reusar la lógica completa de exportación si la necesitas, o dejarla simple)
-    # Por ahora, para que no falle el botón:
-    send_data "Reporte CSV no configurado completamente", filename: filename
+    send_data "CSV no configurado.", filename: filename
   end
 
   def daily_export_excel
-    # Lógica de excel (puedes copiar la del mensaje anterior si la usas)
     head :ok
   end
 
