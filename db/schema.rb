@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_12_002525) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_22_180001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -74,6 +74,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_002525) do
     t.integer "client_number"
     t.index ["client_number"], name: "index_clients_on_client_number", unique: true
     t.index ["user_id"], name: "index_clients_on_user_id"
+  end
+
+  create_table "expenses", force: :cascade do |t|
+    t.string "description"
+    t.integer "amount_cents"
+    t.bigint "user_id", null: false
+    t.datetime "occurred_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_expenses_on_user_id"
   end
 
   create_table "inventory_events", force: :cascade do |t|
@@ -164,6 +174,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_12_002525) do
   add_foreign_key "check_ins", "clients", on_delete: :nullify
   add_foreign_key "check_ins", "users"
   add_foreign_key "clients", "users"
+  add_foreign_key "expenses", "users"
   add_foreign_key "inventory_events", "products"
   add_foreign_key "inventory_events", "users"
   add_foreign_key "sales", "clients", on_delete: :nullify
