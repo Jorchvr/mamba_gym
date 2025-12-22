@@ -1,39 +1,46 @@
-<div class="centered-container">
-  <div class="card card-compact">
+<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+
+<div class="split-container" style="justify-content: center; align-items: center; min-height: 100vh;">
+  
+  <div class="card" style="width: 100%; max-width: 480px; padding: 2rem; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
     
     <div style="text-align: center; margin-bottom: 2rem;">
-      <h2 class="title" style="margin-bottom: 0.5rem;">Registrar Salida</h2>
-      <p class="text-muted">Pago de servicios o gastos de caja</p>
+      <h2 class="title" style="margin-bottom: 0.5rem; font-size: 1.8rem;">Registrar Gasto</h2>
+      <p class="text-muted">Salida de dinero de caja para servicios</p>
     </div>
-    
+
     <%= form_with model: @expense, local: true do |f| %>
       
-      <div class="mb-4">
-        <label class="label">Descripción del gasto</label>
+      <div class="mb-4" style="margin-bottom: 1.5rem;">
+        <label class="label" style="display: block; margin-bottom: 0.5rem; color: #a1a1aa;">Concepto / Descripción</label>
         <%= f.text_field :description, 
             class: "form-input", 
-            placeholder: "Ej: Pago de luz, Garrafones, Limpieza...", 
+            placeholder: "Ej: Pago de luz CFE, Garrafones, Internet...", 
             required: true,
-            autofocus: true %>
+            autofocus: true,
+            style: "width: 100%; box-sizing: border-box;" %>
       </div>
 
-      <div class="mb-4">
-        <label class="label">Monto a retirar ($)</label>
-        <div class="currency-wrapper">
-          <span class="currency-symbol">$</span>
+      <div class="mb-4" style="margin-bottom: 2rem;">
+        <label class="label" style="display: block; margin-bottom: 0.5rem; color: #a1a1aa;">Monto a retirar</label>
+        <div style="position: relative;">
+          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #ef4444; font-weight: bold; font-size: 1.2rem;">$</span>
           <%= f.number_field :amount, 
               step: 0.01, 
-              class: "form-input-lg", 
+              class: "form-input", 
               placeholder: "0.00", 
-              required: true %>
+              required: true,
+              style: "width: 100%; box-sizing: border-box; padding-left: 2.5rem; font-size: 1.4rem; font-weight: 800; color: #fff; border-color: rgba(239,68,68,0.5);" %>
         </div>
       </div>
 
-      <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-        <%= link_to "Cancelar", authenticated_root_path, class: "btn", style: "flex: 1;" %>
-        <%= f.submit "Confirmar Retiro", class: "btn btn-danger", style: "flex: 1;" %>
+      <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+        <%= link_to "Cancelar", authenticated_root_path, class: "btn", style: "flex: 1; justify-content: center;" %>
+        
+        <%= f.submit "Confirmar Retiro", class: "btn btn-danger", style: "flex: 1; justify-content: center; font-weight: 800;" %>
       </div>
 
     <% end %>
   </div>
+
 </div>
