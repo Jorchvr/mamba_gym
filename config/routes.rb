@@ -25,7 +25,7 @@ Rails.application.routes.draw do
   resources :products
 
   # ================== Pago de Servicios (NUEVO) ==================
-  resources :expenses, only: [ :new, :create ]
+  resources :expenses, only: [ :new, :create, :destroy ]
 
   # ================== Carrito / Tienda ==================
   resource :cart, only: [ :show ], controller: :cart do

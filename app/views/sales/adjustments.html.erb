@@ -56,45 +56,47 @@
     <% if @membership_sales.blank? %>
       <p class="text-muted">No hay membresías registradas hoy.</p>
     <% else %>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Cliente</th>
-            <th>Membresía</th>
-            <th>Monto</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @membership_sales.each do |sale| %>
-            <tr style="<%= 'background-color:#fff1f2;' if sale.amount_cents < 0 %>">
-              <td><%= (sale.occurred_at || sale.created_at).strftime("%H:%M") %></td>
-              <td><%= sale.client&.name || "Sin cliente" %></td>
-              <td><%= sale.membership_type %></td>
-              <td style="font-weight:bold; <%= sale.amount_cents < 0 ? 'color:red;' : 'color:green;' %>">
-                <%= number_to_currency(sale.amount_cents.to_f / 100, unit: "$") %>
-              </td>
-              <td>
-                <% if sale.amount_cents > 0 %>
-                  <%= form_with url: reverse_transaction_sales_path, method: :post,
-                      data: { turbo_confirm: "¿Estás seguro de cancelar esta membresía? Se restará el dinero del corte." }, local: true do %>
-                    <%= hidden_field_tag :sale_id, sale.id %>
-                    <%= text_field_tag :reason, nil, placeholder: "Motivo (opc)", class: "form-input", style: "width:110px; display:inline; font-size:0.85rem;" %>
-                    <%= submit_tag "Revertir", class: "btn btn-danger btn-sm" %>
-                  <% end %>
-                <% else %>
-                  <span class="text-muted">Cancelado</span>
-                <% end %>
-              </td>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Cliente</th>
+              <th>Membresía</th>
+              <th>Monto</th>
+              <th>Acción</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% @membership_sales.each do |sale| %>
+              <tr style="<%= 'background-color:#fff1f2;' if sale.amount_cents < 0 %>">
+                <td><%= (sale.occurred_at || sale.created_at).strftime("%H:%M") %></td>
+                <td><%= sale.client&.name || "Sin cliente" %></td>
+                <td><%= sale.membership_type %></td>
+                <td style="font-weight:bold; <%= sale.amount_cents < 0 ? 'color:red;' : 'color:green;' %>">
+                  <%= number_to_currency(sale.amount_cents.to_f / 100, unit: "$") %>
+                </td>
+                <td>
+                  <% if sale.amount_cents > 0 %>
+                    <%= form_with url: reverse_transaction_sales_path, method: :post,
+                        data: { turbo_confirm: "¿Estás seguro de cancelar esta membresía? Se restará el dinero del corte." }, local: true do %>
+                      <%= hidden_field_tag :sale_id, sale.id %>
+                      <%= text_field_tag :reason, nil, placeholder: "Motivo (opc)", class: "form-input", style: "width:110px; display:inline; font-size:0.85rem;" %>
+                      <%= submit_tag "Revertir", class: "btn btn-danger btn-sm" %>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">Cancelado</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% end %>
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-bottom: 2rem;">
     <h3 class="card-title mb-2" style="color: #9333ea;">
       Tienda / Productos
     </h3>
@@ -102,51 +104,98 @@
     <% if @store_sales.blank? %>
       <p class="text-muted">No hay ventas de tienda hoy.</p>
     <% else %>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Usuario</th>
-            <th>Método</th>
-            <th>Total</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @store_sales.each do |ss| %>
-            <tr style="<%= 'background-color:#fff1f2;' if ss.total_cents < 0 %>">
-              <td><%= (ss.occurred_at || ss.created_at).strftime("%H:%M") %></td>
-              <td><%= ss.user&.name || ss.user&.email %></td>
-              <td><%= ss.payment_method %></td>
-              <td style="font-weight:bold; <%= ss.total_cents < 0 ? 'color:red;' : 'color:green;' %>">
-                <%= number_to_currency(ss.total_cents.to_f / 100, unit: "$") %>
-              </td>
-              <td>
-                <% if ss.total_cents > 0 %>
-                  <%= form_with url: reverse_transaction_sales_path, method: :post,
-                      data: { turbo_confirm: "¿Estás seguro de devolver esta venta de tienda? El stock se regresará." }, local: true do %>
-                    <%= hidden_field_tag :store_sale_id, ss.id %>
-                    <%= text_field_tag :reason, nil, placeholder: "Motivo (opc)", class: "form-input", style: "width:110px; display:inline; font-size:0.85rem;" %>
-                    <%= submit_tag "Revertir", class: "btn btn-danger btn-sm" %>
-                  <% end %>
-                <% else %>
-                  <span class="text-muted">Cancelado</span>
-                <% end %>
-              </td>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Usuario</th>
+              <th>Método</th>
+              <th>Total</th>
+              <th>Acción</th>
             </tr>
-            <% if ss.store_sale_items.any? %>
+          </thead>
+          <tbody>
+            <% @store_sales.each do |ss| %>
+              <tr style="<%= 'background-color:#fff1f2;' if ss.total_cents < 0 %>">
+                <td><%= (ss.occurred_at || ss.created_at).strftime("%H:%M") %></td>
+                <td><%= ss.user&.name || ss.user&.email %></td>
+                <td><%= ss.payment_method %></td>
+                <td style="font-weight:bold; <%= ss.total_cents < 0 ? 'color:red;' : 'color:green;' %>">
+                  <%= number_to_currency(ss.total_cents.to_f / 100, unit: "$") %>
+                </td>
+                <td>
+                  <% if ss.total_cents > 0 %>
+                    <%= form_with url: reverse_transaction_sales_path, method: :post,
+                        data: { turbo_confirm: "¿Estás seguro de devolver esta venta de tienda? El stock se regresará." }, local: true do %>
+                      <%= hidden_field_tag :store_sale_id, ss.id %>
+                      <%= text_field_tag :reason, nil, placeholder: "Motivo (opc)", class: "form-input", style: "width:110px; display:inline; font-size:0.85rem;" %>
+                      <%= submit_tag "Revertir", class: "btn btn-danger btn-sm" %>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">Cancelado</span>
+                  <% end %>
+                </td>
+              </tr>
+              <% if ss.store_sale_items.any? %>
+                <tr>
+                  <td colspan="5" style="padding-top:0; padding-bottom:1rem; border:none;">
+                    <small class="text-muted" style="margin-left:1rem; display:block;">
+                      <strong>Items:</strong> 
+                      <%= ss.store_sale_items.map { |i| "#{i.quantity}x #{i.product&.name}" }.join(", ") %>
+                    </small>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="card" style="margin-bottom: 2rem; border-color: rgba(239,68,68,0.4);">
+    <h3 class="card-title mb-2" style="color: #ef4444;">
+      Corrección de Gastos / Servicios
+    </h3>
+    <p class="text-muted mb-4">Eliminar un gasto devolverá el dinero al corte del día.</p>
+
+    <% if @expenses.blank? %>
+      <p class="text-muted">No hay gastos registrados hoy.</p>
+    <% else %>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Descripción</th>
+              <th>Usuario</th>
+              <th>Monto</th>
+              <th style="text-align:right;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @expenses.each do |ex| %>
               <tr>
-                <td colspan="5" style="padding-top:0; padding-bottom:1rem; border:none;">
-                  <small class="text-muted" style="margin-left:1rem; display:block;">
-                    <strong>Items:</strong> 
-                    <%= ss.store_sale_items.map { |i| "#{i.quantity}x #{i.product&.name}" }.join(", ") %>
-                  </small>
+                <td><%= ex.occurred_at.strftime("%H:%M") %></td>
+                <td><%= ex.description %></td>
+                <td><%= ex.user.name %></td>
+                <td style="color: #ef4444; font-weight: bold;">
+                  -<%= number_to_currency(ex.amount_cents / 100.0) %>
+                </td>
+                <td style="text-align:right;">
+                  <%= button_to "Eliminar (Reversar)", expense_path(ex), 
+                        method: :delete, 
+                        form: { data: { turbo_confirm: "¿Seguro que quieres eliminar este gasto?" } },
+                        class: "btn btn-sm btn-danger",
+                        style: "padding: 0.5rem 1rem;" %>
                 </td>
               </tr>
             <% end %>
-          <% end %>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     <% end %>
   </div>
+
 <% end %>

@@ -96,14 +96,14 @@ class SalesController < ApplicationController
     store_scope = StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", @from, @to)
     membership_scope = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", @from, @to)
 
-    # Filtros de usuario desactivados para facilitar la operación
-    # unless superuser?
-    #   store_scope      = store_scope.where(user_id: current_user.id)
-    #   membership_scope = membership_scope.where(user_id: current_user.id)
-    # end
+    # ✅ NUEVO: Cargar gastos del día
+    expenses_scope = Expense.where("occurred_at BETWEEN ? AND ?", @from, @to)
 
     @store_sales = store_scope.includes(:user, store_sale_items: :product).order(id: :desc)
     @membership_sales = membership_scope.includes(:user, :client).order(id: :desc)
+
+    # ✅ NUEVO: Asignar a variable para la vista
+    @expenses = expenses_scope.includes(:user).order(created_at: :desc)
   end
 
   # POST /sales/unlock_adjustments
@@ -140,11 +140,6 @@ class SalesController < ApplicationController
         return
       end
 
-      # ---------------------------------------------------------
-      # CORRECCIÓN AQUÍ:
-      # No podemos inventar "DEVOLUCIÓN - day" porque el sistema usa Enums.
-      # Usamos el tipo original. El precio negativo indicará que es devolución.
-      # ---------------------------------------------------------
       reversal = Sale.new(
         user:           current_user,
         client_id:      original.client_id,
@@ -229,21 +224,27 @@ class SalesController < ApplicationController
     sales = Sale.where("COALESCE(occurred_at, created_at) BETWEEN ? AND ?", from, to)
     store_sales = StoreSale.where("COALESCE(occurred_at, created_at) BETWEEN ? AND ?", from, to)
 
+    # Cargamos gastos para el corte
+    expenses = Expense.where("occurred_at BETWEEN ? AND ?", from, to)
+
     unless superuser?
       sales       = sales.where(user_id: user.id)
       store_sales = store_sales.where(user_id: user.id)
+      expenses    = expenses.where(user_id: user.id)
     end
 
-    @ops_count = sales.count + store_sales.count
-    @member_cents = sales.sum(:amount_cents).to_i
-    @store_cents  = store_sales.sum(:total_cents).to_i
+    @ops_count = sales.count + store_sales.count + expenses.count
+    @member_cents = sales.where("amount_cents >= 0").sum(:amount_cents).to_i
+    @store_cents  = store_sales.where("total_cents >= 0").sum(:total_cents).to_i
 
     # Cálculo informativo
     adjustments_store = store_sales.where("total_cents < 0").sum(:total_cents).to_i
     adjustments_mem   = sales.where("amount_cents < 0").sum(:amount_cents).to_i
     @adjustments_cents = adjustments_store + adjustments_mem
 
-    @total_cents = @member_cents + @store_cents
+    @expenses_cents = expenses.sum(:amount_cents).to_i
+
+    @total_cents = (@member_cents + @store_cents + @adjustments_cents) - @expenses_cents
 
     @by_method = { "cash" => 0, "transfer" => 0 }
     sales.each do |s|
@@ -255,7 +256,10 @@ class SalesController < ApplicationController
       @by_method[pm] += ss.total_cents.to_i if @by_method.key?(pm)
     end
 
-    @checkins_today = Checkin.where(created_at: from..to).count
+    # Restar gastos del efectivo
+    @by_method["cash"] -= @expenses_cents
+
+    @checkins_today = CheckIn.where(created_at: from..to).count
     @new_clients_today = Client.where(created_at: from..to).count
   end
 

@@ -6,9 +6,7 @@ class ExpensesController < ApplicationController
   end
 
   def create
-    # Convertimos el monto de pesos a centavos
     amount = (params[:expense][:amount].to_f * 100).to_i
-
     @expense = Expense.new(
       description: params[:expense][:description],
       amount_cents: amount,
@@ -17,10 +15,23 @@ class ExpensesController < ApplicationController
     )
 
     if @expense.save
-      redirect_to authenticated_root_path, notice: "Pago registrado: #{params[:expense][:description]} (-$#{params[:expense][:amount]})."
+      redirect_to authenticated_root_path, notice: "Gasto registrado correctamente."
     else
-      flash.now[:alert] = "Error al registrar. Revisa el monto."
       render :new
     end
+  end
+
+  # ✅ NUEVO: Permite borrar el gasto (Venta Negativa)
+  def destroy
+    @expense = Expense.find(params[:id])
+
+    # Opcional: Validar que sea del día de hoy para no alterar cortes viejos
+    if @expense.occurred_at < Time.current.beginning_of_day
+      redirect_to adjustments_sales_path, alert: "Solo puedes eliminar gastos del día de hoy."
+      return
+    end
+
+    @expense.destroy
+    redirect_to adjustments_sales_path, notice: "Gasto eliminado. El dinero ha regresado a la caja."
   end
 end
