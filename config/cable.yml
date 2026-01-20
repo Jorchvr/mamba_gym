@@ -1,17 +1,14 @@
-# Async adapter only works within the same process, so for manually triggering cable updates from a console,
-# and seeing results in the browser, you must do so from the web console (running inside the dev process),
-# not a terminal started via bin/rails console! Add "console" to any action or any ERB template view
-# to make the web console appear.
+# config/cable.yml
 development:
   adapter: async
 
 test:
   adapter: test
 
+# 🛠️ CAMBIO CLAVE:
+# Usamos "async" para que los mensajes viajen por la Memoria RAM.
+# Esto evita el Error 500 porque no intenta escribir en la base de datos.
 production:
-  adapter: solid_cable
-  connects_to:
-    database:
-      writing: cable
-  polling_interval: 0.1.seconds
-  message_retention: 1.day
+  adapter: async
+  url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
+  channel_prefix: powergym_production
