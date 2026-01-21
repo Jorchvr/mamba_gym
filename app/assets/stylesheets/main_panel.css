@@ -1,38 +1,55 @@
 /* =========================================
-   MAIN PANEL - VERSIÓN MAESTRA (DASHBOARD + GASTOS)
+   MAIN PANEL - VERSIÓN MAESTRA (CON SOPORTE DÍA/NOCHE)
    ========================================= */
 
-/* 1. VARIABLES (Tema Rojo Original) */
+/* 1. VARIABLES (Tema Oscuro por Defecto) */
 :root {
-  --bg: #0f1115;
-  --panel-left-bg: transparent;
-  --panel-right-bg: transparent;
+  /* Fondo y Degradados */
+  --bg-image: linear-gradient(rgba(15, 17, 21, 0.85), rgba(11, 13, 18, 0.85)), url('/assets/fondo_gym.jpg');
+  --bg-radial-1: rgba(239, 68, 68, .10);
+  --bg-radial-2: rgba(239, 68, 68, .08);
+  --bg-main: #0f1115;
+  --bg-secondary: #0b0d12;
 
-  --card-bg-rgb: 24, 26, 31;
-  --card-alpha: .62;
-  --card-blur: 8px;
-
-  --text: #e8ecf1;
-  --muted: #98a2b3;
+  /* Tarjetas y Contenedores */
+  --card-bg: rgba(24, 26, 31, 0.75);
+  --card-blur: 12px;
   --border: rgba(255, 255, 255, .10);
 
+  /* Texto */
+  --text: #e8ecf1;
+  --muted: #98a2b3;
+  --title-color: #ffffff;
+
+  /* Sombras y Otros */
   --radius: 16px;
-  --shadow: 0 12px 34px rgba(0, 0, 0, .35);
-
-  /* Espaciados */
-  --space-md: 1.25rem;
-  --space-lg: 2rem;
-  --space-xl: 3rem;
-
-  /* Colores */
+  --shadow: 0 12px 34px rgba(0, 0, 0, .45);
+  
+  /* Colores Rojos (Se mantienen en ambos modos) */
   --red-500: #ef4444;
   --red-600: #dc2626;
-  --red-700: #fef2f2;
   --red-alpha: rgba(239, 68, 68, .16);
-  --red-alpha-strong: rgba(239, 68, 68, .26);
-  --red-alpha-ring: rgba(239, 68, 68, .28);
 }
 
+/* 2. VARIABLES (Modo Claro) */
+body.light-mode {
+  --bg-image: linear-gradient(rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.9));
+  --bg-radial-1: rgba(239, 68, 68, .05);
+  --bg-radial-2: rgba(239, 68, 68, .03);
+  --bg-main: #f8fafc;
+  --bg-secondary: #f1f5f9;
+
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-blur: 8px;
+  --border: rgba(0, 0, 0, 0.1);
+
+  --text: #1e293b;
+  --muted: #64748b;
+  --title-color: #0f172a;
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* 3. APLICACIÓN DE ESTILOS BASE */
 html, body {
   height: 100%;
 }
@@ -40,14 +57,17 @@ html, body {
 body {
   margin: 0;
   background:
-    radial-gradient(1200px 800px at 10% -10%, rgba(239, 68, 68, .10), transparent 60%),
-    radial-gradient(1000px 600px at 110% 110%, rgba(239, 68, 68, .08), transparent 60%),
-    linear-gradient(180deg, #0f1115, #0b0d12);
+    radial-gradient(1200px 800px at 10% -10%, var(--bg-radial-1), transparent 60%),
+    radial-gradient(1000px 600px at 110% 110%, var(--bg-radial-2), transparent 60%),
+    var(--bg-image),
+    linear-gradient(180deg, var(--bg-main), var(--bg-secondary));
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  transition: all 0.3s ease; /* Para que el cambio de color sea suave */
   overflow-x: hidden;
 }
-
 /* Fix global para scroll */
 html, body, #app, .app, .page, .content, .split-container, .main, .container {
   height: auto !important;
