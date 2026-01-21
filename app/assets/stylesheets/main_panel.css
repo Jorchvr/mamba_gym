@@ -1,62 +1,60 @@
 /* =========================================
-   VARIABLES DE TEMA
+   VARIABLES DE TEMA (DARK PREMIUM & CLEAN LIGHT)
    ========================================= */
 :root {
+  /* MODO OSCURO ORIGINAL (TEXTURA METÁLICA) */
   --bg-image: linear-gradient(rgba(15, 17, 21, 0.85), rgba(11, 13, 18, 0.85)), url('/assets/fondo_gym.jpg');
   --text-color: #e8ecf1;
   --card-bg: rgba(24, 26, 31, 0.75);
-  --border-color: rgba(255, 255, 255, .15);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-red: #ef4444;
   --title-color: #ffffff;
 }
 
-/* =========================================
-   MODO CLARO - VISIBILIDAD TOTAL
-   ========================================= */
+/* MODO CLARO DISEÑADO (CON MEJOR LETRA Y BORDES) */
 body.light-mode {
-  --bg-image: linear-gradient(#f1f5f9, #e2e8f0); /* Fondo sólido claro */
-  --text-color: #0f172a !important; /* Negro azulado muy fuerte */
-  --card-bg: #ffffff !important; /* Blanco sólido, nada de transparencia */
-  --border-color: #cbd5e1 !important;
-  --title-color: #000000 !important;
+  --bg-image: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --text-color: #1e293b;
+  --card-bg: #ffffff;
+  --border-color: #cbd5e1;
+  --title-color: #0f172a;
 }
 
-/* Forzar que todo texto sea negro en modo claro */
-body.light-mode h1, body.light-mode h2, body.light-mode h3, 
-body.light-mode p, body.light-mode span, body.light-mode div,
-body.light-mode strong, body.light-mode label {
-  color: #000000 !important;
-  opacity: 1 !important; /* Quita cualquier transparencia */
+/* =========================================
+   APLICACIÓN DE ESTILOS (SÓLO LO NECESARIO)
+   ========================================= */
+body {
+  margin: 0;
+  background: var(--bg-image);
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--text-color);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Arreglo para los productos de la tienda */
-body.light-mode .product-square-btn {
-  background: #f8fafc !important;
-  border: 2px solid #e2e8f0 !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+/* Bordes bonitos para las boxes en modo claro */
+body.light-mode .card, 
+body.light-mode .mini-cart, 
+body.light-mode .status-panel {
+  border: 1px solid #e2e8f0;
+  border-bottom: 3px solid var(--accent-red); /* Línea de color abajo para estilo */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-body.light-mode .product-square-name,
-body.light-mode .product-square-stock {
-  color: #000000 !important;
+/* Forzar que las letras se vean en blanco */
+body.light-mode .title, 
+body.light-mode .card-title, 
+body.light-mode .user-greeting,
+body.light-mode .product-square-name {
+  color: var(--title-color) !important;
 }
 
-/* Arreglo para los inputs (buscador) */
+/* Inputs legibles en blanco */
 body.light-mode .form-input {
   background: #ffffff !important;
-  color: #000000 !important;
-  border: 2px solid #cbd5e1 !important;
-}
-
-/* Arreglo para botones secundarios (Historial, Corte, etc) */
-body.light-mode .btn:not(.btn-danger):not(.btn-accent):not(.btn-primary) {
-  background: #e2e8f0 !important;
-  color: #000000 !important;
-  border: 1px solid #cbd5e1 !important;
-}
-
-/* Asegurar que el mensaje de "Esperando Lector" sea visible */
-body.light-mode #live-scan-result p {
-  color: #475569 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
 }
 /* Fix global para scroll */
 /* Fix global para scroll */
