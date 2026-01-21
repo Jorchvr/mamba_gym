@@ -226,3 +226,25 @@ body,
   width: 100% !important;
   margin-bottom: 1.5rem !important;
 }
+/* =========================================
+   ELIMINAR LOGO E IMAGEN DE FONDO
+   ========================================= */
+
+/* 1. Ocultar el elemento de imagen con clase logo */
+.logo {
+  display: none !important;
+}
+
+/* 2. Ocultar cualquier imagen de fondo en el panel o el body */
+body, 
+.gym-panel, 
+.panel, 
+.split-container {
+  background-image: none !important;
+}
+
+/* 3. Ajustar el encabezado para que el título ocupe el espacio */
+.header-row {
+  justify-content: flex-start !important; /* Alinea el título a la izquierda */
+  margin-bottom: 2rem !important;
+}

@@ -1,347 +1,347 @@
-<%# 1. ANTENA PARA RECIBIR SEÑALES EN TIEMPO REAL (TURBO STREAMS) %>
-<%= turbo_stream_from "recepcion" %>
-<%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
+  <%# 1. ANTENA PARA RECIBIR SEÑALES EN TIEMPO REAL (TURBO STREAMS) %>
+  <%= turbo_stream_from "recepcion" %>
+  <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
-<div class="split-container">
-  <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
-  <div class="panel gym-panel">
-    <div class="header-row">
-      <h2 class="title">Power Gym</h2>
-      
-      <div style="display:flex; gap: 15px; align-items:center;">
-        <%# --- BOTÓN DE MODO NOCHE/DÍA --- %>
-        <button id="theme-toggle" class="btn btn-icon" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-          <span id="theme-icon">🌙</span>
-        </button>
-        <%= image_tag "logo.png", alt: "Logo", class: "logo" %>
-      </div>
-    </div>
-
-    <p class="user-greeting"><strong>Usuario:</strong> <%= current_user.name %></p>
-
-    <div class="top-actions" style="display:flex; gap:.75rem; flex-wrap:wrap;">
-      <%= button_to "Cerrar Sesión",
-                  destroy_user_session_path,
-                  method: :delete,
-                  form: { data: { turbo: false } },
-                  class: "btn btn-danger" %>
-    </div>
-
-    <div class="search-card card" style="margin-top:1rem;">
-      <%= form_with url: authenticated_root_path, method: :get, local: true do |f| %>
-        <div class="search-form" style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
-          <%= f.text_field :search_number,
-                           value: params[:search_number],
-                           placeholder: "Buscar # Cliente, nombre o ESCANEAR HUELLA",
-                           class: "form-input",
-                           style: "min-width:240px; flex:1;" %>
-          <%= f.submit "Buscar", class: "btn btn-accent" %>
+  <div class="split-container">
+    <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
+    <div class="panel gym-panel">
+      <div class="header-row">
+        <h2 class="title">Power Gym</h2>
+        
+        <div style="display:flex; gap: 15px; align-items:center;">
+          <%# --- BOTÓN DE MODO NOCHE/DÍA --- %>
+          <button id="theme-toggle" class="btn btn-icon" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+            <span id="theme-icon">🌙</span>
+          </button>
+          <%= image_tag "logo.png", alt: "Logo", class: "logo" %>
         </div>
-      <% end %>
-    </div>
-
-    <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA %>
-    <div id="contenedor_resultado" style="margin-top: 1.5rem;">
-      <div id="live-scan-result">
-        <%= render "clients/card_result", client: nil %>
       </div>
-    </div>
 
-    <%# ===================== RESULTADO DE BÚSQUEDA MANUAL ===================== %>
-    <% if params[:search_number].present? %>
-      <% if @found_client.present? %>
-        <% overdue = @found_client.next_payment_on.present? && @found_client.next_payment_on < Date.current %>
-        <% active  = @found_client.next_payment_on.present? && @found_client.next_payment_on >= Date.current %>
+      <p class="user-greeting"><strong>Usuario:</strong> <%= current_user.name %></p>
 
-        <div class="card result-card" style="border: 4px solid <%= overdue ? '#ef4444' : '#34d399' %>;">
-          <div class="result-left">
-            <div class="result-photo">
-              <%= client_photo_tag(@found_client, size: 160, classes: "client-photo--xl") %>
-            </div>
+      <div class="top-actions" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+        <%= button_to "Cerrar Sesión",
+                    destroy_user_session_path,
+                    method: :delete,
+                    form: { data: { turbo: false } },
+                    class: "btn btn-danger" %>
+      </div>
 
-            <div class="result-details">
-              <h3 class="result-name"><%= @found_client.name %></h3>
-              <p class="result-meta">#<%= @found_client.id %> • <%= @found_client.membership_type.humanize %></p>
-
-              <div class="result-kv">
-                <span>Inscripción</span>
-                <span><%= @found_client.enrolled_on || "-" %></span>
-              </div>
-              <div class="result-kv">
-                <span>Próximo pago</span>
-                <span><%= @found_client.next_payment_on || "-" %></span>
-              </div>
-
-              <div class="result-actions">
-                <%= link_to "Ver ficha", client_path(@found_client), class: "btn" %>
-                <% if overdue %>
-                  <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary" %>
-                <% end %>
-              </div>
-            </div>
+      <div class="search-card card" style="margin-top:1rem;">
+        <%= form_with url: authenticated_root_path, method: :get, local: true do |f| %>
+          <div class="search-form" style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+            <%= f.text_field :search_number,
+                            value: params[:search_number],
+                            placeholder: "Buscar # Cliente, nombre o ESCANEAR HUELLA",
+                            class: "form-input",
+                            style: "min-width:240px; flex:1;" %>
+            <%= f.submit "Buscar", class: "btn btn-accent" %>
           </div>
-
-          <div class="result-right">
-            <% if overdue %>
-              <div class="status-panel status-panel--debt">
-                <div class="status-kicker">Estado</div>
-                <div class="status-big">ADEUDO</div>
-                <p class="status-sub">La fecha de pago ya pasó. ¿Deseas renovar la membresía?</p>
-                <div class="status-buttons">
-                  <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary btn-lg" %>
-                </div>
-              </div>
-            <% elsif active %>
-              <div class="status-panel status-panel--ok">
-                <div class="status-kicker">Estado</div>
-                <div class="status-big">¡BIENVENIDO!</div>
-                <p class="status-sub">Acceso concedido. Disfruta tu entrenamiento 💪</p>
-                <div class="status-badge-row">
-                  <span class="status-badge status-badge--ok">
-                    <span class="dot"></span> Bienvenido
-                  </span>
-                </div>
-              </div>
-            <% else %>
-              <div class="status-panel">
-                <div class="status-kicker">Estado</div>
-                <div class="status-big">SIN FECHAS</div>
-                <p class="status-sub">No hay inscripción registrada. Puedes registrarlo o renovar.</p>
-                <div class="status-buttons">
-                  <%= link_to "Registrar/Renovar", memberships_path(q: @found_client.id), class: "btn btn-accent btn-lg" %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      <% else %>
-        <div class="card">
-          <p class="text-muted">No se encontró ningún cliente con “<strong><%= params[:search_number] %></strong>”.</p>
-        </div>
-      <% end %>
-    <% end %>
-
-    <div class="grid-2 mt-6">
-      <div class="card">
-        <h3 class="card-title mb-2">Caja de Hoy (Neto)</h3>
-        <p class="metric-big">
-          $<%= (@today_total_cents.to_i / 100.0).round(2) %>
-        </p>
-        <p class="text-muted">
-           <%= @today_sales_count.to_i %> ventas
-           <% if defined?(@today_expenses_cents) && @today_expenses_cents > 0 %>
-             <span style="color: #ef4444; font-size: 0.9em;">(-$<%= (@today_expenses_cents/100.0).round(2) %> gastos)</span>
-           <% end %>
-        </p>
-
-        <div class="mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
-          <%= link_to "Ajustes / venta negativa", adjustments_sales_path, class: "btn btn-danger" %>
-          <%= link_to "Historial (por día)", history_path, class: "btn" %>
-          <%= link_to "Corte del día", closeout_path, class: "btn" %>
-          <% if is_superuser? %>
-            <%= link_to "Descargar Excel del día", reports_daily_export_excel_path, class: "btn" %>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 class="card-title mb-2">Personas que han entrado (hoy)</h3>
-        <p class="metric-big"><%= @today_checkins %></p>
-        <p class="text-muted">Registro diario</p>
-      </div>
-    </div>
-
-    <div class="quick-actions mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
-      <%= link_to "Clientes", clients_path, class: "btn" %>
-      <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
-      <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
-      <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn btn-accent" %>
-      <%= link_to "Pago Servicios", new_expense_path, class: "btn btn-danger" %>
-    </div>
-  </div>
-
-  <%# ==================== PANEL DERECHO: TIENDA ==================== %>
-  <div class="panel shop-panel">
-    <div class="header-row">
-      <h2 class="title">Tienda Online</h2>
-      <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
-        <% if is_superuser? %>
-          <%= link_to "Backoffice", products_path, class: "btn" %>
-          <%= link_to "Crear usuario", new_admin_user_path, class: "btn btn-primary" %>
         <% end %>
       </div>
-    </div>
 
-    <div class="shop-body-split">
-      <div class="shop-top">
-        <div class="card product-grid-card">
-          <h3 class="card-title mb-2">Productos rápidos</h3>
-          <p class="text-muted" style="margin-bottom:.75rem;">Toca un cuadro para agregar al carrito.</p>
-
-          <div class="product-grid">
-            <% @products.each do |p| %>
-              <%= button_to add_cart_path,
-                    method: :post,
-                    params: { product_id: p.id },
-                    class: "product-square-btn",
-                    form: { data: { turbo: false } } do %>
-                <div class="product-square-name"><%= p.name %></div>
-                <div class="product-square-footer">
-                  <span class="product-square-price">$<%= (p.price_cents.to_i/100.0).round(2) %></span>
-                  <span class="product-square-stock">Stock: <%= p.stock %></span>
-                </div>
-              <% end %>
-            <% end %>
-          </div>
+      <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA %>
+      <div id="contenedor_resultado" style="margin-top: 1.5rem;">
+        <div id="live-scan-result">
+          <%= render "clients/card_result", client: nil %>
         </div>
       </div>
 
-      <div class="shop-bottom">
-        <div class="mini-cart mini-cart--short">
-          <div class="header-row">
-            <h3 class="card-title">Carrito</h3>
+      <%# ===================== RESULTADO DE BÚSQUEDA MANUAL ===================== %>
+      <% if params[:search_number].present? %>
+        <% if @found_client.present? %>
+          <% overdue = @found_client.next_payment_on.present? && @found_client.next_payment_on < Date.current %>
+          <% active  = @found_client.next_payment_on.present? && @found_client.next_payment_on >= Date.current %>
+
+          <div class="card result-card" style="border: 4px solid <%= overdue ? '#ef4444' : '#34d399' %>;">
+            <div class="result-left">
+              <div class="result-photo">
+                <%= client_photo_tag(@found_client, size: 160, classes: "client-photo--xl") %>
+              </div>
+
+              <div class="result-details">
+                <h3 class="result-name"><%= @found_client.name %></h3>
+                <p class="result-meta">#<%= @found_client.id %> • <%= @found_client.membership_type.humanize %></p>
+
+                <div class="result-kv">
+                  <span>Inscripción</span>
+                  <span><%= @found_client.enrolled_on || "-" %></span>
+                </div>
+                <div class="result-kv">
+                  <span>Próximo pago</span>
+                  <span><%= @found_client.next_payment_on || "-" %></span>
+                </div>
+
+                <div class="result-actions">
+                  <%= link_to "Ver ficha", client_path(@found_client), class: "btn" %>
+                  <% if overdue %>
+                    <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-right">
+              <% if overdue %>
+                <div class="status-panel status-panel--debt">
+                  <div class="status-kicker">Estado</div>
+                  <div class="status-big">ADEUDO</div>
+                  <p class="status-sub">La fecha de pago ya pasó. ¿Deseas renovar la membresía?</p>
+                  <div class="status-buttons">
+                    <%= link_to "Renovar ahora", memberships_path(q: @found_client.id), class: "btn btn-primary btn-lg" %>
+                  </div>
+                </div>
+              <% elsif active %>
+                <div class="status-panel status-panel--ok">
+                  <div class="status-kicker">Estado</div>
+                  <div class="status-big">¡BIENVENIDO!</div>
+                  <p class="status-sub">Acceso concedido. Disfruta tu entrenamiento 💪</p>
+                  <div class="status-badge-row">
+                    <span class="status-badge status-badge--ok">
+                      <span class="dot"></span> Bienvenido
+                    </span>
+                  </div>
+                </div>
+              <% else %>
+                <div class="status-panel">
+                  <div class="status-kicker">Estado</div>
+                  <div class="status-big">SIN FECHAS</div>
+                  <p class="status-sub">No hay inscripción registrada. Puedes registrarlo o renovar.</p>
+                  <div class="status-buttons">
+                    <%= link_to "Registrar/Renovar", memberships_path(q: @found_client.id), class: "btn btn-accent btn-lg" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% else %>
+          <div class="card">
+            <p class="text-muted">No se encontró ningún cliente con “<strong><%= params[:search_number] %></strong>”.</p>
+          </div>
+        <% end %>
+      <% end %>
+
+      <div class="grid-2 mt-6">
+        <div class="card">
+          <h3 class="card-title mb-2">Caja de Hoy (Neto)</h3>
+          <p class="metric-big">
+            $<%= (@today_total_cents.to_i / 100.0).round(2) %>
+          </p>
+          <p class="text-muted">
+            <%= @today_sales_count.to_i %> ventas
+            <% if defined?(@today_expenses_cents) && @today_expenses_cents > 0 %>
+              <span style="color: #ef4444; font-size: 0.9em;">(-$<%= (@today_expenses_cents/100.0).round(2) %> gastos)</span>
+            <% end %>
+          </p>
+
+          <div class="mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+            <%= link_to "Ajustes / venta negativa", adjustments_sales_path, class: "btn btn-danger" %>
+            <%= link_to "Historial (por día)", history_path, class: "btn" %>
+            <%= link_to "Corte del día", closeout_path, class: "btn" %>
             <% if is_superuser? %>
-              <%= link_to "Ventas hechas", sales_path, class: "btn" %>
+              <%= link_to "Descargar Excel del día", reports_daily_export_excel_path, class: "btn" %>
             <% end %>
           </div>
+        </div>
 
-          <% if flash[:cart_notice].present? || flash[:cart_alert].present? %>
-            <div class="mb-4">
-              <% if flash[:cart_notice].present? %>
-                <div class="card" style="border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); padding:.6rem 1rem;">
-                  <%= flash[:cart_notice] %>
-                </div>
-              <% end %>
-              <% if flash[:cart_alert].present? %>
-                <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem;">
-                  <%= flash[:cart_alert] %>
-                </div>
+        <div class="card">
+          <h3 class="card-title mb-2">Personas que han entrado (hoy)</h3>
+          <p class="metric-big"><%= @today_checkins %></p>
+          <p class="text-muted">Registro diario</p>
+        </div>
+      </div>
+
+      <div class="quick-actions mt-6" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+        <%= link_to "Clientes", clients_path, class: "btn" %>
+        <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
+        <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
+        <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn btn-accent" %>
+        <%= link_to "Pago Servicios", new_expense_path, class: "btn btn-danger" %>
+      </div>
+    </div>
+
+    <%# ==================== PANEL DERECHO: TIENDA ==================== %>
+    <div class="panel shop-panel">
+      <div class="header-row">
+        <h2 class="title">Tienda Online</h2>
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <% if is_superuser? %>
+            <%= link_to "Backoffice", products_path, class: "btn" %>
+            <%= link_to "Crear usuario", new_admin_user_path, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="shop-body-split">
+        <div class="shop-top">
+          <div class="card product-grid-card">
+            <h3 class="card-title mb-2">Productos rápidos</h3>
+            <p class="text-muted" style="margin-bottom:.75rem;">Toca un cuadro para agregar al carrito.</p>
+
+            <div class="product-grid">
+              <% @products.each do |p| %>
+                <%= button_to add_cart_path,
+                      method: :post,
+                      params: { product_id: p.id },
+                      class: "product-square-btn",
+                      form: { data: { turbo: false } } do %>
+                  <div class="product-square-name"><%= p.name %></div>
+                  <div class="product-square-footer">
+                    <span class="product-square-price">$<%= (p.price_cents.to_i/100.0).round(2) %></span>
+                    <span class="product-square-stock">Stock: <%= p.stock %></span>
+                  </div>
+                <% end %>
               <% end %>
             </div>
-          <% end %>
+          </div>
+        </div>
 
-          <% cart = session[:cart] || {} %>
-          <% product_ids  = cart.keys.map(&:to_i) %>
-          <% products_map = Product.where(id: product_ids).index_by(&:id) %>
-
-          <div class="mini-cart-body">
-            <% if cart.blank? %>
-              <p class="text-muted">No hay productos en el carrito.</p>
-            <% else %>
-              <% total_cents = 0 %>
-              <% cart.each do |pid, qty| %>
-                <% p = products_map[pid.to_i] %>
-                <% next unless p %>
-                <% qty        = qty.to_i %>
-                <% line_cents = p.price_cents.to_i * qty %>
-                <% total_cents += line_cents %>
-
-                <div class="cart-line" style="display: flex; justify-content: space-between; align-items: center; padding: .7rem 0; border-bottom: 1px solid var(--border);">
-                  <span><%= p.name %> <em>x<%= qty %></em></span>
-                  <span>$<%= (line_cents/100.0).round(2) %></span>
-                </div>
-
-                <div class="qty-actions" style="display: flex; gap: .35rem; justify-content: flex-end; margin-top: 5px;">
-                  <%= button_to "−", decrement_cart_path, method: :post,
-                        params: { product_id: p.id },
-                        class: "btn btn-sm btn-icon",
-                        form: { data: { turbo: false }, style: "display:inline-block" } %>
-
-                  <%= button_to "+", increment_cart_path, method: :post,
-                        params: { product_id: p.id },
-                        class: "btn btn-primary btn-sm btn-icon",
-                        form: { data: { turbo: false }, style: "display:inline-block" } %>
-
-                  <%= button_to "Quitar", remove_cart_path, method: :post,
-                        params: { product_id: p.id },
-                        class: "btn btn-sm",
-                        form: { data: { turbo: false }, style: "display:inline-block" } %>
-                </div>
+        <div class="shop-bottom">
+          <div class="mini-cart mini-cart--short">
+            <div class="header-row">
+              <h3 class="card-title">Carrito</h3>
+              <% if is_superuser? %>
+                <%= link_to "Ventas hechas", sales_path, class: "btn" %>
               <% end %>
+            </div>
+
+            <% if flash[:cart_notice].present? || flash[:cart_alert].present? %>
+              <div class="mb-4">
+                <% if flash[:cart_notice].present? %>
+                  <div class="card" style="border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); padding:.6rem 1rem;">
+                    <%= flash[:cart_notice] %>
+                  </div>
+                <% end %>
+                <% if flash[:cart_alert].present? %>
+                  <div class="card" style="border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:.6rem 1rem;">
+                    <%= flash[:cart_alert] %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <% cart = session[:cart] || {} %>
+            <% product_ids  = cart.keys.map(&:to_i) %>
+            <% products_map = Product.where(id: product_ids).index_by(&:id) %>
+
+            <div class="mini-cart-body">
+              <% if cart.blank? %>
+                <p class="text-muted">No hay productos en el carrito.</p>
+              <% else %>
+                <% total_cents = 0 %>
+                <% cart.each do |pid, qty| %>
+                  <% p = products_map[pid.to_i] %>
+                  <% next unless p %>
+                  <% qty        = qty.to_i %>
+                  <% line_cents = p.price_cents.to_i * qty %>
+                  <% total_cents += line_cents %>
+
+                  <div class="cart-line" style="display: flex; justify-content: space-between; align-items: center; padding: .7rem 0; border-bottom: 1px solid var(--border);">
+                    <span><%= p.name %> <em>x<%= qty %></em></span>
+                    <span>$<%= (line_cents/100.0).round(2) %></span>
+                  </div>
+
+                  <div class="qty-actions" style="display: flex; gap: .35rem; justify-content: flex-end; margin-top: 5px;">
+                    <%= button_to "−", decrement_cart_path, method: :post,
+                          params: { product_id: p.id },
+                          class: "btn btn-sm btn-icon",
+                          form: { data: { turbo: false }, style: "display:inline-block" } %>
+
+                    <%= button_to "+", increment_cart_path, method: :post,
+                          params: { product_id: p.id },
+                          class: "btn btn-primary btn-sm btn-icon",
+                          form: { data: { turbo: false }, style: "display:inline-block" } %>
+
+                    <%= button_to "Quitar", remove_cart_path, method: :post,
+                          params: { product_id: p.id },
+                          class: "btn btn-sm",
+                          form: { data: { turbo: false }, style: "display:inline-block" } %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+
+            <%= form_with url: checkout_cart_path, method: :post, local: true do |f| %>
+              <div class="mb-4">
+                <label class="label">Método de pago:</label>
+                <div class="radio-row">
+                  <label><input type="radio" name="payment_method" value="cash" <%= "checked" unless params[:payment_method] == "transfer" %>> Efectivo</label>
+                  <label style="margin-left:1rem;"><input type="radio" name="payment_method" value="transfer" <%= "checked" if params[:payment_method] == "transfer" %>> Transferencia</label>
+                </div>
+              </div>
+
+              <div class="cart-total-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: auto; padding-top: 1rem;">
+                <div class="total" style="font-size: 1.5rem; font-weight: 800; color: #f3f4f6;">
+                  Total: $<%= ((cart || {}).sum { |pid, q| (products_map[pid.to_i]&.price_cents.to_i || 0) * q.to_i } / 100.0).round(2) %>
+                </div>
+                <%= f.submit "Realizar Venta", class: "btn btn-primary" %>
+              </div>
             <% end %>
           </div>
-
-          <%= form_with url: checkout_cart_path, method: :post, local: true do |f| %>
-            <div class="mb-4">
-              <label class="label">Método de pago:</label>
-              <div class="radio-row">
-                <label><input type="radio" name="payment_method" value="cash" <%= "checked" unless params[:payment_method] == "transfer" %>> Efectivo</label>
-                <label style="margin-left:1rem;"><input type="radio" name="payment_method" value="transfer" <%= "checked" if params[:payment_method] == "transfer" %>> Transferencia</label>
-              </div>
-            </div>
-
-            <div class="cart-total-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: auto; padding-top: 1rem;">
-              <div class="total" style="font-size: 1.5rem; font-weight: 800; color: #f3f4f6;">
-                Total: $<%= ((cart || {}).sum { |pid, q| (products_map[pid.to_i]&.price_cents.to_i || 0) * q.to_i } / 100.0).round(2) %>
-              </div>
-              <%= f.submit "Realizar Venta", class: "btn btn-primary" %>
-            </div>
-          <% end %>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<style>
-  @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-</style>
+  <style>
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+  </style>
 
-<%# 📡 SCRIPTS: TEMA Y HUELLA %>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    // --- 1. LÓGICA DE CAMBIO DE TEMA (Día/Noche) ---
-    const btn = document.getElementById("theme-toggle");
-    const icon = document.getElementById("theme-icon");
-    
-    // Al cargar, verificar preferencia guardada
-    if (localStorage.getItem("gym_theme") === "light") {
-      document.body.classList.add("light-mode");
-      icon.innerText = "☀️";
-    }
+  <%# 📡 SCRIPTS: TEMA Y HUELLA %>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // --- 1. LÓGICA DE CAMBIO DE TEMA (Día/Noche) ---
+      const btn = document.getElementById("theme-toggle");
+      const icon = document.getElementById("theme-icon");
+      
+      // Al cargar, verificar preferencia guardada
+      if (localStorage.getItem("gym_theme") === "light") {
+        document.body.classList.add("light-mode");
+        icon.innerText = "☀️";
+      }
 
-    btn.addEventListener("click", () => {
-      document.body.classList.toggle("light-mode");
-      const isLight = document.body.classList.contains("light-mode");
-      localStorage.setItem("gym_theme", isLight ? "light" : "dark");
-      icon.innerText = isLight ? "☀️" : "🌙";
+      btn.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        const isLight = document.body.classList.contains("light-mode");
+        localStorage.setItem("gym_theme", isLight ? "light" : "dark");
+        icon.innerText = isLight ? "☀️" : "🌙";
+      });
+
+      // --- 2. LÓGICA DE RASTREO DE HUELLAS ---
+      console.log("📡 [HOME] Iniciando rastreo de huellas...");
+      let lastProcesedId = null;
+      let isFetching = false;
+
+      setInterval(() => {
+        if (isFetching) return; 
+        fetch('/clients/check_latest')
+          .then(response => response.json())
+          .then(data => {
+            if (data.new_entry && data.client_id && data.client_id !== lastProcesedId) {
+              console.log("🔥 ¡HUELLA DETECTADA! ID:", data.client_id);
+              lastProcesedId = data.client_id;
+              isFetching = true;
+
+              const manualResult = document.querySelector(".result-card");
+              if(manualResult) manualResult.style.display = 'none';
+
+              fetch(`/clients/${data.client_id}/card_view`)
+                .then(res => res.text())
+                .then(html => {
+                  const container = document.getElementById("live-scan-result");
+                  container.innerHTML = html;
+                  container.style.opacity = 0;
+                  container.style.transform = "translateY(-10px)";
+                  container.style.transition = "all 0.4s ease-out";
+                  setTimeout(() => {
+                    container.style.opacity = 1;
+                    container.style.transform = "translateY(0)";
+                  }, 50);
+                })
+                .finally(() => { isFetching = false; });
+            }
+          })
+          .catch(err => console.error("Silencio en la red...", err));
+      }, 1000); 
     });
-
-    // --- 2. LÓGICA DE RASTREO DE HUELLAS ---
-    console.log("📡 [HOME] Iniciando rastreo de huellas...");
-    let lastProcesedId = null;
-    let isFetching = false;
-
-    setInterval(() => {
-      if (isFetching) return; 
-      fetch('/clients/check_latest')
-        .then(response => response.json())
-        .then(data => {
-          if (data.new_entry && data.client_id && data.client_id !== lastProcesedId) {
-            console.log("🔥 ¡HUELLA DETECTADA! ID:", data.client_id);
-            lastProcesedId = data.client_id;
-            isFetching = true;
-
-            const manualResult = document.querySelector(".result-card");
-            if(manualResult) manualResult.style.display = 'none';
-
-            fetch(`/clients/${data.client_id}/card_view`)
-              .then(res => res.text())
-              .then(html => {
-                const container = document.getElementById("live-scan-result");
-                container.innerHTML = html;
-                container.style.opacity = 0;
-                container.style.transform = "translateY(-10px)";
-                container.style.transition = "all 0.4s ease-out";
-                setTimeout(() => {
-                  container.style.opacity = 1;
-                  container.style.transform = "translateY(0)";
-                }, 50);
-              })
-              .finally(() => { isFetching = false; });
-          }
-        })
-        .catch(err => console.error("Silencio en la red...", err));
-    }, 1000); 
-  });
-</script>
+  </script>
