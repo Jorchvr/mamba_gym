@@ -2,8 +2,8 @@
 <% prices = defined?(Client::PRICES) ? Client::PRICES : { "day" => 3000, "week" => 12000, "month" => 26500 } %>
 <% d, w, m = prices["day"]/100.0, prices["week"]/100.0, prices["month"]/100.0 %>
 
-<%# 🔥 CORRECCIÓN APLICADA: multipart: true permite subir archivos, turbo: "false" evita errores de Rails moderno %>
-<%= form_with(model: client, local: true, html: { multipart: true, id: "client-form", data: { turbo: "false" } }) do |f| %>
+<%# 🔥 CORRECCIÓN FINAL: Usamos 'enctype' explícito para forzar la subida de archivos %>
+<%= form_with(model: client, local: true, html: { enctype: "multipart/form-data", id: "client-form", data: { turbo: "false" } }) do |f| %>
   
   <% if client.errors.any? %>
     <div class="card" style="border-color:#ef4444; background:rgba(239,68,68,.1); padding:1rem; margin-bottom:1rem; color:#ef4444;">
@@ -62,9 +62,9 @@
         
         <div id="gymPlaceholder" style="text-align:center;">
           <% if client.photo.attached? %>
-            <%# Usamos cl_image_tag si tienes la gema configurada, o image_tag normal %>
-            <%= image_tag client.photo, style: "max-width:120px; border-radius:5px;" %>
-            <p style="color:#aaa; font-size:0.8rem;">Actual</p>
+             <%# Muestra la foto actual si existe %>
+             <%= image_tag client.photo, style: "max-width:120px; border-radius:5px;" %>
+             <p style="color:#aaa; font-size:0.8rem;">Actual</p>
           <% else %>
             <div style="font-size:3rem;">📷</div>
             <p style="color:#666;">Sin foto</p>
