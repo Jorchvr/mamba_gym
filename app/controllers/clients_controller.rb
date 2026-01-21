@@ -29,11 +29,10 @@ class ClientsController < ApplicationController
 
       if @client
         begin
-          # Intentamos usar el primer usuario como respaldo para el historial
+          # Usamos el primer usuario como respaldo para evitar Error 500 si no hay sesión activa
           system_user = User.first
 
-          # 🟢 CREACIÓN DEL CHECK-IN (Corregido para evitar Error 500)
-          # Al crear el CheckIn, el modelo dispara automáticamente el Turbo Stream a la vista.
+          # Creación del registro que dispara el Turbo Stream automáticamente
           CheckIn.create!(
             client: @client,
             occurred_at: Time.current,
@@ -44,7 +43,7 @@ class ClientsController < ApplicationController
           return render json: { status: "success", message: "Bienvenido #{@client.name}" }
         rescue => e
           puts "❌ ERROR AL GUARDAR ASISTENCIA: #{e.message}"
-          return render json: { status: "error", message: e.message }, status: 500
+          render json: { status: "error", message: e.message }, status: 500
         end
       end
     end
@@ -54,7 +53,7 @@ class ClientsController < ApplicationController
     if huella_recibida.present?
       Rails.cache.write("temp_huella_manual", huella_recibida, expires_in: 10.minutes)
 
-      # Avisamos a la web que hay una huella nueva mediante Turbo Stream manual
+      # Notificación visual manual para huellas nuevas
       Turbo::StreamsChannel.broadcast_replace_to(
         "recepcion",
         target: "contenedor_resultado",
@@ -104,7 +103,7 @@ class ClientsController < ApplicationController
   end
 
   # =========================================================
-  # 📋 2. CRUD Y LÓGICA DE NEGOCIO
+  # 📋 2. CRUD Y LÓGICA DE NEGOCIO (INDEX CON BUSCADOR)
   # =========================================================
   def index
     @q = params[:q].to_s.strip
@@ -115,13 +114,12 @@ class ClientsController < ApplicationController
     base_scope = ::Client.order(id: :desc)
     scope = base_scope
 
-    # Buscador por número (Home)
+    # Buscador por número para el Home
     if @search_number.present?
       scope = scope.where(id: @search_number)
       @found_client = scope.first
     end
 
-    # Buscador general
     if @q.present?
       if @filter == "id" && @q.to_i.to_s == @q
         scope = scope.where(id: @q.to_i)

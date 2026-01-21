@@ -9,6 +9,11 @@
       <h2 class="title">Gym Control</h2>
       
       <div style="display:flex; gap: 10px; align-items:center;">
+        <%# BOTÓN DE CAMBIO DE TEMA %>
+        <button id="theme-toggle" class="btn btn-sm" style="border-radius: 50px; padding: 5px 12px; font-size: 1.2rem; background: var(--border);">
+          <span id="theme-icon">🌙</span>
+        </button>
+
         <% if @scanner_active %>
           <div style="color:#10b981; font-size:0.75rem; font-weight:900; border:2px solid #10b981; padding:4px 10px; border-radius:12px; background: rgba(16, 185, 129, 0.1); animation: blink 2s infinite;">
             📡 ESCANEANDO...
@@ -48,12 +53,12 @@
       <% end %>
     </div>
 
-    <%# ========================================================= %>
     <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA (TURBO Y SCRIPT) %>
-    <%# Usamos el ID 'contenedor_resultado' para Turbo y mantenemos %>
-    <%# el ID 'live-scan-result' dentro para tu script original. %>
-    <%# ========================================================= %>
-  
+    <div id="contenedor_resultado" style="margin-top: 1.5rem;">
+      <div id="live-scan-result">
+        <%= render "clients/card_result", client: nil %>
+      </div>
+    </div>
 
     <%# ===================== Resultado de búsqueda MANUAL ===================== %>
     <% if params[:search_number].present? %>
@@ -163,9 +168,7 @@
       <%= link_to "Clientes", clients_path, class: "btn" %>
       <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
       <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
-      
       <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn btn-accent" %>
-
       <%= link_to "Pago Servicios", new_expense_path, class: "btn btn-danger" %>
     </div>
   </div>
@@ -311,11 +314,27 @@
   @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 
-<%# Mantenemos tu script original por seguridad %>
+<%# --- SCRIPT PARA CAMBIO DE TEMA Y RASTREO --- %>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    console.log("📡 [HOME] Iniciando rastreo de huellas...");
+    // 1. LÓGICA DE TEMA
+    const themeBtn = document.getElementById("theme-toggle");
+    const themeIcon = document.getElementById("theme-icon");
+    const body = document.body;
 
+    if (localStorage.getItem("gym_theme") === "light") {
+      body.classList.add("light-mode");
+      themeIcon.innerText = "☀️";
+    }
+
+    themeBtn.addEventListener("click", function() {
+      body.classList.toggle("light-mode");
+      const isLight = body.classList.contains("light-mode");
+      localStorage.setItem("gym_theme", isLight ? "light" : "dark");
+      themeIcon.innerText = isLight ? "☀️" : "🌙";
+    });
+
+    // 2. LÓGICA DE RASTREO (POLLING) MANTENIDA POR SEGURIDAD
     let lastProcesedId = null;
     let isFetching = false;
 
