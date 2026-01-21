@@ -1,131 +1,197 @@
 /* =========================================
-   1. VARIABLES DE TEMA (MATE DEFINITIVO)
+   1. VARIABLES DE TEMA (DISEÑO MATE TOTAL)
    ========================================= */
 :root {
+  /* MODO NOCHE: Gris Oscuro + Rojo Mate */
   --bg-color: #1a1c21;
   --text-color: #e8ecf1;
   --card-bg: rgba(24, 26, 31, 0.9);
   --border-color: rgba(255, 255, 255, 0.1);
-  --btn-color: #991b1b; /* ROJO MATE (NOCHE) */
+  --btn-color: #991b1b; /* ROJO MATE */
   --accent-red: #991b1b;
+  --radius: 12px;
+  --space-lg: 2rem;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 body.light-mode {
+  /* MODO DÍA: Blanco + Azul Mate */
   --bg-color: #ffffff;
   --text-color: #000000;
   --card-bg: #ffffff;
   --border-color: #000000;
-  --btn-color: #4169E1; /* AZUL MATE (DÍA) */
+  --btn-color: #4169E1; /* AZUL REY MATE */
 }
 
 /* =========================================
    2. FIX GLOBAL Y ESTRUCTURA
    ========================================= */
 html, body {
-  height: 100%;
+  height: auto !important;
+  min-height: 100% !important;
   margin: 0;
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   transition: background 0.3s ease;
 }
 
-body.light-mode * { color: #000000 !important; }
+/* Fuerza letras negras totales en modo claro sin excepción */
+body.light-mode, 
+body.light-mode * {
+  color: #000000 !important;
+}
 
+/* Los botones mantienen texto blanco sobre el azul/rojo mate */
+body.light-mode .btn, 
+body.light-mode .product-square-btn, 
+body.light-mode button,
+body.light-mode input[type="submit"] {
+  color: #ffffff !important;
+}
+
+/* =========================================
+   3. LAYOUT DIVIDIDO (SIMETRÍA 50/50)
+   ========================================= */
 .split-container {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
 
 .panel {
-  flex: 0 0 50%;
+  flex: 0 0 50%; /* OBLIGA a ser 50% */
   max-width: 50%;
-  padding: 2rem;
+  padding: var(--space-lg);
   box-sizing: border-box;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
+.gym-panel { border-right: 1px solid var(--border-color); }
+
 /* =========================================
-   3. BOTONES MATE (SIN EXCEPCIÓN)
+   4. BOTONES (UNIFORMES MATE)
    ========================================= */
-.btn, .btn-primary, .btn-accent, .btn-danger, .product-square-btn, input[type="submit"], button {
+.btn, .btn-primary, .btn-accent, .btn-danger, .product-square-btn, 
+input[type="submit"], button {
   background-color: var(--btn-color) !important;
-  color: #ffffff !important; /* Letra blanca en botón para que se lea */
+  color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
   font-weight: 700 !important;
-  padding: 0.8rem 1.2rem;
+  padding: 0.9rem 1.35rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
-.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:hover, .product-square-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-sm { padding: .45rem .6rem; font-size: .9rem; }
 
 /* =========================================
-   4. TARJETAS Y TABLAS (TUS DETALLES)
+   5. TARJETAS (CARDS) Y TABLAS
    ========================================= */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.nice-table {
+  border-radius: var(--radius);
+  padding: 1.35rem 1.5rem;
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow);
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  box-sizing: border-box;
 }
 
+.nice-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .nice-table tbody tr:hover {
-  background: radial-gradient(circle at left, rgba(153, 27, 27, 0.15), transparent 60%);
+  background: radial-gradient(circle at left, rgba(153, 27, 27, 0.1), transparent 60%);
+}
+
+.nice-table thead th {
+  text-align: left;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* =========================================
-   5. TIENDA Y PRODUCTOS
+   6. TIENDA Y CARRITO (SHOP)
    ========================================= */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 1rem;
+  width: 100%;
 }
 
 .product-square-btn {
-  min-height: 120px;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 120px;
+  padding: 1rem;
+}
+
+.mini-cart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* =========================================
-   6. TICKET Y RESULTADOS (TUS DISEÑOS ESPECÍFICOS)
+   7. ELEMENTOS ESPECIALES (TICKET/STATUS)
    ========================================= */
 .ticket-card {
   background: #fdfdfd;
   color: #111827 !important;
   border-radius: 18px;
   padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
 .status-panel--ok { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
 .status-panel--debt { background: rgba(153, 27, 27, 0.1); border-color: #991b1b; }
 
+.client-photo--xl {
+  width: 160px;
+  height: 160px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
 /* =========================================
-   7. FORMULARIOS E INPUTS
+   8. FORMULARIOS E INPUTS
    ========================================= */
 .form-input {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.85rem 1.1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-color);
+  outline: none;
 }
 
 body.light-mode .form-input {
-  background: #ffffff;
-  border: 2px solid #000000;
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+/* =========================================
+   9. RESPONSIVIDAD
+   ========================================= */
+@media (max-width: 1024px) {
+  .split-container { flex-direction: column; height: auto; }
+  .panel { flex: 0 0 auto; width: 100%; max-width: 100%; }
 }
