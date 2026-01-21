@@ -151,6 +151,63 @@ input[type="submit"], button {
 /* =========================================
    7. ELEMENTOS ESPECIALES (TICKET/STATUS)
    ========================================= */
+/* =========================================
+   7. ELEMENTOS ESPECIALES (TICKET/STATUS)
+   ========================================= */
+
+/* --- PANEL DE ESTADO MINIMALISTA --- */
+.status-panel {
+  padding: 1.5rem !important;
+  border-radius: 12px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* MODO NOCHE: Verde Mate Oscuro */
+.status-panel--ok { 
+  background-color: #064e3b !important; 
+  border: 1px solid #10b981 !important; 
+}
+
+/* MODO DÍA: Verde Mate Pálido */
+body.light-mode .status-panel--ok { 
+  background-color: #ecfdf5 !important; 
+  border: 1px solid #10b981 !important; 
+}
+
+/* ROJO MATE PARA DEUDA (Ambos modos) */
+.status-panel--debt { 
+  background-color: rgba(153, 27, 27, 0.1) !important; 
+  border: 1px solid #991b1b !important; 
+}
+
+/* TIPOGRAFÍA MINIMALISTA */
+.status-kicker {
+  font-size: 0.9rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+  font-weight: 600 !important;
+}
+
+.status-big {
+  font-size: 2rem !important; 
+  font-weight: 800 !important;
+  margin: 0 0 0.5rem 0 !important;
+  text-shadow: none !important; 
+}
+
+.status-sub {
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5;
+}
+
+/* --- TICKET Y FOTOS --- */
 .ticket-card {
   background: #fdfdfd;
   color: #111827 !important;
@@ -158,9 +215,6 @@ input[type="submit"], button {
   padding: 1.5rem;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
-
-.status-panel--ok { background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
-.status-panel--debt { background: rgba(153, 27, 27, 0.1); border-color: #991b1b; }
 
 .client-photo--xl {
   width: 160px;
