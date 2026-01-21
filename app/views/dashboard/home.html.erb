@@ -53,11 +53,7 @@
     <%# Usamos el ID 'contenedor_resultado' para Turbo y mantenemos %>
     <%# el ID 'live-scan-result' dentro para tu script original. %>
     <%# ========================================================= %>
-    <div id="contenedor_resultado" style="margin-top: 1.5rem;">
-      <div id="live-scan-result">
-        <%= render "clients/card_result", client: nil %>
-      </div>
-    </div>
+  
 
     <%# ===================== Resultado de búsqueda MANUAL ===================== %>
     <% if params[:search_number].present? %>

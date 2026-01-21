@@ -1,11 +1,11 @@
 class ClientsController < ApplicationController
-  # 🛡️ SEGURIDAD: Permitimos que el C# entre sin token.
+  # 🛡️ SEGURIDAD: Permitimos que el C# entre sin token de autenticidad.
   skip_before_action :verify_authenticity_token, only: [ :check_entry, :fingerprints_data ]
   before_action :authenticate_user!, except: [ :check_entry, :fingerprints_data ]
   before_action :set_client, only: [ :show, :edit, :update, :start_registration, :fingerprint_status, :attach_last_fingerprint, :card_view ]
 
   # =========================================================
-  # 🔌 1. HARDWARE Y SINCRONIZACIÓN C# (TURBO ACTIVADO ⚡)
+  # 🔌 1. HARDWARE Y SINCRONIZACIÓN C# (CORREGIDO)
   # =========================================================
 
   def fingerprints_data
@@ -16,7 +16,6 @@ class ClientsController < ApplicationController
   def start_scanner
     Thread.new do
       puts ">>> INTENTANDO INICIAR PUENTE C#..."
-      # Ajusta esta ruta si cambia en la PC de recepción
       project_path = "C:\\Users\\ramoo\\Documents\\PuenteHuella"
       system("cmd.exe /C \"cd #{project_path} && dotnet run\"")
     end
@@ -24,19 +23,24 @@ class ClientsController < ApplicationController
   end
 
   def check_entry
-    # CASO A: MATCH EXITOSO (El C# nos manda un ID)
+    # CASO A: MATCH EXITOSO (Llega un ID del lector)
     if params[:client_id].present?
       @client = Client.find_by(id: params[:client_id])
 
       if @client
-        # 👇 1. GUARDAR ASISTENCIA
-        # Al hacer .create!, el modelo CheckIn dispara automáticamente
-        # la actualización visual en la pantalla gracias al 'after_create_commit'.
         begin
-          CheckIn.create!(client: @client, occurred_at: Time.current)
-          puts "✅ ASISTENCIA GUARDADA: #{@client.name}"
+          # Intentamos usar el primer usuario como respaldo para el historial
+          system_user = User.first
 
-          # Respuesta para la App de C#
+          # 🟢 CREACIÓN DEL CHECK-IN (Corregido para evitar Error 500)
+          # Al crear el CheckIn, el modelo dispara automáticamente el Turbo Stream a la vista.
+          CheckIn.create!(
+            client: @client,
+            occurred_at: Time.current,
+            user: system_user
+          )
+
+          puts "✅ ASISTENCIA GUARDADA: #{@client.name}"
           return render json: { status: "success", message: "Bienvenido #{@client.name}" }
         rescue => e
           puts "❌ ERROR AL GUARDAR ASISTENCIA: #{e.message}"
@@ -45,16 +49,12 @@ class ClientsController < ApplicationController
       end
     end
 
-    # CASO B: HUELLA DESCONOCIDA O NUEVA
-    # Si llegamos aquí, es que no hubo ID o no se encontró el cliente.
+    # CASO B: HUELLA DESCONOCIDA
     huella_recibida = params[:fingerprint]
-
     if huella_recibida.present?
-      # 1. Guardamos en caché para poder vincularla después
       Rails.cache.write("temp_huella_manual", huella_recibida, expires_in: 10.minutes)
 
-      # 👇 2. AVISO VISUAL: "HUELLA NO RECONOCIDA"
-      # Como no se creó un CheckIn, mandamos el aviso manual a la pantalla "recepcion"
+      # Avisamos a la web que hay una huella nueva mediante Turbo Stream manual
       Turbo::StreamsChannel.broadcast_replace_to(
         "recepcion",
         target: "contenedor_resultado",
@@ -62,14 +62,12 @@ class ClientsController < ApplicationController
         locals: { client: nil, message: "⚠️ HUELLA NO VINCULADA" }
       )
 
-      # Respuesta para la App de C#
-      render json: { status: "not_found", message: "Huella guardada en memoria temporal" }, status: :not_found
+      render json: { status: "not_found", message: "Desconocida (Guardada en Cache)" }, status: :not_found
     else
       render json: { status: "error", message: "Datos incompletos" }, status: :bad_request
     end
   end
 
-  # Esta acción ya no es crítica si usamos Turbo, pero la dejamos por si acaso
   def check_latest
     last_checkin = CheckIn.where("occurred_at > ?", 4.seconds.ago).order(created_at: :desc).first
     if last_checkin
@@ -79,7 +77,10 @@ class ClientsController < ApplicationController
     end
   end
 
-  # Vinculación manual de la última huella desconocida
+  def card_view
+    render partial: "clients/card_result", locals: { client: @client }, layout: false
+  end
+
   def attach_last_fingerprint
     huella_cache = Rails.cache.read("temp_huella_manual")
     if huella_cache.present?
@@ -90,12 +91,12 @@ class ClientsController < ApplicationController
         redirect_to @client, alert: "❌ Error: #{@client.errors.full_messages.join}"
       end
     else
-      redirect_to @client, alert: "⚠️ No hay huella reciente en memoria. Escanea primero."
+      redirect_to @client, alert: "⚠️ No hay huella reciente en memoria."
     end
   end
 
   def start_registration
-    redirect_to @client, notice: "Instrucciones: 1. Pon el dedo en el lector. 2. Espera el sonido de error. 3. Pulsa Vincular aquí."
+    redirect_to @client, notice: "Instrucciones: 1. Pon el dedo. 2. Pulsa Vincular."
   end
 
   def fingerprint_status
@@ -103,16 +104,24 @@ class ClientsController < ApplicationController
   end
 
   # =========================================================
-  # 📋 2. CRUD Y LÓGICA DE NEGOCIO (SIN CAMBIOS)
+  # 📋 2. CRUD Y LÓGICA DE NEGOCIO
   # =========================================================
   def index
     @q = params[:q].to_s.strip
+    @search_number = params[:search_number].to_s.strip
     @filter = params[:filter].presence || "name"
     @status = params[:status].to_s
 
     base_scope = ::Client.order(id: :desc)
     scope = base_scope
 
+    # Buscador por número (Home)
+    if @search_number.present?
+      scope = scope.where(id: @search_number)
+      @found_client = scope.first
+    end
+
+    # Buscador general
     if @q.present?
       if @filter == "id" && @q.to_i.to_s == @q
         scope = scope.where(id: @q.to_i)
@@ -157,7 +166,6 @@ class ClientsController < ApplicationController
 
       pm = params.dig(:client, :payment_method).presence || "cash"
 
-      # Usamos user_id opcional o current_user
       Sale.create!(user: current_user, client: @client, membership_type: plan, amount_cents: amount_cents, payment_method: pm, occurred_at: Time.current)
     end
     redirect_to @client, notice: "Cliente creado."
