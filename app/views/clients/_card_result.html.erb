@@ -1,63 +1,91 @@
 <%# app/views/clients/_card_result.html.erb %>
-<% overdue = client.next_payment_on.present? && client.next_payment_on < Date.current %>
-<% active  = client.next_payment_on.present? && client.next_payment_on >= Date.current %>
 
-<div class="card result-card" style="border: 4px solid <%= overdue ? '#ef4444' : '#34d399' %>; margin-top: 20px; animation: fadeIn 0.5s;">
-  <div class="result-left">
-    <div class="result-photo">
-      <%= client_photo_tag(client, size: 160, classes: "client-photo--xl") rescue "" %>
+<%# 1. CASO: CLIENTE ENCONTRADO (Tu código original) %>
+<% if client %>
+  <% overdue = client.next_payment_on.present? && client.next_payment_on < Date.current %>
+  <% active  = client.next_payment_on.present? && client.next_payment_on >= Date.current %>
+
+  <div class="card result-card" style="border: 4px solid <%= overdue ? '#ef4444' : '#34d399' %>; margin-top: 20px; animation: fadeIn 0.5s;">
+    <div class="result-left">
+      <div class="result-photo">
+        <%= client_photo_tag(client, size: 160, classes: "client-photo--xl") rescue "" %>
+      </div>
+
+      <div class="result-details">
+        <h3 class="result-name"><%= client.name %></h3>
+        <p class="result-meta">#<%= client.id %> • <%= client.membership_type.presence || "Normal" %></p>
+
+        <div class="result-kv">
+          <span>Inscripción</span>
+          <span><%= client.enrolled_on || "-" %></span>
+        </div>
+        <div class="result-kv">
+          <span>Próximo pago</span>
+          <span><%= client.next_payment_on || "-" %></span>
+        </div>
+
+        <div class="result-actions">
+          <%= link_to "Ver ficha", client_path(client), class: "btn" %>
+          <% if overdue %>
+            <%= link_to "Renovar ahora", memberships_path(q: client.id), class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      </div>
     </div>
 
-    <div class="result-details">
-      <h3 class="result-name"><%= client.name %></h3>
-      <p class="result-meta">#<%= client.id %> • <%= client.membership_type.presence || "Normal" %></p>
+    <div class="result-right">
+      <% if overdue %>
+        <div class="status-panel status-panel--debt">
+          <div class="status-kicker">Estado</div>
+          <div class="status-big">ADEUDO</div>
+          <p class="status-sub">La fecha de pago ya pasó.</p>
+          <div class="status-buttons">
+            <%= link_to "Renovar ahora", memberships_path(q: client.id), class: "btn btn-primary btn-lg" %>
+          </div>
+        </div>
+      <% elsif active %>
+        <div class="status-panel status-panel--ok">
+          <div class="status-kicker">Estado</div>
+          <div class="status-big">¡BIENVENIDO!</div>
+          <p class="status-sub">Acceso concedido.</p>
+          <div class="status-badge-row">
+            <span class="status-badge status-badge--ok"><span class="dot"></span> Al día</span>
+          </div>
+        </div>
+      <% else %>
+        <div class="status-panel">
+          <div class="status-kicker">Estado</div>
+          <div class="status-big">SIN DATOS</div>
+          <div class="status-buttons">
+            <%= link_to "Registrar", memberships_path(q: client.id), class: "btn btn-accent btn-lg" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
 
-      <div class="result-kv">
-        <span>Inscripción</span>
-        <span><%= client.enrolled_on || "-" %></span>
-      </div>
-      <div class="result-kv">
-        <span>Próximo pago</span>
-        <span><%= client.next_payment_on || "-" %></span>
-      </div>
-
-      <div class="result-actions">
-        <%= link_to "Ver ficha", client_path(client), class: "btn" %>
-        <% if overdue %>
-          <%= link_to "Renovar ahora", memberships_path(q: client.id), class: "btn btn-primary" %>
-        <% end %>
+<%# 2. CASO: HUELLA NUEVA / DESCONOCIDA %>
+<% elsif local_assigns[:message].present? %>
+  <div class="card result-card" style="border: 4px solid #f59e0b; margin-top: 20px; animation: fadeIn 0.5s; background: rgba(245, 158, 11, 0.05);">
+    <div style="width: 100%; text-align: center; padding: 2rem;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;">✋</div>
+      <h2 style="color: #f59e0b; margin-bottom: 0.5rem;">Huella No Vinculada</h2>
+      <p style="color: #ccc; font-size: 1.1rem; margin-bottom: 1.5rem;">
+        Esta huella no pertenece a ningún cliente todavía.
+      </p>
+      <div style="background: #333; padding: 1rem; border-radius: 8px; display: inline-block;">
+        <p style="margin:0; color: #fff;"><strong>¿Qué hacer?</strong></p>
+        <p style="margin:0; color: #aaa; font-size: 0.9rem;">Ve al perfil del cliente > Opciones > <strong>Vincular Huella</strong></p>
       </div>
     </div>
   </div>
 
-  <div class="result-right">
-    <% if overdue %>
-      <div class="status-panel status-panel--debt">
-        <div class="status-kicker">Estado</div>
-        <div class="status-big">ADEUDO</div>
-        <p class="status-sub">La fecha de pago ya pasó.</p>
-        <div class="status-buttons">
-          <%= link_to "Renovar ahora", memberships_path(q: client.id), class: "btn btn-primary btn-lg" %>
-        </div>
-      </div>
-    <% elsif active %>
-      <div class="status-panel status-panel--ok">
-        <div class="status-kicker">Estado</div>
-        <div class="status-big">¡BIENVENIDO!</div>
-        <p class="status-sub">Acceso concedido.</p>
-        <div class="status-badge-row">
-          <span class="status-badge status-badge--ok"><span class="dot"></span> Al día</span>
-        </div>
-      </div>
-    <% else %>
-      <div class="status-panel">
-        <div class="status-kicker">Estado</div>
-        <div class="status-big">SIN DATOS</div>
-        <div class="status-buttons">
-          <%= link_to "Registrar", memberships_path(q: client.id), class: "btn btn-accent btn-lg" %>
-        </div>
-      </div>
-    <% end %>
+<%# 3. CASO: ESPERANDO (Estado inicial) %>
+<% else %>
+  <div class="card" style="margin-top: 20px; text-align: center; padding: 3rem; opacity: 0.4; border: 2px dashed #444;">
+    <h2 style="color: #fff; margin-bottom: 0.5rem;">Esperando Lector...</h2>
+    <p>Pon el dedo en el sensor o busca por nombre arriba.</p>
   </div>
-</div>
+<% end %>
+
 <style> @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } } </style>

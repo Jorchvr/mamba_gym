@@ -1,6 +1,9 @@
+<%# 1. ANTENA PARA RECIBIR SEÑALES EN TIEMPO REAL %>
+<%= turbo_stream_from "recepcion" %>
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
 <div class="split-container">
+  <%# ==================== PANEL IZQUIERDO: GYM ==================== %>
   <div class="panel gym-panel">
     <div class="header-row">
       <h2 class="title">Gym Control</h2>
@@ -46,9 +49,15 @@
     </div>
 
     <%# ========================================================= %>
-    <%# 🟢 AQUÍ APARECERÁ LA TARJETA DE HUELLA AUTOMÁTICA %>
+    <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA (TURBO Y SCRIPT) %>
+    <%# Usamos el ID 'contenedor_resultado' para Turbo y mantenemos %>
+    <%# el ID 'live-scan-result' dentro para tu script original. %>
     <%# ========================================================= %>
-    <div id="live-scan-result" style="margin-top: 1.5rem;"></div>
+    <div id="contenedor_resultado" style="margin-top: 1.5rem;">
+      <div id="live-scan-result">
+        <%= render "clients/card_result", client: nil %>
+      </div>
+    </div>
 
     <%# ===================== Resultado de búsqueda MANUAL ===================== %>
     <% if params[:search_number].present? %>
@@ -165,6 +174,7 @@
     </div>
   </div>
 
+  <%# ==================== PANEL DERECHO: TIENDA ==================== %>
   <div class="panel shop-panel">
     <div class="header-row">
       <h2 class="title">Tienda Online</h2>
@@ -183,9 +193,7 @@
           <p class="text-muted" style="margin-bottom:.75rem;">Toca un cuadro para agregar al carrito.</p>
 
           <div class="product-grid">
-
             <% products_for_grid = @products %>
-
             <% products_for_grid.each do |p| %>
               <%= button_to add_cart_path,
                     method: :post,
@@ -205,7 +213,6 @@
                 </div>
               <% end %>
             <% end %>
-
           </div>
         </div>
       </div>
@@ -308,9 +315,7 @@
   @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 
-<%# ================================================================================= %>
-<%# 🔴 SCRIPT INFALIBLE: PREGUNTA CADA SEGUNDO SI ALGUIEN ENTRÓ 🔴 %>
-<%# ================================================================================= %>
+<%# Mantenemos tu script original por seguridad %>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     console.log("📡 [HOME] Iniciando rastreo de huellas...");
@@ -318,32 +323,26 @@
     let lastProcesedId = null;
     let isFetching = false;
 
-    // Preguntar al servidor cada 1 segundo (1000ms)
     setInterval(() => {
       if (isFetching) return; 
 
       fetch('/clients/check_latest')
         .then(response => response.json())
         .then(data => {
-          
-          // SI HAY UN CLIENTE NUEVO QUE NO HEMOS VISTO AÚN...
           if (data.new_entry && data.client_id && data.client_id !== lastProcesedId) {
             console.log("🔥 ¡HUELLA DETECTADA! ID:", data.client_id);
             lastProcesedId = data.client_id;
-            isFetching = true; // Pausar para que no parpadee
+            isFetching = true;
 
-            // 1. Ocultar resultado manual viejo
             const manualResult = document.querySelector(".result-card");
             if(manualResult) manualResult.style.display = 'none';
 
-            // 2. Traer la tarjeta visual bonita
             fetch(`/clients/${data.client_id}/card_view`)
               .then(res => res.text())
               .then(html => {
                 const container = document.getElementById("live-scan-result");
                 container.innerHTML = html;
                 
-                // Animación simple de entrada
                 container.style.opacity = 0;
                 container.style.transform = "translateY(-10px)";
                 container.style.transition = "all 0.4s ease-out";
@@ -359,7 +358,6 @@
           }
         })
         .catch(err => console.error("Silencio en la red...", err));
-
     }, 1000); 
   });
 </script>
