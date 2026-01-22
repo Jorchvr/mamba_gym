@@ -23,22 +23,16 @@ class ClientsController < ApplicationController
   end
 
   def check_entry
-    # CASO A: MATCH EXITOSO (Llega un ID del lector)
     if params[:client_id].present?
       @client = Client.find_by(id: params[:client_id])
-
       if @client
         begin
-          # Usamos el primer usuario como respaldo para evitar Error 500 si no hay sesión activa
           system_user = User.first
-
-          # Creación del registro que dispara el Turbo Stream automáticamente
           CheckIn.create!(
             client: @client,
             occurred_at: Time.current,
             user: system_user
           )
-
           puts "✅ ASISTENCIA GUARDADA: #{@client.name}"
           return render json: { status: "success", message: "Bienvenido #{@client.name}" }
         rescue => e
@@ -48,19 +42,15 @@ class ClientsController < ApplicationController
       end
     end
 
-    # CASO B: HUELLA DESCONOCIDA
     huella_recibida = params[:fingerprint]
     if huella_recibida.present?
       Rails.cache.write("temp_huella_manual", huella_recibida, expires_in: 10.minutes)
-
-      # Notificación visual manual para huellas nuevas
       Turbo::StreamsChannel.broadcast_replace_to(
         "recepcion",
         target: "contenedor_resultado",
         partial: "clients/card_result",
         locals: { client: nil, message: "⚠️ HUELLA NO VINCULADA" }
       )
-
       render json: { status: "not_found", message: "Desconocida (Guardada en Cache)" }, status: :not_found
     else
       render json: { status: "error", message: "Datos incompletos" }, status: :bad_request
@@ -103,7 +93,7 @@ class ClientsController < ApplicationController
   end
 
   # =========================================================
-  # 📋 2. CRUD Y LÓGICA DE NEGOCIO (INDEX CON BUSCADOR)
+  # 📋 2. CRUD Y LÓGICA DE NEGOCIO
   # =========================================================
   def index
     @q = params[:q].to_s.strip
@@ -114,7 +104,6 @@ class ClientsController < ApplicationController
     base_scope = ::Client.order(id: :desc)
     scope = base_scope
 
-    # Buscador por número para el Home
     if @search_number.present?
       scope = scope.where(id: @search_number)
       @found_client = scope.first
@@ -137,7 +126,13 @@ class ClientsController < ApplicationController
   end
 
   def show; end
-  def new; @client = ::Client.new; end
+
+  # ACTUALIZACIÓN: Aquí se calcula el siguiente socio
+  def new
+    @client = ::Client.new
+    @next_id = (::Client.maximum(:id) || 0) + 1
+  end
+
   def edit; end
 
   def create

@@ -5,6 +5,46 @@
   <%= link_to "Volver", clients_path, class: "btn" %>
 </div>
 
+<div style="margin: 0 0 20px 0; padding: 10px 15px; background: rgba(255,255,255,0.03); border-left: 4px solid var(--btn-color); border-radius: 4px;">
+  <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-color); opacity: 0.9;">
+    NÚMERO ASIGNADO: <span style="color: var(--btn-color);">#<%= @next_id %></span>
+  </span>
+</div>
+
 <div class="page-scroll">
   <%= render "form", client: (@client || ::Client.new) %>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Buscamos los campos del formulario de Gym Control
+  const membershipSelect = document.querySelector('select[name*="membership_type"]');
+  const paymentDateInput = document.querySelector('input[name*="next_payment_on"]');
+  const enrolledDateInput = document.querySelector('input[name*="enrolled_on"]');
+
+  if (membershipSelect && paymentDateInput) {
+    membershipSelect.addEventListener('change', function() {
+      const plan = this.value.toLowerCase();
+      let date = new Date(); // Inicia con hoy
+
+      // Si el campo inscripción tiene fecha manual, se usa como base
+      if (enrolledDateInput && enrolledDateInput.value) {
+        // Se añade T12:00:00 para evitar desfases de zona horaria
+        date = new Date(enrolledDateInput.value + "T12:00:00");
+      }
+
+      // Suma de tiempo automática según el plan
+      if (plan.includes('month') || plan.includes('mes')) {
+        date.setMonth(date.getMonth() + 1);
+      } else if (plan.includes('week') || plan.includes('semana')) {
+        date.setDate(date.getDate() + 7);
+      } else if (plan.includes('day') || plan.includes('dia')) {
+        date.setDate(date.getDate() + 1);
+      }
+
+      // Formatear a YYYY-MM-DD para que el navegador lo acepte
+      paymentDateInput.value = date.toISOString().split('T')[0];
+    });
+  }
+});
+</script>
