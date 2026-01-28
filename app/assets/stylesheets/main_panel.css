@@ -2,25 +2,27 @@
    1. VARIABLES DE TEMA (DISEÑO MATE TOTAL)
    ========================================= */
 :root {
-  /* MODO NOCHE: Gris Oscuro + Rojo Mate */
+  /* MODO NOCHE: Gris Oscuro + DORADO Mate */
   --bg-color: #1a1c21;
   --text-color: #e8ecf1;
   --card-bg: rgba(24, 26, 31, 0.9);
   --border-color: rgba(255, 255, 255, 0.1);
-  --btn-color: #991b1b; /* ROJO MATE */
-  --accent-red: #991b1b;
+  --btn-color: #D4AF37; /* DORADO MATE */
+  --accent-red: #D4AF37; /* Usamos dorado como acento principal también */
   --radius: 12px;
   --space-lg: 2rem;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --btn-text: #000000; /* Texto NEGRO para contraste con dorado */
 }
 
 body.light-mode {
-  /* MODO DÍA: Blanco + Azul Mate */
+  /* MODO DÍA: Blanco + AMARILLO Mate */
   --bg-color: #ffffff;
   --text-color: #000000;
   --card-bg: #ffffff;
   --border-color: #000000;
-  --btn-color: #4169E1; /* AZUL REY MATE */
+  --btn-color: #FACC15; /* AMARILLO MATE INTENSO */
+  --btn-text: #000000;
 }
 
 /* =========================================
@@ -34,20 +36,21 @@ html, body {
   color: var(--text-color);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   transition: background 0.3s ease;
+  position: relative; /* Necesario para la imagen central absoluta */
 }
 
-/* Fuerza letras negras totales en modo claro sin excepción */
+/* Fuerza letras negras totales en modo claro */
 body.light-mode, 
 body.light-mode * {
   color: #000000 !important;
 }
 
-/* Los botones mantienen texto blanco sobre el azul/rojo mate */
+/* Los botones AHORA tienen texto NEGRO en ambos modos */
 body.light-mode .btn, 
 body.light-mode .product-square-btn, 
 body.light-mode button,
 body.light-mode input[type="submit"] {
-  color: #ffffff !important;
+  color: #000000 !important;
 }
 
 /* =========================================
@@ -58,19 +61,40 @@ body.light-mode input[type="submit"] {
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
+  position: relative; /* Para posicionar la imagen central sobre esto */
 }
 
 .panel {
-  flex: 0 0 50%; /* OBLIGA a ser 50% */
+  flex: 0 0 50%;
   max-width: 50%;
   padding: var(--space-lg);
   box-sizing: border-box;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  z-index: 2; /* Para que el contenido quede sobre la imagen si se solapan */
 }
 
 .gym-panel { border-right: 1px solid var(--border-color); }
+
+/* =========================================
+   IMAGEN CENTRAL ABSOLUTA
+   ========================================= */
+.center-branding {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1; /* Detrás del contenido interactivo pero visible */
+  pointer-events: none; /* Para que puedas dar click a través de ella si estorba */
+  opacity: 0.15; /* Transparencia para que no tape las letras, ajusta si quieres full color */
+}
+
+.center-branding img {
+  max-height: 500px; /* Ajusta el tamaño según prefieras */
+  width: auto;
+  border-radius: 50%; /* Opcional: si quieres que sea redonda */
+}
 
 /* =========================================
    4. BOTONES (UNIFORMES MATE)
@@ -78,10 +102,10 @@ body.light-mode input[type="submit"] {
 .btn, .btn-primary, .btn-accent, .btn-danger, .product-square-btn, 
 input[type="submit"], button {
   background-color: var(--btn-color) !important;
-  color: #ffffff !important;
+  color: var(--btn-text) !important; /* TEXTO NEGRO */
   border: none !important;
   border-radius: 8px !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important; /* Más negrita para resaltar sobre dorado */
   padding: 0.9rem 1.35rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -92,9 +116,9 @@ input[type="submit"], button {
 }
 
 .btn:hover, .product-square-btn:hover {
-  filter: brightness(1.15);
+  filter: brightness(1.1); /* Brillo suave al hover */
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.3); /* Sombra dorada */
 }
 
 .btn-sm { padding: .45rem .6rem; font-size: .9rem; }
@@ -115,7 +139,7 @@ input[type="submit"], button {
 
 .nice-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .nice-table tbody tr:hover {
-  background: radial-gradient(circle at left, rgba(153, 27, 27, 0.1), transparent 60%);
+  background: radial-gradient(circle at left, rgba(212, 175, 55, 0.1), transparent 60%); /* Efecto hover dorado */
 }
 
 .nice-table thead th {
@@ -139,6 +163,7 @@ input[type="submit"], button {
   justify-content: space-between;
   min-height: 120px;
   padding: 1rem;
+  color: #000000 !important; /* Asegurar negro en productos */
 }
 
 .mini-cart {
@@ -148,9 +173,6 @@ input[type="submit"], button {
   overflow: hidden;
 }
 
-/* =========================================
-   7. ELEMENTOS ESPECIALES (TICKET/STATUS)
-   ========================================= */
 /* =========================================
    7. ELEMENTOS ESPECIALES (TICKET/STATUS)
    ========================================= */
@@ -178,7 +200,7 @@ body.light-mode .status-panel--ok {
   border: 1px solid #10b981 !important; 
 }
 
-/* ROJO MATE PARA DEUDA (Ambos modos) */
+/* ROJO MATE PARA DEUDA (Mantenemos rojo solo para alertas críticas) */
 .status-panel--debt { 
   background-color: rgba(153, 27, 27, 0.1) !important; 
   border: 1px solid #991b1b !important; 
@@ -250,29 +272,22 @@ body.light-mode .form-input {
   .panel { flex: 0 0 auto; width: 100%; max-width: 100%; }
 }
 /* =========================================
-   FIX: QUITAR IMAGEN GRANDE Y LOGO PEQUEÑO
+   FIX: LOGO Y FONDOS
    ========================================= */
 
-/* 1. Forzar que el logo sea pequeño (como estaba antes) */
 .logo {
-  height: 55px !important; /* Tamaño pequeño para el header */
+  height: 55px !important;
   width: auto !important;
   max-width: 150px !important;
   object-fit: contain !important;
-  background: transparent !important; /* Quita el fondo blanco si lo tiene */
-  box-shadow: none !important; /* Quita la sombra pesada */
+  background: transparent !important;
   border: none !important;
 }
 
-/* 2. Quitar la imagen gigante de fondo o del panel */
-.gym-panel, 
-.panel, 
-body, 
-.split-container {
-  background-image: none !important; /* Elimina fondos pesados */
+.gym-panel, .panel, body {
+  background-image: none !important; 
 }
 
-/* 3. Asegurar que el header no se rompa */
 .header-row {
   display: flex !important;
   justify-content: space-between !important;

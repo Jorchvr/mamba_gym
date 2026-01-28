@@ -20,10 +20,8 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
-# 2. EN RENDER (Producción) usamos PostgreSQL (potente)
-group :production do
   gem "pg"
-end
+
 
 # ==========================================
 # 📦 OTRAS GEMAS

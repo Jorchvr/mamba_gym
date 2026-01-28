@@ -1,8 +1,15 @@
-  <%# 1. ANTENA PARA RECIBIR SEÑALES EN TIEMPO REAL (TURBO STREAMS) %>
+<%# 1. ANTENA PARA RECIBIR SEÑALES EN TIEMPO REAL (TURBO STREAMS) %>
   <%= turbo_stream_from "recepcion" %>
   <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
   <div class="split-container">
+  
+    <%# 🖼️ IMAGEN CENTRAL FLOTANTE (NUEVO) %>
+    <div class="center-branding">
+      <%# Asegúrate que el archivo esté en app/assets/images/ %>
+      <%= image_tag "black_img.jpg.jpeg", alt: "Gym Logo Center" %>
+    </div>
+
     <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
     <div class="panel gym-panel">
       <div class="header-row">
