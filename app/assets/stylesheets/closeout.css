@@ -4,17 +4,18 @@
   display: flex;
   justify-content: center;
   padding: 2rem 0;
+  /* Fondo transparente para que tome el del body */
 }
 
 .ticket {
-  background: #fafafa;
+  background: #fafafa; /* El ticket se queda blanco (es papel) */
   color: #111827;
   width: 340px;
   max-width: 100%;
   border-radius: 16px;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   padding: 1.2rem 1.4rem 1.4rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Segoe UI", sans-serif;
   position: relative;
 }
@@ -26,7 +27,7 @@
   left: 0;
   right: 0;
   height: 20px;
-  background-image: radial-gradient(circle at 10px 10px, #f9fafb 10px, transparent 10px);
+  background-image: radial-gradient(circle at 10px 10px, #1a1c21 10px, transparent 10px); /* Ajustado al fondo dark del main */
   background-size: 20px 20px;
 }
 
@@ -45,8 +46,9 @@
   height: 52px;
   border-radius: 999px;
   object-fit: contain;
-  background: #111827;
+  background: #1a1c21; /* Fondo oscuro del main */
   padding: 4px;
+  border: 1px solid #D4AF37; /* Borde Dorado */
 }
 
 .ticket-header-text {
@@ -64,6 +66,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0.1rem 0 0;
+  color: #888;
 }
 
 .ticket-date {
@@ -84,6 +87,9 @@
   margin: 0 0 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: #000;
+  border-bottom: 2px solid #D4AF37; /* Línea Dorada */
+  display: inline-block;
 }
 
 .ticket-row {
@@ -103,10 +109,11 @@
 
 .ticket-row-total {
   margin-top: 0.35rem;
+  font-size: 1.1em;
 }
 
 .ticket-row-negative {
-  color: #b91c1c;
+  color: #991b1b; /* Mantenemos rojo solo para números negativos (pérdidas) */
 }
 
 .ticket-label {

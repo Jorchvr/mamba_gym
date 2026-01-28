@@ -4,7 +4,7 @@
 
   <div class="split-container">
   
-    <%# 🖼️ IMAGEN CENTRAL FLOTANTE (NUEVO) %>
+    <%# 🖼️ IMAGEN CENTRAL FLOTANTE %>
     <div class="center-branding">
       <%# Asegúrate que el archivo esté en app/assets/images/ %>
       <%= image_tag "black_img.jpg.jpeg", alt: "Gym Logo Center" %>
@@ -12,9 +12,18 @@
 
     <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
     <div class="panel gym-panel">
-      <div class="header-row">
-        <h2 class="title">Administracion</h2>
+      
+      <%# --- HEADER MODIFICADO CON LOGO AL CENTRO --- %>
+      <div class="header-row" style="display: flex; justify-content: space-between; align-items: center;">
+        <%# 1. Título a la izquierda %>
+        <h2 class="title" style="margin: 0;">Administracion</h2>
         
+        <%# 2. LOGO AL CENTRO (En el espacio del cuadro verde) %>
+        <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center;">
+           <%= image_tag "black_img.jpg.jpeg", style: "height: 55px; width: auto; object-fit: contain;", alt: "Logo Header" %>
+        </div>
+        
+        <%# 3. Botones a la derecha %>
         <div style="display:flex; gap: 15px; align-items:center;">
           <%# --- BOTÓN DE MODO NOCHE/DÍA --- %>
           <button id="theme-toggle" class="btn btn-icon" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
@@ -22,6 +31,7 @@
           </button>
         </div>
       </div>
+      <%# -------------------------------------------- %>
 
       <p class="user-greeting"><strong>Usuario:</strong> <%= current_user.name %></p>
 
@@ -350,4 +360,4 @@
           .catch(err => console.error("Silencio en la red...", err));
       }, 1000); 
     });
-  </script>
+  </script> 

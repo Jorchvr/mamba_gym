@@ -1,11 +1,11 @@
 /* ===== Membership page (scoped) ===== */
 .membership-page { max-width: 980px; margin: 0 auto; padding: 0 12px; }
-.membership-page .title { font-size: 1.9rem; line-height: 1.25; font-weight: 800; }
+.membership-page .title { font-size: 1.9rem; line-height: 1.25; font-weight: 800; color: #e8ecf1; }
 
 /* Cards / tipografías */
-.membership-page .card { padding: 1.25rem 1.25rem; border-radius: 18px; }
-.membership-page .card-title { font-size: 1.3rem; margin-bottom: .75rem; font-weight: 700; }
-.membership-page .text-muted { color: #6b7280; }
+.membership-page .card { padding: 1.25rem 1.25rem; border-radius: 12px; background: rgba(24, 26, 31, 0.9); border: 1px solid rgba(255,255,255,0.1); }
+.membership-page .card-title { font-size: 1.3rem; margin-bottom: .75rem; font-weight: 700; color: #e8ecf1; }
+.membership-page .text-muted { color: #a9b0b6; }
 .membership-page .block { display: block; }
 .membership-page .mb-3 { margin-bottom: 1rem; }
 
@@ -13,19 +13,27 @@
 .membership-page .search-inline{
   display: flex;
   align-items: stretch;
-  gap: 0;               /* sin espacio entre input y botón */
+  gap: 0;             /* sin espacio entre input y botón */
   width: 100%;
 }
-.membership-page .form-input{ font-size: 1.06rem; padding: .9rem 1rem; border-radius: 14px; width: 100%; }
-.membership-page .form-input--xl{ font-size: 1.18rem; padding: 1.05rem 1.15rem; border-radius: 16px; }
+.membership-page .form-input{ 
+    font-size: 1.06rem; 
+    padding: .9rem 1rem; 
+    border-radius: 8px; 
+    width: 100%; 
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+.membership-page .form-input--xl{ font-size: 1.18rem; padding: 1.05rem 1.15rem; }
 
 .membership-page .search-inline .form-input{
   flex: 1 1 auto;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-.membership-page .btn{ font-size: 1.08rem; padding: .95rem 1.2rem; border-radius: 12px; }
-.membership-page .btn-xl{ font-size: 1.18rem; padding: 1.05rem 1.35rem; border-radius: 16px; }
+.membership-page .btn{ font-size: 1.08rem; padding: .95rem 1.2rem; border-radius: 8px; background: #D4AF37; color: #000; font-weight: 800; }
+.membership-page .btn-xl{ font-size: 1.18rem; padding: 1.05rem 1.35rem; }
 
 .membership-page .search-inline .search-inline-btn{
   flex: 0 0 auto;
@@ -39,27 +47,35 @@
 /* ===== Ficha ===== */
 .membership-page .result-card { display: grid; gap: 1rem; }
 .membership-page .result-row { display: grid; grid-template-columns: 160px 1fr; gap: 1.25rem; align-items: start; }
-.membership-page .result-photo { width: 140px; height: 140px; border-radius: 16px; overflow: hidden; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
-.membership-page .result-name { font-size: 1.42rem; margin: 0 0 .25rem; font-weight: 800; }
-.membership-page .result-meta { margin: .15rem 0 .6rem; color:#64748b; }
-.membership-page .kv { display: grid; grid-template-columns: 180px 1fr; gap: .4rem; margin: .4rem 0; }
+.membership-page .result-photo { width: 140px; height: 140px; border-radius: 16px; overflow: hidden; background: #2a2d33; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+.membership-page .result-name { font-size: 1.42rem; margin: 0 0 .25rem; font-weight: 800; color: #fff; }
+.membership-page .result-meta { margin: .15rem 0 .6rem; color:#a9b0b6; }
+.membership-page .kv { display: grid; grid-template-columns: 180px 1fr; gap: .4rem; margin: .4rem 0; color: #e8ecf1; }
 
 /* ===== Estado ===== */
 .membership-page .status-wrap { margin-top: .5rem; }
-.membership-page .status-panel { border-radius: 14px; padding: .9rem 1rem; background: #f8fafc; }
-.membership-page .status-panel--ok   { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.25); }
-.membership-page .status-panel--debt { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); }
-.membership-page .status-kicker { font-size: .92rem; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
-.membership-page .status-big { font-size: 1.35rem; font-weight: 800; margin-top: .15rem; }
-.membership-page .status-sub { margin:.25rem 0 0; color:#475569; }
+.membership-page .status-panel { border-radius: 12px; padding: .9rem 1rem; background: transparent; }
+.membership-page .status-panel--ok   { background: #064e3b; border: 1px solid #10b981; }
+.membership-page .status-panel--debt { background: rgba(153, 27, 27, 0.1); border: 1px solid #991b1b; }
+.membership-page .status-kicker { font-size: .92rem; color: #e8ecf1; text-transform: uppercase; letter-spacing: .06em; opacity: 0.8; }
+.membership-page .status-big { font-size: 1.35rem; font-weight: 800; margin-top: .15rem; color: #fff; }
+.membership-page .status-sub { margin:.25rem 0 0; color:#e8ecf1; }
 
 /* ===== Botoneras (planes y pago) ===== */
 .membership-page .btn-toggle-group { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: .9rem; margin-top: .6rem; }
 .membership-page .btn-toggle-group--2 { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
-.membership-page .btn-toggle { border-radius: 16px; padding: 1rem 1rem; font-weight: 800; text-align:center; cursor: pointer; }
+.membership-page .btn-toggle { border-radius: 8px; padding: 1rem 1rem; font-weight: 800; text-align:center; cursor: pointer; color: #e8ecf1; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
 .membership-page .btn-toggle-price { font-weight: 700; opacity: .85; margin-left: .25rem; }
-.membership-page .btn-toggle.active { outline: 2px solid rgba(239,68,68,.45); }
-.membership-page .btn-toggle--custom.active { outline-color: rgba(14,165,233,.5); }
+
+/* ESTADO ACTIVO: Dorado con letras Negras */
+.membership-page .btn-toggle.active { 
+    background-color: #D4AF37 !important; 
+    color: #000000 !important; 
+    border-color: #D4AF37 !important;
+    outline: none;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+.membership-page .btn-toggle--custom.active { outline-color: #D4AF37; }
 
 /* Personalizado */
 .membership-page .custom-price-wrap { margin-top: .9rem; display: none; }
@@ -86,7 +102,7 @@
 .membership-page .card,
 .membership-page .result-card {
   overflow: hidden;            /* recorta sombras/contornos internos */
-  border-radius: 18px;         /* asegura simetría con el recorte */
+  border-radius: 12px;         /* asegura simetría con el recorte */
 }
 
 /* === Panel de estado: 100% ancho y sin outline que desborda === */
@@ -94,23 +110,21 @@
   width: 100%;
   box-sizing: border-box;
   margin: .75rem 0 0;          /* separa del contenido, simétrico */
-  border-radius: 14px;
+  border-radius: 12px;
   outline: none !important;    /* evita que salga del borde redondo */
   box-shadow: none;            /* limpiamos sombras heredadas */
 }
 
-/* Verde (OK): usa borde + sombra interna que sí respeta el radio */
+/* Verde (OK) */
 .membership-page .status-panel--ok {
-  background: rgba(16,185,129,.08);
-  border: 1px solid rgba(16,185,129,.28);
-  box-shadow: inset 0 0 0 0 rgba(0,0,0,0);
+  background: #064e3b;
+  border: 1px solid #10b981;
 }
 
-/* Rojo (deuda): mismo criterio */
+/* Rojo (deuda) */
 .membership-page .status-panel--debt {
-  background: rgba(239,68,68,.08);
-  border: 1px solid rgba(239,68,68,.28);
-  box-shadow: inset 0 0 0 0 rgba(0,0,0,0);
+  background: rgba(153, 27, 27, 0.1);
+  border: 1px solid #991b1b;
 }
 
 /* Por si algún stylesheet global aplicó outline/sombra al pasar el mouse */
@@ -150,22 +164,28 @@
   justify-content: center;
   padding: 1rem 1rem;
   font-weight: 800;
-  border-radius: 16px;
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
-  outline: 1px solid rgba(148,163,184,.35);
+  outline: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
 }
 .membership-page .segmented-btn:hover{
-  outline-color: rgba(148,163,184,.55);
+  outline-color: #D4AF37;
 }
 .membership-page .segmented-input:checked + .segmented-btn{
-  outline: 2px solid rgba(239,68,68,.45);
+  background-color: #D4AF37 !important;
+  color: #000000 !important;
+  outline: none;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 .membership-page .segmented-btn--custom{
-  outline-color: rgba(14,165,233,.35);
+  outline-color: rgba(255,255,255,.2);
 }
 .membership-page #plan_custom:checked + .segmented-btn--custom{
-  outline: 2px solid rgba(14,165,233,.55);
+  background-color: #D4AF37 !important;
+  color: #000 !important;
 }
 
 /* (ya los tienes) — buscador inline */
@@ -271,9 +291,9 @@
   padding: .6rem 1.1rem;
 }
 :root {
-  /* usa tu rojo; puedes ajustar si tu tema define otra variable */
-  --brand-red: #dc2626;      /* rojo principal */
-  --brand-red-ink: #ffffff;  /* texto en rojo */
+  /* Nuevo color de marca: Dorado */
+  --brand-gold: #D4AF37;
+  --brand-gold-ink: #000000;
 }
 
 .btn-toggle-group {
@@ -293,18 +313,18 @@
 }
 
 .btn-toggle:hover {
-  border-color: rgba(239,68,68,.5);
+  border-color: #D4AF37;
 }
 
 .btn-toggle.is-active {
-  background: var(--brand-red) !important;
-  border-color: var(--brand-red) !important;
-  color: var(--brand-red-ink) !important;
-  box-shadow: 0 0 0 2px rgba(220,38,38,.25) inset;
+  background: var(--brand-gold) !important;
+  border-color: var(--brand-gold) !important;
+  color: var(--brand-gold-ink) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, .25) inset;
 }
 
 .dark .btn-toggle.is-active {
-  box-shadow: 0 0 0 2px rgba(220,38,38,.45) inset;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, .45) inset;
 }
 .plan-button-row {
   display: flex;
@@ -332,17 +352,18 @@
   background: transparent;
   cursor: pointer;
   transition: .15s;
+  color: #fff;
 }
 
 .plan-option input[type="radio"]:hover + .plan-btn,
 .plan-btn:hover {
-  border-color: rgba(239,68,68,.5);
+  border-color: #D4AF37;
 }
 
-/* Aquí tu rojo cuando está seleccionado */
+/* Aquí tu Dorado cuando está seleccionado */
 .plan-option input[type="radio"]:checked + .plan-btn {
-  background: #dc2626;           /* tu rojo */
-  border-color: #dc2626;
-  color: #fff;
-  box-shadow: 0 0 0 2px rgba(220,38,38,.25) inset;
+  background: #D4AF37;           /* tu dorado */
+  border-color: #D4AF37;
+  color: #000; /* Texto negro */
+  box-shadow: 0 0 0 2px rgba(212, 175, 55,.25) inset;
 }
