@@ -13,14 +13,14 @@
     <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
     <div class="panel gym-panel">
       <div class="header-row">
-        <h2 class="title">Power Gym</h2>
+        <h2 class="title">Administracion</h2>
         
         <div style="display:flex; gap: 15px; align-items:center;">
           <%# --- BOTÓN DE MODO NOCHE/DÍA --- %>
           <button id="theme-toggle" class="btn btn-icon" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 50%; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
             <span id="theme-icon">🌙</span>
           </button>
-          <%= image_tag "logo.png", alt: "Logo", class: "logo" %>
+          <%= image_tag "black_img.jpg", alt: "Gym Logo Center" %>
         </div>
       </div>
 
@@ -162,7 +162,7 @@
         <%= link_to "Clientes", clients_path, class: "btn" %>
         <%= link_to "Registrar Cliente", new_client_path, class: "btn" %>
         <%= link_to "Cobrar mensualidad", memberships_path, class: "btn btn-accent" %>
-        <%= link_to "Clases (Griselle)", griselle_cart_path, class: "btn btn-accent" %>
+        <%= link_to "Ventas Externas", griselle_cart_path, class: "btn btn-accent" %>
         <%= link_to "Pago Servicios", new_expense_path, class: "btn btn-danger" %>
       </div>
     </div>
