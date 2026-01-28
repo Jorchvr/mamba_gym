@@ -2,6 +2,41 @@
 <% prices = defined?(Client::PRICES) ? Client::PRICES : { "day" => 3000, "week" => 12000, "month" => 26500 } %>
 <% d, w, m = prices["day"]/100.0, prices["week"]/100.0, prices["month"]/100.0 %>
 
+<%# --- ESTILOS INCRUSTADOS PARA EL TAMAÑO DE LA CÁMARA --- %>
+<style>
+  /* Contenedor principal de la cámara */
+  .camera-container {
+    background: #000;
+    border: 1px solid #444;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* TAMAÑO FIJO Y PEQUEÑO */
+    width: 100%;
+    max-width: 320px;       /* Ancho máximo de celular */
+    aspect-ratio: 4/3;      /* Proporción cuadrada/rectangular estándar */
+    margin: 0 auto;         /* Centrado horizontal */
+  }
+
+  /* El video y el preview deben respetar el contenedor */
+  #gymVideo, #gymPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;      /* Rellena el cuadro sin deformar */
+    display: none;          /* Ocultos por defecto */
+  }
+
+  /* Placeholder (icono de cámara) */
+  #gymPlaceholder {
+    text-align: center;
+    width: 100%;
+  }
+</style>
+
 <%# 🔥 Formulario con Enctype para subir archivos y Turbo desactivado para evitar conflictos JS %>
 <%= form_with(model: client, local: true, html: { enctype: "multipart/form-data", id: "client-form", data: { turbo: "false" } }) do |f| %>
   
@@ -66,14 +101,15 @@
       <%# Input tradicional oculto por si quieren subir archivo %>
       <%= f.file_field :photo, accept: "image/*", style: "display:none;", id: "real_file" %>
 
-      <div style="background:#000; border:1px solid #444; border-radius:8px; overflow:hidden; min-height:220px; position:relative; display:flex; justify-content:center; align-items:center;">
-        <video id="gymVideo" autoplay playsinline muted style="width:100%; height:auto; display:none;"></video>
+      <%# --- CONTENEDOR DE CÁMARA CON CLASE NUEVA --- %>
+      <div class="camera-container">
+        <video id="gymVideo" autoplay playsinline muted></video>
         <canvas id="gymCanvas" style="display:none;"></canvas>
-        <img id="gymPreview" style="width:100%; display:none;">
+        <img id="gymPreview">
         
-        <div id="gymPlaceholder" style="text-align:center;">
+        <div id="gymPlaceholder">
           <% if client.photo.attached? %>
-             <%= image_tag client.photo, style: "max-width:120px; border-radius:5px;" %>
+             <%= image_tag client.photo, style: "max-width:100px; max-height:100px; border-radius:5px;" %>
              <p style="color:#aaa; font-size:0.8rem;">Actual</p>
           <% else %>
             <div style="font-size:3rem;">📷</div>
@@ -82,7 +118,7 @@
         </div>
       </div>
 
-      <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
+      <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px; max-width:320px; margin-left:auto; margin-right:auto;">
         <button type="button" class="btn btn-primary" id="btnStartCam">🔌 Encender Cámara</button>
         
         <select id="gymCamSelect" class="form-input" style="display:none;"></select>
@@ -121,7 +157,7 @@
 
 <script>
 (function() {
-  console.log("🚀 Iniciando script de cámara V2 (Auto-Save)...");
+  console.log("🚀 Iniciando script de cámara V3 (Tamaño Corregido)...");
 
   let stream = null;
   const video = document.getElementById('gymVideo');
@@ -162,9 +198,14 @@
   // === 2. FUNCIONES DE CÁMARA MEJORADAS ===
   async function startCamera(deviceId = null) {
     try {
-      const initStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      initStream.getTracks().forEach(t => t.stop());
+      // Detener stream anterior si existe
+      if (stream) stream.getTracks().forEach(t => t.stop());
 
+      // Permisos iniciales
+      const initStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      initStream.getTracks().forEach(t => t.stop()); // Solo para pedir permiso
+
+      // Llenar select de cámaras si está vacío
       if(select.options.length === 0) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const inputs = devices.filter(d => d.kind === 'videoinput');
@@ -178,16 +219,27 @@
         if(inputs.length > 1) select.style.display = 'block';
       }
 
-      const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : true };
+      // Configuración de resolución ideal (No forzar demasiado para evitar errores)
+      const constraints = { 
+        video: {
+          deviceId: deviceId ? { exact: deviceId } : undefined,
+          width: { ideal: 640 },  // Pedimos resolución baja/media para que sea rápido
+          height: { ideal: 480 }
+        }
+      };
+
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
+      
+      // Mostrar video y ocultar placeholder
       video.style.display = 'block';
+      placeholder.style.display = 'none';
+      preview.style.display = 'none';
+      
       await video.play();
 
-      placeholder.style.display = 'none';
       btnStart.style.display = 'none';
       actions.style.display = 'flex';
-      preview.style.display = 'none';
       btnConfirm.style.display = 'none';
 
     } catch(err) {
@@ -197,41 +249,46 @@
 
   function snap() {
     if(!stream) return;
+    
+    // Ajustar canvas al tamaño real del video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    // Generar imagen
     preview.src = canvas.toDataURL('image/jpeg');
     
-    // === 🔥 FIX CRÍTICO: GUARDADO AUTOMÁTICO ===
-    // Guardamos la foto en el input oculto INMEDIATAMENTE al capturar.
-    // Así, aunque el usuario olvide dar click en "Usar Foto", la imagen ya se enviará.
+    // GUARDADO AUTOMÁTICO
     const hiddenInput = document.getElementById('photo_base64_input');
     if(hiddenInput) hiddenInput.value = preview.src;
 
+    // Cambiar vistas
     video.style.display = 'none';
     preview.style.display = 'block';
     actions.style.display = 'none';
     
-    // Mostramos el botón verde solo como confirmación visual, pero el trabajo ya está hecho
     btnConfirm.style.display = 'block'; 
     
+    // Detener la cámara para ahorrar recursos
     stream.getTracks().forEach(t => t.stop());
   }
 
   function stop() {
     if(stream) stream.getTracks().forEach(t => t.stop());
     video.style.display = 'none';
+    preview.style.display = 'none';
     placeholder.style.display = 'block';
+    
     btnStart.style.display = 'block';
     actions.style.display = 'none';
     select.style.display = 'none';
+    btnConfirm.style.display = 'none';
   }
 
   if(btnStart) btnStart.onclick = () => startCamera();
   if(select) select.onchange = () => startCamera(select.value);
   if(btnSnap) btnSnap.onclick = snap;
   if(btnStop) btnStop.onclick = stop;
-  // El botón verde ahora solo sirve para cerrar la UI de la cámara si quieren
   if(btnConfirm) btnConfirm.onclick = () => { btnConfirm.style.display = 'none'; select.style.display = 'none'; };
 
 })();
