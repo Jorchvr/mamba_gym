@@ -13,15 +13,15 @@
     <%# ==================== PANEL IZQUIERDO: GYM CONTROL ==================== %>
     <div class="panel gym-panel">
       
-      <%# --- HEADER MODIFICADO CON LOGO GRANDE AL CENTRO --- %>
+      <%# --- HEADER MODIFICADO CON LOGO MAXIMIZADO --- %>
       <div class="header-row" style="display: flex; justify-content: space-between; align-items: center;">
         <%# 1. Título a la izquierda %>
         <h2 class="title" style="margin: 0; white-space: nowrap;">Administracion</h2>
         
-        <%# 2. LOGO AL CENTRO (Modificado para ser largo y grande) %>
-        <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 0 15px;">
-           <%# max-width grande para que se estire, max-height controlado para no romper la altura %>
-           <%= image_tag "black_img.jpg.jpeg", style: "height: auto; width: 100%; max-width: 450px; max-height: 110px; object-fit: contain;", alt: "Logo Header" %>
+        <%# 2. LOGO AL CENTRO (Ocupando todo el espacio verde posible) %>
+        <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 0 10px;">
+           <%# width: 100% para llenar a los lados, max-height aumentado a 160px para llenar arriba/abajo %>
+           <%= image_tag "black_img.jpg.jpeg", style: "height: 160px; width: 100%; object-fit: contain;", alt: "Logo Header" %>
         </div>
         
         <%# 3. Botones a la derecha %>
