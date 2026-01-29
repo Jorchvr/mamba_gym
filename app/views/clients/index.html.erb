@@ -1,129 +1,160 @@
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
-<div class="card clients-card">
-  <div class="header-row clients-header" style="align-items:flex-start;">
-    <div>
-      <h2 class="title">Clientes</h2>
-
-
-      <div class="clients-stat-row">
-        <span class="stat-pill">
-          Registrados: <strong><%= @clients.size %></strong>
-        </span>
-        <span class="stat-pill stat-pill--ok">
-          Activos: <strong><%= @active_clients_count %></strong>
-        </span>
+<div class="clients-page-container">
+  
+  <%# --- HEADER: Título y Métricas --- %>
+  <div class="page-header">
+    <div class="header-content">
+      <h2 class="page-title">Clientes</h2>
+      <div class="header-metrics">
+        <div class="metric-pill">
+          <span class="metric-label">Registrados</span>
+          <span class="metric-value"><%= @clients.count %></span>
+        </div>
+        <div class="metric-pill metric-pill--accent">
+          <span class="metric-label">Activos</span>
+          <span class="metric-value"><%= @active_clients_count %></span>
+        </div>
       </div>
     </div>
-
-    <div class="btn-row">
-      <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
-      <%= link_to "Registrar Cliente", new_client_path, class: "btn btn-primary" %>
+    
+    <div class="header-actions">
+      <%= link_to authenticated_root_path, class: "btn btn-outline" do %>
+        <span>🏠</span> Inicio
+      <% end %>
+      <%= link_to new_client_path, class: "btn btn-primary" do %>
+        <span>➕</span> Registrar Cliente
+      <% end %>
     </div>
   </div>
 
-  <!-- 🔎 Buscador + filtros -->
-  <%= form_with url: clients_path, method: :get, local: true do %>
-    <div class="clients-filters-row">
-      <div class="clients-filter-block">
-        <label class="label-small">Buscar por:</label>
-        <%= select_tag :filter,
-          options_for_select([["Número", "id"], ["Nombre", "name"]], params[:filter].presence || "name"),
-          class: "form-select" %>
+  <%# --- BARRA DE HERRAMIENTAS (FILTROS) --- %>
+  <div class="search-toolbar card">
+    <%= form_with url: clients_path, method: :get, local: true, class: "toolbar-form" do |f| %>
+      
+      <%# Filtro de Tipo de Búsqueda %>
+      <div class="filter-group">
+        <label class="filter-label">Buscar por:</label>
+        <%= select_tag :filter, 
+            options_for_select([["Nombre", "name"], ["Número (#)", "id"]], params[:filter].presence || "name"), 
+            class: "filter-select" %>
       </div>
 
-      <div class="clients-filter-block clients-filter-block--grow">
-        <label class="label-small">Texto de búsqueda</label>
-        <%= text_field_tag :q, params[:q],
-          placeholder: "Escribe número de cliente o nombre…",
-          class: "form-input",
-          style: "width:100%;" %>
+      <%# Input de Texto %>
+      <div class="search-input-group">
+        <div class="search-icon">🔍</div>
+        <%= text_field_tag :q, params[:q], 
+            placeholder: "Escribe el nombre o número...", 
+            class: "search-field" %>
       </div>
 
-      <div class="clients-filter-block">
-        <label class="label-small">Estado</label>
-        <%= select_tag :status,
-          options_for_select(
-            [
-              ["Todos", ""],
-              ["Solo activos", "active"]
-            ],
-            params[:status].presence
-          ),
-          class: "form-select" %>
+      <%# Filtro de Estado %>
+      <div class="filter-group">
+        <label class="filter-label">Estado:</label>
+        <%= select_tag :status, 
+            options_for_select([["Todos", ""], ["Solo Activos", "active"]], params[:status]), 
+            class: "filter-select" %>
       </div>
 
-      <div class="clients-filter-block clients-filter-block--button">
-        <label class="label-small">&nbsp;</label>
-        <%= submit_tag "Buscar", class: "btn btn-accent btn-block" %>
-      </div>
-    </div>
-  <% end %>
+      <%= submit_tag "Buscar", class: "btn-toolbar" %>
+      
+      <% if params[:q].present? || params[:status].present? %>
+        <%= link_to "Limpiar", clients_path, class: "btn-reset" %>
+      <% end %>
+    <% end %>
+  </div>
 
-  <!-- Tabla con scroll -->
-  <div class="table-wrap clients-scroll">
-    <table class="nice-table nice-table--clients" style="width:100%; border-collapse:collapse;">
+  <%# --- TABLA DE RESULTADOS --- %>
+  <div class="card table-card">
+    <table class="modern-table">
       <thead>
         <tr>
-          <th>#</th>
+          <th width="80">ID</th>
           <th>Cliente</th>
           <th>Membresía</th>
           <th>Inscripción</th>
-          <th>Próximo pago</th>
-          <th>Acciones</th>
+          <th>Próximo Pago</th>
+          <th width="100">Estado</th>
+          <th width="80">Acción</th>
         </tr>
       </thead>
       <tbody>
         <% @clients.each do |c| %>
-          <tr class="client-row">
-            <td class="muted">
-              <span class="mono">#<%= c.id %></span>
+          <%# Lógica de estado %>
+          <% is_active = c.next_payment_on.present? && c.next_payment_on >= Date.current %>
+          
+          <tr class="table-row" onclick="window.location='<%= client_path(c) %>'">
+            
+            <%# Columna ID %>
+            <td class="id-cell">
+              <span class="hash">#</span><%= c.id %>
             </td>
 
+            <%# Columna Cliente (Foto + Nombre) %>
             <td>
-              <div class="name-cell">
-                <%= link_to (c.name.presence || "(Sin nombre)"),
-                            client_path(c),
-                            class: "client-name-link" %>
-
-                <% if c.next_payment_on.present? && c.next_payment_on < Date.current %>
-                  <span class="badge badge-danger">Vencida</span>
-                <% elsif c.next_payment_on.present? && c.next_payment_on >= Date.current %>
-                  <span class="badge badge-ok">Activa</span>
-                <% else %>
-                  <span class="badge">Sin plan</span>
-                <% end %>
+              <div class="client-profile-flex">
+                <div class="client-avatar">
+                  <% if c.photo.attached? %>
+                    <%= image_tag c.photo, class: "avatar-img" %>
+                  <% else %>
+                    <div class="avatar-initials"><%= c.name.first(2).upcase rescue "??" %></div>
+                  <% end %>
+                </div>
+                <div class="client-info">
+                  <span class="client-name"><%= c.name.presence || "Sin Nombre" %></span>
+                  <span class="client-meta">
+                    <% if c.client_number.present? %>
+                      Clave: <%= c.client_number %>
+                    <% else %>
+                      Sin clave
+                    <% end %>
+                  </span>
+                </div>
               </div>
-              <div class="client-meta-mini">
-                <span class="mono">Membresía: <%= c.membership_type&.humanize || "-" %></span>
-              </div>
             </td>
 
+            <%# Columna Membresía %>
             <td>
-              <span class="mono"><%= c.membership_type&.humanize || "-" %></span>
+              <span class="membership-pill">
+                <%= c.membership_type&.humanize || "-" %>
+              </span>
             </td>
 
+            <%# Columna Inscripción %>
             <td>
-              <span class="mono"><%= c.enrolled_on || "-" %></span>
+              <span class="date-text"><%= c.enrolled_on&.strftime("%d/%m/%Y") || "-" %></span>
             </td>
 
+            <%# Columna Próximo Pago %>
             <td>
-              <span class="mono"><%= c.next_payment_on || "-" %></span>
+              <span class="date-text <%= (!is_active && c.next_payment_on.present?) ? 'text-danger' : '' %>">
+                <%= c.next_payment_on&.strftime("%d/%m/%Y") || "-" %>
+              </span>
             </td>
 
+            <%# Columna Estado %>
             <td>
-              <div class="actions-stack">
-                <%= link_to "Ver", client_path(c), class: "btn btn-sm" %>
-                <%= link_to "Editar", edit_client_path(c), class: "btn btn-sm btn-primary" %>
-              </div>
+              <% if is_active %>
+                <span class="status-badge status-active">Activo</span>
+              <% elsif c.next_payment_on.present? %>
+                <span class="status-badge status-inactive">Vencido</span>
+              <% else %>
+                <span class="status-badge status-neutral">Sin Plan</span>
+              <% end %>
+            </td>
+
+            <%# Columna Acción %>
+            <td>
+              <div class="action-arrow">➔</div>
             </td>
           </tr>
         <% end %>
 
-        <% if @clients.blank? %>
+        <% if @clients.empty? %>
           <tr>
-            <td colspan="6" class="muted" style="text-align:center; padding:1.25rem 0;">
-              No hay clientes que coincidan con la búsqueda.
+            <td colspan="7" style="text-align:center; padding: 4rem; color: #666;">
+              <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+              No se encontraron clientes con esos criterios.
             </td>
           </tr>
         <% end %>
@@ -131,3 +162,279 @@
     </table>
   </div>
 </div>
+
+<%# --- ESTILOS CSS PERSONALIZADOS (Igual a los anteriores para consistencia) --- %>
+<style>
+  /* Layout General */
+  .clients-page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .header-metrics {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .metric-pill {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+
+  .metric-pill--accent {
+    background: rgba(212, 175, 55, 0.1); /* Dorado transparente */
+    border-color: rgba(212, 175, 55, 0.3);
+    color: #D4AF37;
+  }
+
+  .metric-value { font-weight: 800; color: #fff; }
+  .metric-pill--accent .metric-value { color: #D4AF37; }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* Botones Header */
+  .btn-outline {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #ccc !important;
+  }
+  .btn-outline:hover {
+    border-color: #fff !important;
+    color: #fff !important;
+  }
+
+  /* Barra de Herramientas */
+  .search-toolbar {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background: #181a1f; 
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .toolbar-form {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .filter-label {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .search-input-group {
+    flex-grow: 1;
+    position: relative;
+    min-width: 250px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+    pointer-events: none;
+    color: #fff;
+  }
+
+  .search-field {
+    width: 100%;
+    padding: 10px 10px 10px 40px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    height: 42px;
+    box-sizing: border-box;
+  }
+  .search-field:focus { border-color: #D4AF37; }
+
+  .filter-select {
+    padding: 0 15px;
+    height: 42px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #ccc;
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+  }
+  .filter-select:focus { border-color: #D4AF37; }
+
+  .btn-toolbar {
+    background: #D4AF37;
+    border: none;
+    padding: 0 24px;
+    height: 42px;
+    border-radius: 8px;
+    color: #000;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-toolbar:hover { opacity: 0.9; }
+
+  .btn-reset {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    align-self: center;
+  }
+  .btn-reset:hover { color: #fff; border-bottom-color: #fff; }
+
+  /* Tabla Moderna */
+  .table-card {
+    padding: 0 !important;
+    overflow: hidden; 
+    background: #181a1f;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+  }
+
+  .modern-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .modern-table thead th {
+    text-align: left;
+    padding: 1.2rem 1.5rem;
+    background: rgba(255,255,255,0.02);
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .table-row {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s ease;
+    cursor: pointer;
+  }
+  .table-row:hover { background: rgba(255,255,255,0.05); }
+  .table-row:last-child { border-bottom: none; }
+
+  .modern-table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    color: #e8ecf1;
+  }
+
+  /* Celdas específicas */
+  .id-cell {
+    font-family: monospace;
+    color: #666;
+    font-size: 1.1rem;
+  }
+  .hash { color: #D4AF37; margin-right: 2px; opacity: 0.5; }
+
+  /* Perfil */
+  .client-profile-flex { display: flex; align-items: center; gap: 12px; }
+  .client-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #2a2d33;
+    display: flex; justify-content: center; align-items: center;
+    border: 2px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-initials { font-weight: bold; color: #D4AF37; font-size: 0.9rem; }
+
+  .client-info { display: flex; flex-direction: column; }
+  .client-name { font-weight: 700; color: #fff; font-size: 1rem; }
+  .client-meta { font-size: 0.8rem; color: #666; margin-top: 2px; }
+
+  /* Elementos Visuales */
+  .membership-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #ccc;
+    text-transform: capitalize;
+  }
+
+  .date-text { font-family: monospace; color: #aaa; font-size: 0.95rem; }
+  .text-danger { color: #f87171 !important; font-weight: bold; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+  .status-inactive { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
+  .status-neutral { background: rgba(255, 255, 255, 0.1); color: #aaa; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+  .action-arrow {
+    color: #444;
+    font-weight: bold;
+    transition: transform 0.2s, color 0.2s;
+    text-align: right;
+  }
+  .table-row:hover .action-arrow { color: #D4AF37; transform: translateX(3px); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .modern-table thead { display: none; }
+    .modern-table tr { display: block; padding: 1rem; border-bottom: 1px solid #333; position: relative; }
+    .modern-table td { display: flex; justify-content: space-between; padding: 0.5rem 0; border: none; }
+    .modern-table td::before { content: attr(data-label); font-weight: bold; color: #666; margin-right: 1rem; }
+    .id-cell { display: none; }
+    .action-arrow { position: absolute; top: 50%; right: 10px; font-size: 1.5rem; }
+  }
+</style>

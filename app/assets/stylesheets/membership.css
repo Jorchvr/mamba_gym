@@ -1,369 +1,369 @@
-/* ===== Membership page (scoped) ===== */
-.membership-page { max-width: 980px; margin: 0 auto; padding: 0 12px; }
-.membership-page .title { font-size: 1.9rem; line-height: 1.25; font-weight: 800; color: #e8ecf1; }
+  /* ===== Membership page (scoped) ===== */
+  .membership-page { max-width: 980px; margin: 0 auto; padding: 0 12px; }
+  .membership-page .title { font-size: 1.9rem; line-height: 1.25; font-weight: 800; color: #e8ecf1; }
 
-/* Cards / tipografías */
-.membership-page .card { padding: 1.25rem 1.25rem; border-radius: 12px; background: rgba(24, 26, 31, 0.9); border: 1px solid rgba(255,255,255,0.1); }
-.membership-page .card-title { font-size: 1.3rem; margin-bottom: .75rem; font-weight: 700; color: #e8ecf1; }
-.membership-page .text-muted { color: #a9b0b6; }
-.membership-page .block { display: block; }
-.membership-page .mb-3 { margin-bottom: 1rem; }
+  /* Cards / tipografías */
+  .membership-page .card { padding: 1.25rem 1.25rem; border-radius: 12px; background: rgba(24, 26, 31, 0.9); border: 1px solid rgba(255,255,255,0.1); }
+  .membership-page .card-title { font-size: 1.3rem; margin-bottom: .75rem; font-weight: 700; color: #e8ecf1; }
+  .membership-page .text-muted { color: #a9b0b6; }
+  .membership-page .block { display: block; }
+  .membership-page .mb-3 { margin-bottom: 1rem; }
 
-/* ===== Buscador: input + botón pegado (una sola fila) ===== */
-.membership-page .search-inline{
-  display: flex;
-  align-items: stretch;
-  gap: 0;             /* sin espacio entre input y botón */
-  width: 100%;
-}
-.membership-page .form-input{ 
-    font-size: 1.06rem; 
-    padding: .9rem 1rem; 
-    border-radius: 8px; 
-    width: 100%; 
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  /* ===== Buscador: input + botón pegado (una sola fila) ===== */
+  .membership-page .search-inline{
+    display: flex;
+    align-items: stretch;
+    gap: 0;             /* sin espacio entre input y botón */
+    width: 100%;
+  }
+  .membership-page .form-input{ 
+      font-size: 1.06rem; 
+      padding: .9rem 1rem; 
+      border-radius: 8px; 
+      width: 100%; 
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+  }
+  .membership-page .form-input--xl{ font-size: 1.18rem; padding: 1.05rem 1.15rem; }
+
+  .membership-page .search-inline .form-input{
+    flex: 1 1 auto;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .membership-page .btn{ font-size: 1.08rem; padding: .95rem 1.2rem; border-radius: 8px; background: #D4AF37; color: #000; font-weight: 800; }
+  .membership-page .btn-xl{ font-size: 1.18rem; padding: 1.05rem 1.35rem; }
+
+  .membership-page .search-inline .search-inline-btn{
+    flex: 0 0 auto;
+    white-space: nowrap;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding-left: 1.15rem;
+    padding-right: 1.15rem;
+  }
+
+  /* ===== Ficha ===== */
+  .membership-page .result-card { display: grid; gap: 1rem; }
+  .membership-page .result-row { display: grid; grid-template-columns: 160px 1fr; gap: 1.25rem; align-items: start; }
+  .membership-page .result-photo { width: 140px; height: 140px; border-radius: 16px; overflow: hidden; background: #2a2d33; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+  .membership-page .result-name { font-size: 1.42rem; margin: 0 0 .25rem; font-weight: 800; color: #fff; }
+  .membership-page .result-meta { margin: .15rem 0 .6rem; color:#a9b0b6; }
+  .membership-page .kv { display: grid; grid-template-columns: 180px 1fr; gap: .4rem; margin: .4rem 0; color: #e8ecf1; }
+
+  /* ===== Estado ===== */
+  .membership-page .status-wrap { margin-top: .5rem; }
+  .membership-page .status-panel { border-radius: 12px; padding: .9rem 1rem; background: transparent; }
+  .membership-page .status-panel--ok   { background: #064e3b; border: 1px solid #10b981; }
+  .membership-page .status-panel--debt { background: rgba(153, 27, 27, 0.1); border: 1px solid #991b1b; }
+  .membership-page .status-kicker { font-size: .92rem; color: #e8ecf1; text-transform: uppercase; letter-spacing: .06em; opacity: 0.8; }
+  .membership-page .status-big { font-size: 1.35rem; font-weight: 800; margin-top: .15rem; color: #fff; }
+  .membership-page .status-sub { margin:.25rem 0 0; color:#e8ecf1; }
+
+  /* ===== Botoneras (planes y pago) ===== */
+  .membership-page .btn-toggle-group { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: .9rem; margin-top: .6rem; }
+  .membership-page .btn-toggle-group--2 { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+  .membership-page .btn-toggle { border-radius: 8px; padding: 1rem 1rem; font-weight: 800; text-align:center; cursor: pointer; color: #e8ecf1; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
+  .membership-page .btn-toggle-price { font-weight: 700; opacity: .85; margin-left: .25rem; }
+
+  /* ESTADO ACTIVO: Dorado con letras Negras */
+  .membership-page .btn-toggle.active { 
+      background-color: #D4AF37 !important; 
+      color: #000000 !important; 
+      border-color: #D4AF37 !important;
+      outline: none;
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  }
+  .membership-page .btn-toggle--custom.active { outline-color: #D4AF37; }
+
+  /* Personalizado */
+  .membership-page .custom-price-wrap { margin-top: .9rem; display: none; }
+  .membership-page .grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
+  .membership-page .gap { gap: 1rem; }
+
+  /* Acciones */
+  .membership-page .actions-end { display:flex; justify-content:flex-end; margin-top:1rem; }
+
+  /* Responsive */
+  @media (max-width: 1020px){
+    .membership-page .btn-toggle-group { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .membership-page .result-row { grid-template-columns: 1fr; }
+    .membership-page .kv { grid-template-columns: 1fr; }
+    /* si en móvil quieres que sigan en una fila, mantenemos el layout del buscador */
+    .membership-page .search-inline .search-inline-btn{
+      padding-left: .95rem;
+      padding-right: .95rem;
+    }
+  }
+  /* === Fix: que nada se salga de la card === */
+  .membership-page .card,
+  .membership-page .result-card {
+    overflow: hidden;            /* recorta sombras/contornos internos */
+    border-radius: 12px;         /* asegura simetría con el recorte */
+  }
+
+  /* === Panel de estado: 100% ancho y sin outline que desborda === */
+  .membership-page .status-panel {
+    width: 100%;
+    box-sizing: border-box;
+    margin: .75rem 0 0;          /* separa del contenido, simétrico */
+    border-radius: 12px;
+    outline: none !important;    /* evita que salga del borde redondo */
+    box-shadow: none;            /* limpiamos sombras heredadas */
+  }
+
+  /* Verde (OK) */
+  .membership-page .status-panel--ok {
+    background: #064e3b;
+    border: 1px solid #10b981;
+  }
+
+  /* Rojo (deuda) */
+  .membership-page .status-panel--debt {
+    background: rgba(153, 27, 27, 0.1);
+    border: 1px solid #991b1b;
+  }
+
+  /* Por si algún stylesheet global aplicó outline/sombra al pasar el mouse */
+  .membership-page .status-panel:hover {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  /* --- FIX de clics en botoneras --- */
+  .membership-page .btn-toggle {
+    cursor: pointer;
+    user-select: none;
+    pointer-events: auto; /* asegura que recibe el click */
+  }
+
+  .membership-page .btn-toggle-group {
+    position: relative;   /* evita overlays raros de otros contenedores */
+    z-index: 0;
+  }
+  /* Radios con look de botón (segmented) */
+  .membership-page .segmented{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(160px,1fr));
+    gap: .9rem;
+    margin-top: .6rem;
+  }
+  .membership-page .segmented--2{
+    grid-template-columns: repeat(2, minmax(160px,1fr));
+  }
+  .membership-page .segmented-input{
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .membership-page .segmented-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1rem;
+    font-weight: 800;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    outline: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,0.05);
     color: #fff;
-}
-.membership-page .form-input--xl{ font-size: 1.18rem; padding: 1.05rem 1.15rem; }
-
-.membership-page .search-inline .form-input{
-  flex: 1 1 auto;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-.membership-page .btn{ font-size: 1.08rem; padding: .95rem 1.2rem; border-radius: 8px; background: #D4AF37; color: #000; font-weight: 800; }
-.membership-page .btn-xl{ font-size: 1.18rem; padding: 1.05rem 1.35rem; }
-
-.membership-page .search-inline .search-inline-btn{
-  flex: 0 0 auto;
-  white-space: nowrap;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  padding-left: 1.15rem;
-  padding-right: 1.15rem;
-}
-
-/* ===== Ficha ===== */
-.membership-page .result-card { display: grid; gap: 1rem; }
-.membership-page .result-row { display: grid; grid-template-columns: 160px 1fr; gap: 1.25rem; align-items: start; }
-.membership-page .result-photo { width: 140px; height: 140px; border-radius: 16px; overflow: hidden; background: #2a2d33; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
-.membership-page .result-name { font-size: 1.42rem; margin: 0 0 .25rem; font-weight: 800; color: #fff; }
-.membership-page .result-meta { margin: .15rem 0 .6rem; color:#a9b0b6; }
-.membership-page .kv { display: grid; grid-template-columns: 180px 1fr; gap: .4rem; margin: .4rem 0; color: #e8ecf1; }
-
-/* ===== Estado ===== */
-.membership-page .status-wrap { margin-top: .5rem; }
-.membership-page .status-panel { border-radius: 12px; padding: .9rem 1rem; background: transparent; }
-.membership-page .status-panel--ok   { background: #064e3b; border: 1px solid #10b981; }
-.membership-page .status-panel--debt { background: rgba(153, 27, 27, 0.1); border: 1px solid #991b1b; }
-.membership-page .status-kicker { font-size: .92rem; color: #e8ecf1; text-transform: uppercase; letter-spacing: .06em; opacity: 0.8; }
-.membership-page .status-big { font-size: 1.35rem; font-weight: 800; margin-top: .15rem; color: #fff; }
-.membership-page .status-sub { margin:.25rem 0 0; color:#e8ecf1; }
-
-/* ===== Botoneras (planes y pago) ===== */
-.membership-page .btn-toggle-group { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: .9rem; margin-top: .6rem; }
-.membership-page .btn-toggle-group--2 { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
-.membership-page .btn-toggle { border-radius: 8px; padding: 1rem 1rem; font-weight: 800; text-align:center; cursor: pointer; color: #e8ecf1; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
-.membership-page .btn-toggle-price { font-weight: 700; opacity: .85; margin-left: .25rem; }
-
-/* ESTADO ACTIVO: Dorado con letras Negras */
-.membership-page .btn-toggle.active { 
-    background-color: #D4AF37 !important; 
-    color: #000000 !important; 
-    border-color: #D4AF37 !important;
+  }
+  .membership-page .segmented-btn:hover{
+    outline-color: #D4AF37;
+  }
+  .membership-page .segmented-input:checked + .segmented-btn{
+    background-color: #D4AF37 !important;
+    color: #000000 !important;
     outline: none;
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
-}
-.membership-page .btn-toggle--custom.active { outline-color: #D4AF37; }
-
-/* Personalizado */
-.membership-page .custom-price-wrap { margin-top: .9rem; display: none; }
-.membership-page .grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
-.membership-page .gap { gap: 1rem; }
-
-/* Acciones */
-.membership-page .actions-end { display:flex; justify-content:flex-end; margin-top:1rem; }
-
-/* Responsive */
-@media (max-width: 1020px){
-  .membership-page .btn-toggle-group { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 720px) {
-  .membership-page .result-row { grid-template-columns: 1fr; }
-  .membership-page .kv { grid-template-columns: 1fr; }
-  /* si en móvil quieres que sigan en una fila, mantenemos el layout del buscador */
-  .membership-page .search-inline .search-inline-btn{
-    padding-left: .95rem;
-    padding-right: .95rem;
   }
-}
-/* === Fix: que nada se salga de la card === */
-.membership-page .card,
-.membership-page .result-card {
-  overflow: hidden;            /* recorta sombras/contornos internos */
-  border-radius: 12px;         /* asegura simetría con el recorte */
-}
+  .membership-page .segmented-btn--custom{
+    outline-color: rgba(255,255,255,.2);
+  }
+  .membership-page #plan_custom:checked + .segmented-btn--custom{
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+  }
 
-/* === Panel de estado: 100% ancho y sin outline que desborda === */
-.membership-page .status-panel {
-  width: 100%;
-  box-sizing: border-box;
-  margin: .75rem 0 0;          /* separa del contenido, simétrico */
-  border-radius: 12px;
-  outline: none !important;    /* evita que salga del borde redondo */
-  box-shadow: none;            /* limpiamos sombras heredadas */
-}
+  /* (ya los tienes) — buscador inline */
+  /* Asegura que el label sea clickeable */
+  .segmented-btn { cursor: pointer; }
 
-/* Verde (OK) */
-.membership-page .status-panel--ok {
-  background: #064e3b;
-  border: 1px solid #10b981;
-}
+  /* Oculta por defecto la caja de personalizado */
+  .plan-picker .custom-price-wrap {
+    display: none;
+    margin-top: .75rem;
+  }
 
-/* Rojo (deuda) */
-.membership-page .status-panel--debt {
-  background: rgba(153, 27, 27, 0.1);
-  border: 1px solid #991b1b;
-}
+  /* Muestra la caja cuando el radio #plan_custom está seleccionado.
+    IMPORTANTE: #plan_custom y #custom_price_wrap deben compartir el MISMO padre. */
+  .plan-picker #plan_custom:checked ~ #custom_price_wrap {
+    display: block;
+  }
 
-/* Por si algún stylesheet global aplicó outline/sombra al pasar el mouse */
-.membership-page .status-panel:hover {
-  outline: none !important;
-  box-shadow: none !important;
-}
-/* --- FIX de clics en botoneras --- */
-.membership-page .btn-toggle {
-  cursor: pointer;
-  user-select: none;
-  pointer-events: auto; /* asegura que recibe el click */
-}
+  /* (Opcional) si tu CSS oculta el input, asegúrate que no bloquee el click del label */
+  .segmented-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;  /* el click va al label (for=...) */
+  }
 
-.membership-page .btn-toggle-group {
-  position: relative;   /* evita overlays raros de otros contenedores */
-  z-index: 0;
-}
-/* Radios con look de botón (segmented) */
-.membership-page .segmented{
-  display: grid;
-  grid-template-columns: repeat(4, minmax(160px,1fr));
-  gap: .9rem;
-  margin-top: .6rem;
-}
-.membership-page .segmented--2{
-  grid-template-columns: repeat(2, minmax(160px,1fr));
-}
-.membership-page .segmented-input{
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-.membership-page .segmented-btn{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 1rem;
-  font-weight: 800;
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
-  outline: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,0.05);
-  color: #fff;
-}
-.membership-page .segmented-btn:hover{
-  outline-color: #D4AF37;
-}
-.membership-page .segmented-input:checked + .segmented-btn{
-  background-color: #D4AF37 !important;
-  color: #000000 !important;
-  outline: none;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
-}
-.membership-page .segmented-btn--custom{
-  outline-color: rgba(255,255,255,.2);
-}
-.membership-page #plan_custom:checked + .segmented-btn--custom{
-  background-color: #D4AF37 !important;
-  color: #000 !important;
-}
+  /* Un poco de separación visual dentro del grupo */
+  .plan-picker .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  /* ====== Botones tipo radio (segmentados) ====== */
+  .segmented-btn { cursor: pointer; }
+  .segmented-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none; /* el click va al label (for=...) */
+  }
 
-/* (ya los tienes) — buscador inline */
-/* Asegura que el label sea clickeable */
-.segmented-btn { cursor: pointer; }
+  /* Contenedor de botones del plan */
+  .plan-picker .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: stretch;
+  }
 
-/* Oculta por defecto la caja de personalizado */
-.plan-picker .custom-price-wrap {
-  display: none;
-  margin-top: .75rem;
-}
+  /* Por defecto, oculto el bloque de "Personalizado" */
+  .plan-picker .custom-price-wrap {
+    display: none;
+    /* NUEVO: ocupa toda la línea y mete espacio respecto a los botones */
+    flex-basis: 100%;
+    width: 100%;
+    margin-top: 1rem;
+  }
 
-/* Muestra la caja cuando el radio #plan_custom está seleccionado.
-   IMPORTANTE: #plan_custom y #custom_price_wrap deben compartir el MISMO padre. */
-.plan-picker #plan_custom:checked ~ #custom_price_wrap {
-  display: block;
-}
+  /* Mostrar el bloque cuando el radio de personalizado esté checked */
+  .plan-picker #plan_custom:checked ~ #custom_price_wrap {
+    display: block;
+  }
 
-/* (Opcional) si tu CSS oculta el input, asegúrate que no bloquee el click del label */
-.segmented-input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;  /* el click va al label (for=...) */
-}
-
-/* Un poco de separación visual dentro del grupo */
-.plan-picker .segmented {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-}
-/* ====== Botones tipo radio (segmentados) ====== */
-.segmented-btn { cursor: pointer; }
-.segmented-input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none; /* el click va al label (for=...) */
-}
-
-/* Contenedor de botones del plan */
-.plan-picker .segmented {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-  align-items: stretch;
-}
-
-/* Por defecto, oculto el bloque de "Personalizado" */
-.plan-picker .custom-price-wrap {
-  display: none;
-  /* NUEVO: ocupa toda la línea y mete espacio respecto a los botones */
-  flex-basis: 100%;
-  width: 100%;
-  margin-top: 1rem;
-}
-
-/* Mostrar el bloque cuando el radio de personalizado esté checked */
-.plan-picker #plan_custom:checked ~ #custom_price_wrap {
-  display: block;
-}
-
-/* Grid de dos columnas para los inputs del personalizado, con buen espacio */
-.custom-price-wrap .grid-2 {
-  display: grid;
-  grid-template-columns: 1fr;   /* móvil: apilados */
-  gap: 1rem;
-}
-
-@media (min-width: 720px) {
+  /* Grid de dos columnas para los inputs del personalizado, con buen espacio */
   .custom-price-wrap .grid-2 {
-    grid-template-columns: 1fr 1fr;   /* desktop: lado a lado */
+    display: grid;
+    grid-template-columns: 1fr;   /* móvil: apilados */
+    gap: 1rem;
   }
-}
 
-/* Asegura que los inputs ocupen el ancho y no se monten */
-.custom-price-wrap .form-input {
-  width: 100%;
-  box-sizing: border-box;
-}
+  @media (min-width: 720px) {
+    .custom-price-wrap .grid-2 {
+      grid-template-columns: 1fr 1fr;   /* desktop: lado a lado */
+    }
+  }
 
-/* (Opcional) un poco de padding visual */
-.custom-price-wrap {
-  padding-top: .25rem;
-}
+  /* Asegura que los inputs ocupen el ancho y no se monten */
+  .custom-price-wrap .form-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
 
-/* ====== Buscador en línea (por si no lo tienes ya) ====== */
-.search-inline {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: .75rem;
-  align-items: center;
-}
+  /* (Opcional) un poco de padding visual */
+  .custom-price-wrap {
+    padding-top: .25rem;
+  }
 
-.form-input--xl {
-  height: 48px;
-  font-size: 1.05rem;
-  padding: .6rem .9rem;
-}
+  /* ====== Buscador en línea (por si no lo tienes ya) ====== */
+  .search-inline {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: .75rem;
+    align-items: center;
+  }
 
-.btn-xl {
-  height: 48px;
-  font-size: 1.05rem;
-  padding: .6rem 1.1rem;
-}
-:root {
-  /* Nuevo color de marca: Dorado */
-  --brand-gold: #D4AF37;
-  --brand-gold-ink: #000000;
-}
+  .form-input--xl {
+    height: 48px;
+    font-size: 1.05rem;
+    padding: .6rem .9rem;
+  }
 
-.btn-toggle-group {
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-}
+  .btn-xl {
+    height: 48px;
+    font-size: 1.05rem;
+    padding: .6rem 1.1rem;
+  }
+  :root {
+    /* Nuevo color de marca: Dorado */
+    --brand-gold: #D4AF37;
+    --brand-gold-ink: #000000;
+  }
 
-.btn-toggle {
-  background: transparent !important;
-  border: 1px solid var(--border, rgba(255,255,255,.15));
-  color: inherit !important;
-  padding: .55rem .9rem;
-  border-radius: 10px;
-  transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
-  cursor: pointer;
-}
+  .btn-toggle-group {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
 
-.btn-toggle:hover {
-  border-color: #D4AF37;
-}
+  .btn-toggle {
+    background: transparent !important;
+    border: 1px solid var(--border, rgba(255,255,255,.15));
+    color: inherit !important;
+    padding: .55rem .9rem;
+    border-radius: 10px;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+    cursor: pointer;
+  }
 
-.btn-toggle.is-active {
-  background: var(--brand-gold) !important;
-  border-color: var(--brand-gold) !important;
-  color: var(--brand-gold-ink) !important;
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, .25) inset;
-}
+  .btn-toggle:hover {
+    border-color: #D4AF37;
+  }
 
-.dark .btn-toggle.is-active {
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, .45) inset;
-}
-.plan-button-row {
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-}
+  .btn-toggle.is-active {
+    background: var(--brand-gold) !important;
+    border-color: var(--brand-gold) !important;
+    color: var(--brand-gold-ink) !important;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, .25) inset;
+  }
 
-.plan-option {
-  position: relative;
-  display: inline-block;
-}
+  .dark .btn-toggle.is-active {
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, .45) inset;
+  }
+  .plan-button-row {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
 
-.plan-option input[type="radio"] {
-  /* lo escondemos pero sigue siendo clickeable por el label */
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
+  .plan-option {
+    position: relative;
+    display: inline-block;
+  }
 
-.plan-btn {
-  display: inline-block;
-  padding: .55rem .9rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: transparent;
-  cursor: pointer;
-  transition: .15s;
-  color: #fff;
-}
+  .plan-option input[type="radio"] {
+    /* lo escondemos pero sigue siendo clickeable por el label */
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
 
-.plan-option input[type="radio"]:hover + .plan-btn,
-.plan-btn:hover {
-  border-color: #D4AF37;
-}
+  .plan-btn {
+    display: inline-block;
+    padding: .55rem .9rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: transparent;
+    cursor: pointer;
+    transition: .15s;
+    color: #fff;
+  }
 
-/* Aquí tu Dorado cuando está seleccionado */
-.plan-option input[type="radio"]:checked + .plan-btn {
-  background: #D4AF37;           /* tu dorado */
-  border-color: #D4AF37;
-  color: #000; /* Texto negro */
-  box-shadow: 0 0 0 2px rgba(212, 175, 55,.25) inset;
-}
+  .plan-option input[type="radio"]:hover + .plan-btn,
+  .plan-btn:hover {
+    border-color: #D4AF37;
+  }
+
+  /* Aquí tu Dorado cuando está seleccionado */
+  .plan-option input[type="radio"]:checked + .plan-btn {
+    background: #D4AF37;           /* tu dorado */
+    border-color: #D4AF37;
+    color: #000; /* Texto negro */
+    box-shadow: 0 0 0 2px rgba(212, 175, 55,.25) inset;
+  }
