@@ -18,9 +18,9 @@
         <%# 1. Título a la izquierda %>
         <h2 class="title" style="margin: 0;">Administracion</h2>
         
-        <%# 2. LOGO AL CENTRO (En el espacio del cuadro verde) %>
+        <%# 2. LOGO AL CENTRO (Aumentado a 85px para llenar el cuadro) %>
         <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center;">
-           <%= image_tag "black_img.jpg.jpeg", style: "height: 55px; width: auto; object-fit: contain;", alt: "Logo Header" %>
+           <%= image_tag "black_img.jpg.jpeg", style: "height: 85px; width: auto; object-fit: contain;", alt: "Logo Header" %>
         </div>
         
         <%# 3. Botones a la derecha %>
@@ -360,4 +360,4 @@
           .catch(err => console.error("Silencio en la red...", err));
       }, 1000); 
     });
-  </script> 
+  </script>
