@@ -1,59 +1,140 @@
+<%# app/views/clients/show.html.erb %>
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
-<div class="card">
-  <div class="header-row" style="justify-content: space-between; align-items: center;">
-    <h2 class="title">Ficha de Cliente</h2>
-    <div class="btn-row">
-      <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
-      <%= link_to "Clientes", clients_path, class: "btn" %>
-      <%= link_to "Editar", edit_client_path(@client), class: "btn btn-primary" %>
-    </div>
-  </div>
+<div class="client-profile-container">
 
-  <div class="grid-2">
-    <div>
-      <%= client_photo_tag(@client, size: 160, classes: "client-photo--xl") %>
+  <%# --- HEADER: Título y Navegación --- %>
+  <div class="profile-header">
+    <div class="header-left">
+      <%= link_to authenticated_root_path, class: "back-link" do %>
+        <span class="icon">←</span> Inicio
+      <% end %>
+      <span class="divider">/</span>
+      <%= link_to "Clientes", clients_path, class: "back-link" %>
+      <span class="divider">/</span>
+      <span class="current-crumb">Ficha de Cliente</span>
     </div>
-    <div>
-      <h3 class="result-name"><%= @client.name %></h3>
-      <p class="result-meta">#<%= @client.id %> • <%= @client.membership_type&.humanize || "Sin plan" %></p>
-      <div class="result-kv"><span>Inscripción</span><span><%= @client.enrolled_on || "-" %></span></div>
-      <div class="result-kv"><span>Próximo pago</span><span><%= @client.next_payment_on || "-" %></span></div>
-      <div class="mt-4 btn-row">
-        <%= link_to "Cobrar mensualidad", memberships_path(q: @client.id), class: "btn btn-accent" %>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="card" style="margin-top: 1.5rem; border: 1px solid rgba(255,255,255,0.1);">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-    <h3 class="title" style="font-size:1.1rem; margin:0;">🔐 Gestión de Huella</h3>
-    <div id="status-badge">
-      <% if @client.fingerprint.present? %>
-        <span style="color: #34d399; font-weight:bold; background: rgba(52, 211, 153, 0.1); padding: 5px 10px; border-radius: 6px;">✅ Registrada</span>
-      <% else %>
-        <span style="color: #f87171; font-weight:bold; background: rgba(248, 113, 113, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ No asignada</span>
+    
+    <div class="header-actions">
+      <%= link_to edit_client_path(@client), class: "btn btn-outline" do %>
+        ✏️ Editar Datos
       <% end %>
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-    <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-      <h4 style="font-size: 0.9rem; color: #888; margin-bottom: 0.5rem;">Opción A: Registro</h4>
-      <%= button_to "👆 Iniciar Escaneo", start_registration_client_path(@client), method: :post, class: "btn btn-primary w-100", form: { data: { turbo: false } } %> 
-    </div>
+  <%# --- TARJETA PRINCIPAL: DATOS DEL CLIENTE --- %>
+  <div class="card profile-card">
+    <div class="profile-grid">
+      
+      <%# Columna Foto %>
+      <div class="photo-column">
+        <div class="photo-frame">
+          <% if @client.photo.attached? %>
+            <%= image_tag @client.photo, class: "client-photo-img" %>
+          <% else %>
+            <div class="photo-placeholder">
+              <span><%= @client.name.first(2).upcase %></span>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="status-indicator <%= @client.next_payment_on.present? && @client.next_payment_on >= Date.current ? 'status-active' : 'status-inactive' %>">
+          <%= @client.next_payment_on.present? && @client.next_payment_on >= Date.current ? 'ACTIVO' : 'VENCIDO' %>
+        </div>
+      </div>
 
-    <div id="manual-box" style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border: 1px dashed #555; border-radius: 8px; transition: all 0.3s ease;">
-      <h4 style="font-size: 0.9rem; color: #ccc; margin-bottom: 0.5rem;">Opción B: Vincular</h4>
-      <p id="manual-text" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">Pon el dedo en el lector primero.</p>
-      <%= button_to "🔗 VINCULAR ÚLTIMA LEÍDA", attach_last_fingerprint_client_path(@client), method: :post, id: "btn-vincular", class: "btn w-100", style: "background-color: #444; color: #888; border: none; font-weight: bold;" %>
+      <%# Columna Información %>
+      <div class="info-column">
+        <h1 class="client-fullname"><%= @client.name %></h1>
+        <div class="client-id-badge">
+          <span class="label">ID Cliente:</span>
+          <span class="value">#<%= @client.id %></span>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Membresía Actual</span>
+            <span class="info-value accent-text">
+              <%= @client.membership_type.present? ? @client.membership_type.humanize : "Sin plan asignado" %>
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Fecha Inscripción</span>
+            <span class="info-value"><%= @client.enrolled_on&.strftime("%d/%m/%Y") || "-" %></span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Próximo Vencimiento</span>
+            <span class="info-value <%= (@client.next_payment_on.present? && @client.next_payment_on < Date.current) ? 'text-danger' : '' %>">
+              <%= @client.next_payment_on&.strftime("%d/%m/%Y") || "-" %>
+            </span>
+          </div>
+          
+          <% if @client.age.present? %>
+          <div class="info-item">
+            <span class="info-label">Edad</span>
+            <span class="info-value"><%= @client.age %> años</span>
+          </div>
+          <% end %>
+        </div>
+
+        <div class="action-buttons mt-4">
+          <%= link_to memberships_path(q: @client.id), class: "btn btn-primary btn-lg w-100" do %>
+            💳 Renovar / Cobrar Mensualidad
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
+
+  <%# --- TARJETA SECUNDARIA: GESTIÓN DE HUELLA --- %>
+  <div class="card fingerprint-card mt-4">
+    <div class="card-header-row">
+      <h3 class="card-title-sm">🔐 Acceso Biométrico</h3>
+      
+      <div class="fingerprint-status">
+        <% if @client.fingerprint.present? %>
+          <span class="badge badge-success">
+            <span class="dot"></span> Huella Vinculada
+          </span>
+        <% else %>
+          <span class="badge badge-warning">
+            <span class="dot"></span> Sin Huella
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="fingerprint-actions-grid">
+      
+      <%# Opción A: Escaneo Directo (Solo Windows/App Local) %>
+      <div class="fp-option-box">
+        <div class="fp-icon">👆</div>
+        <div class="fp-content">
+          <h4>Escaneo Directo</h4>
+          <p>Usa esta opción si tienes el lector conectado a este PC.</p>
+          <%= button_to "Iniciar Escaneo", start_registration_client_path(@client), method: :post, class: "btn btn-outline btn-sm w-100", form: { data: { turbo: false } } %> 
+        </div>
+      </div>
+
+      <%# Opción B: Vinculación Remota (Recomendada) %>
+      <div id="manual-box" class="fp-option-box fp-option-remote">
+        <div class="fp-icon">📡</div>
+        <div class="fp-content">
+          <h4>Vincular Remotamente</h4>
+          <p id="manual-text">Pon el dedo en el lector de recepción primero.</p>
+          <%= button_to "VINCULAR ÚLTIMA LEÍDA", attach_last_fingerprint_client_path(@client), method: :post, id: "btn-vincular", class: "btn btn-disabled btn-sm w-100", disabled: true %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
+<%# --- SCRIPT PARA HUELLA EN TIEMPO REAL --- %>
 <script>
-  // Script para recibir señales en tiempo real
   if (typeof consumer === 'undefined') { var consumer = ActionCable.createConsumer(); }
 
   consumer.subscriptions.create({ channel: "LectorHuellaChannel" }, {
@@ -63,14 +144,215 @@
         const btn = document.getElementById("btn-vincular");
         const text = document.getElementById("manual-text");
 
-        box.style.background = "rgba(16, 185, 129, 0.15)";
-        box.style.borderColor = "#10b981";
-        text.innerHTML = "✨ ¡Huella detectada en el lector!";
+        // Activar visualmente la caja
+        box.classList.add("active-pulse");
+        
+        text.innerHTML = "✨ ¡Huella detectada! Lista para vincular.";
         text.style.color = "#10b981";
-        btn.style.backgroundColor = "#059669";
-        btn.style.color = "white";
+        text.style.fontWeight = "bold";
+
+        // Activar botón
+        btn.disabled = false;
+        btn.classList.remove("btn-disabled");
+        btn.classList.add("btn-success");
+        btn.innerText = "🔗 VINCULAR AHORA";
       }
-      if (data.action === "registered") { window.location.reload(); }
+      if (data.action === "registered") { 
+        window.location.reload(); 
+      }
     }
   });
 </script>
+
+
+<%# --- ESTILOS EXTRA PARA ESTA VISTA (Copia esto en tu main_panel.css si prefieres) --- %>
+<style>
+  /* Layout contenedor */
+  .client-profile-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+  }
+
+  /* Header de navegación */
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: #888;
+  }
+  .back-link {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--btn-color); }
+  .current-crumb { color: #fff; font-weight: 600; }
+  .divider { opacity: 0.3; }
+
+  /* Tarjeta de Perfil */
+  .profile-card { padding: 0 !important; overflow: hidden; }
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0;
+  }
+  
+  /* Columna izquierda (Foto) */
+  .photo-column {
+    background: rgba(0,0,0,0.2);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid var(--border-color);
+  }
+  .photo-frame {
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 4px solid rgba(255,255,255,0.05);
+    margin-bottom: 1rem;
+    background: #000;
+  }
+  .client-photo-img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: #222; color: #444; font-size: 3rem; font-weight: 800;
+  }
+  
+  .status-indicator {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    width: 100%;
+    text-align: center;
+  }
+  .status-active { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+  .status-inactive { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+
+  /* Columna derecha (Info) */
+  .info-column { padding: 2rem; }
+  .client-fullname {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .client-id-badge {
+    display: inline-flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 1.5rem;
+  }
+  .client-id-badge .value { color: var(--btn-color); font-weight: bold; }
+
+  /* Grid de información */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .info-item { display: flex; flex-direction: column; gap: 4px; }
+  .info-label { font-size: 0.8rem; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+  .info-value { font-size: 1.1rem; color: #e8ecf1; font-weight: 500; }
+  .accent-text { color: var(--btn-color); font-weight: 700; }
+  .text-danger { color: #f87171; }
+
+  /* Botones específicos */
+  .btn-outline {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
+    color: #ccc !important;
+  }
+  .btn-outline:hover {
+    border-color: #fff !important;
+    color: #fff !important;
+  }
+  .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; }
+  .w-100 { width: 100%; }
+
+  /* Tarjeta de Huella */
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .card-title-sm { font-size: 1.1rem; color: #fff; margin: 0; font-weight: 700; }
+  
+  .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .badge-success { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+  .badge-warning { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+  .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+
+  .fingerprint-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .fp-option-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    transition: all 0.3s ease;
+  }
+  .fp-icon { font-size: 1.5rem; opacity: 0.7; }
+  .fp-content h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: #fff; }
+  .fp-content p { font-size: 0.8rem; color: #666; margin: 0 0 12px 0; line-height: 1.4; }
+
+  /* Estado Activo de Huella Detectada */
+  .active-pulse {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .btn-disabled {
+    background: #333 !important;
+    color: #555 !important;
+    cursor: not-allowed;
+    border: none !important;
+  }
+  .btn-success {
+    background: #059669 !important;
+    color: #fff !important;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .profile-grid { grid-template-columns: 1fr; }
+    .photo-column { border-right: none; border-bottom: 1px solid var(--border-color); padding: 1.5rem; }
+    .info-column { padding: 1.5rem; }
+    .info-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .fingerprint-actions-grid { grid-template-columns: 1fr; }
+  }
+</style>
