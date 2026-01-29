@@ -57,12 +57,29 @@
         <% end %>
       </div>
 
-      <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA %>
-      <div id="contenedor_resultado" style="margin-top: 1.5rem;">
-        <div id="live-scan-result">
-          <%= render "clients/card_result", client: nil %>
-        </div>
-      </div>
+      <%# 🟢 CONTENEDOR DE HUELLA AUTOMÁTICA (VERSIÓN DELGADA) %>
+<div id="contenedor_resultado" style="margin-top: 1rem;">
+  <div id="live-scan-result" style="
+      border: 1px dashed rgba(255,255,255,0.2); 
+      background: rgba(0,0,0,0.2); 
+      border-radius: 6px; 
+      padding: 8px 15px; 
+      text-align: center; 
+      color: #666; 
+      font-size: 0.85rem;
+      transition: all 0.3s ease;">
+    
+    <span style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--btn-color); border-radius: 50%; box-shadow: 0 0 5px var(--btn-color); animation: blink 2s infinite;"></span>
+      Esperando lector de huella...
+    </span>
+
+  </div>
+</div>
+
+<style>
+  @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+</style>
 
       <%# ===================== RESULTADO DE BÚSQUEDA MANUAL ===================== %>
       <% if params[:search_number].present? %>

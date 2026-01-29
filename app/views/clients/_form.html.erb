@@ -1,10 +1,72 @@
 <%# app/views/clients/_form.html.erb %>
-<% prices = defined?(Client::PRICES) ? Client::PRICES : { "day" => 3000, "week" => 12000, "month" => 26500 } %>
-<% d, w, m = prices["day"]/100.0, prices["week"]/100.0, prices["month"]/100.0 %>
 
-<%# --- ESTILOS INCRUSTADOS PARA EL TAMAÑO DE LA CÁMARA --- %>
+<% 
+  # Definimos las opciones de membresía con sus etiquetas y precios para la vista
+  # (Deben coincidir con las claves del modelo)
+  membership_options = [
+    { code: 'visit',    label: 'Visita',    price: 100 },
+    { code: 'week',     label: 'Semana',    price: 200 },
+    { code: 'month',    label: 'Mes',       price: 550 },
+    { code: 'couple',   label: 'Pareja',    price: 950 },
+    { code: 'semester', label: 'Semestre',  price: 2300 }
+  ]
+%>
+
+<%# --- ESTILOS CSS PARA LOS BOTONES Y CÁMARA --- %>
 <style>
-  /* Contenedor principal de la cámara */
+  /* Estilo para los botones de membresía (Radio Buttons disfrazados) */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Se adaptan al espacio */
+    gap: 8px;
+    margin-top: 5px;
+  }
+
+  .plan-option input[type="radio"] {
+    display: none; /* Ocultamos el círculo del radio */
+  }
+
+  .plan-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    height: 100%;
+  }
+
+  .plan-option label .plan-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .plan-option label .plan-price {
+    font-size: 0.75rem;
+    color: #aaa;
+  }
+
+  /* Estado seleccionado */
+  .plan-option input[type="radio"]:checked + label {
+    background: var(--btn-color); /* Color dorado/amarillo */
+    border-color: var(--btn-color);
+    color: #000; /* Texto negro para contraste */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  .plan-option input[type="radio"]:checked + label .plan-price {
+    color: #333; /* Precio oscuro cuando está seleccionado */
+    font-weight: bold;
+  }
+
+  /* Estilos Cámara */
   .camera-container {
     background: #000;
     border: 1px solid #444;
@@ -14,34 +76,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    
-    /* TAMAÑO FIJO Y PEQUEÑO */
     width: 100%;
-    max-width: 320px;       /* Ancho máximo de celular */
-    aspect-ratio: 4/3;      /* Proporción cuadrada/rectangular estándar */
-    margin: 0 auto;         /* Centrado horizontal */
+    max-width: 320px;
+    aspect-ratio: 4/3;
+    margin: 0 auto;
   }
-
-  /* El video y el preview deben respetar el contenedor */
-  #gymVideo, #gymPreview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;      /* Rellena el cuadro sin deformar */
-    display: none;          /* Ocultos por defecto */
-  }
-
-  /* Placeholder (icono de cámara) */
-  #gymPlaceholder {
-    text-align: center;
-    width: 100%;
-  }
+  #gymVideo, #gymPreview { width: 100%; height: 100%; object-fit: cover; display: none; }
+  #gymPlaceholder { text-align: center; width: 100%; }
 </style>
 
-<%# 🔥 Formulario con Enctype para subir archivos y Turbo desactivado para evitar conflictos JS %>
 <%= form_with(model: client, local: true, html: { enctype: "multipart/form-data", id: "client-form", data: { turbo: "false" } }) do |f| %>
   
-  <%# === 1. CAMPO OCULTO (Aquí se guarda la foto de la cámara) === %>
   <%= f.hidden_field :photo_base64, id: "photo_base64_input" %>
+
+  <%# Fecha de inscripción oculta (siempre es HOY por defecto al crear) %>
+  <%= f.hidden_field :enrolled_on, value: (client.enrolled_on || Date.current), id: "enrolled_input" %>
 
   <% if client.errors.any? %>
     <div class="card" style="border-color:#ef4444; background:rgba(239,68,68,.1); padding:1rem; margin-bottom:1rem; color:#ef4444;">
@@ -49,7 +98,6 @@
     </div>
   <% end %>
 
-  <%# === 2. AVISO DE PRÓXIMO SOCIO (Solo nuevos) === %>
   <% if @next_id.present? && client.new_record? %>
     <div style="margin-bottom:1rem; padding:10px; border-left:4px solid var(--btn-color); background:rgba(255,255,255,0.03);">
       <span style="font-weight:700; color:var(--text-color);">PRÓXIMO SOCIO: <span style="color:var(--btn-color);">#<%= @next_id %></span></span>
@@ -57,11 +105,12 @@
   <% end %>
 
   <div class="grid-2" style="gap:1rem;">
+    
     <div class="card">
       <h3 class="card-title mb-2">Datos del Cliente</h3>
       
       <div class="form-row">
-        <%= f.label :name, "Nombre", class: "label" %>
+        <%= f.label :name, "Nombre Completo", class: "label" %>
         <%= f.text_field :name, class: "form-input", required: true, placeholder: "Ej. Juan Pérez" %>
       </div>
 
@@ -71,37 +120,37 @@
           <%= f.number_field :age, class: "form-input", placeholder: "25" %>
         </div>
         <div>
-          <%= f.label :height, "Altura (m)", class: "label" %>
-          <%= f.number_field :height, step: 0.01, class: "form-input", placeholder: "1.75" %>
+           <label class="label">Membresía</label>
+           <div class="plan-grid">
+             <% membership_options.each do |opt| %>
+               <div class="plan-option">
+                 <%= f.radio_button :membership_type, opt[:code], 
+                     id: "plan_#{opt[:code]}", 
+                     data: { price: opt[:price], type: opt[:code] } %>
+                 <label for="plan_<%= opt[:code] %>">
+                   <span class="plan-name"><%= opt[:label] %></span>
+                   <span class="plan-price">$<%= opt[:price] %></span>
+                 </label>
+               </div>
+             <% end %>
+           </div>
         </div>
       </div>
-       <div class="grid-2" style="gap:.5rem; margin-top:.5rem;">
-        <div>
-          <%= f.label :weight, "Peso (kg)", class: "label" %>
-          <%= f.number_field :weight, step: 0.01, class: "form-input", placeholder: "80.0" %>
-        </div>
-        <div>
-           <%= f.label :membership_type, "Membresía", class: "label" %>
-           <%= f.select :membership_type, 
-              options_for_select([["Día - $#{d.to_i}", "day"], ["Semana - $#{w.to_i}", "week"], ["Mes - $#{m.to_i}", "month"]], client.membership_type),
-              { include_blank: "Seleccionar..." }, 
-              class: "form-select", id: "mem_select" %>
-        </div>
+      
+      <div style="margin-top: 1rem;">
+        <%= f.label :next_payment_on, "Fecha de Vencimiento (Próximo Pago)", class: "label label-strong" %>
+        <%= f.date_field :next_payment_on, class: "form-input form-input--xl", id: "next_pay_input", required: true %>
+        <p class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">
+          📅 Se calcula automáticamente a partir de hoy, pero puedes cambiarla.
+        </p>
       </div>
-      <div class="grid-2" style="gap:.5rem; margin-top:.5rem;">
-        <%# === 3. FECHAS CON IDs PARA AUTOMATIZACIÓN === %>
-        <div><%= f.label :enrolled_on, "Inscripción", class: "label" %> <%= f.date_field :enrolled_on, class: "form-input", id: "enrolled_input" %></div>
-        <div><%= f.label :next_payment_on, "Próximo pago", class: "label" %> <%= f.date_field :next_payment_on, class: "form-input", id: "next_pay_input" %></div>
-      </div>
+
     </div>
 
     <div class="card">
       <h3 class="card-title mb-2">Foto de Perfil</h3>
-
-      <%# Input tradicional oculto por si quieren subir archivo %>
       <%= f.file_field :photo, accept: "image/*", style: "display:none;", id: "real_file" %>
 
-      <%# --- CONTENEDOR DE CÁMARA CON CLASE NUEVA --- %>
       <div class="camera-container">
         <video id="gymVideo" autoplay playsinline muted></video>
         <canvas id="gymCanvas" style="display:none;"></canvas>
@@ -120,16 +169,12 @@
 
       <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px; max-width:320px; margin-left:auto; margin-right:auto;">
         <button type="button" class="btn btn-primary" id="btnStartCam">🔌 Encender Cámara</button>
-        
         <select id="gymCamSelect" class="form-input" style="display:none;"></select>
-        
         <div id="gymActions" style="display:none; gap:5px;">
           <button type="button" class="btn btn-accent" style="flex:1;" id="btnSnap">📸 Capturar</button>
           <button type="button" class="btn btn-danger" id="btnStop">❌</button>
         </div>
-        
         <button type="button" class="btn btn-success" id="btnConfirmPhoto" style="display:none;">✅ Foto Lista</button>
-        
         <button type="button" class="btn btn-sm" onclick="document.getElementById('real_file').click()" style="background:#333; margin-top:5px;">📁 Subir Archivo</button>
       </div>
     </div>
@@ -137,18 +182,21 @@
 
   <div class="card" style="margin-top:1rem;">
     <% if client.new_record? %>
-      <h4 class="card-title">Pago</h4>
+      <h4 class="card-title">Cobro Inicial</h4>
       <div class="grid-2" style="gap:1rem;">
-        <div><label class="label">Total</label><%= number_field_tag :registration_price_mxn, ('%.2f' % m), class: "form-input", id: "gymPriceInput" %></div>
+        <div>
+          <label class="label">Total a Pagar (MXN)</label>
+          <%= number_field_tag :registration_price_mxn, nil, class: "form-input", id: "gymPriceInput", placeholder: "0.00" %>
+        </div>
         <div>
            <label class="label">Método</label>
-           <div style="display:flex; gap:10px;">
-             <label style="color:#fff;"><input type="radio" name="client[payment_method]" value="cash" checked> Efectivo</label>
-             <label style="color:#fff;"><input type="radio" name="client[payment_method]" value="transfer"> Transferencia</label>
+           <div style="display:flex; gap:10px; align-items: center; height: 42px;">
+             <label style="color:#fff; cursor:pointer;"><input type="radio" name="client[payment_method]" value="cash" checked> Efectivo</label>
+             <label style="color:#fff; cursor:pointer;"><input type="radio" name="client[payment_method]" value="transfer"> Transferencia</label>
            </div>
         </div>
       </div>
-      <%= f.submit "Guardar Cliente", class: "btn btn-primary w-full mt-4" %>
+      <%= f.submit "Guardar y Cobrar", class: "btn btn-primary w-full mt-4" %>
     <% else %>
       <%= f.submit "Actualizar Datos", class: "btn btn-primary w-full mt-4" %>
     <% end %>
@@ -157,8 +205,56 @@
 
 <script>
 (function() {
-  console.log("🚀 Iniciando script de cámara V3 (Tamaño Corregido)...");
+  console.log("🚀 Lógica V5: Botones Estéticos + Fechas Automáticas");
 
+  const planRadios = document.querySelectorAll('input[name="client[membership_type]"]');
+  const priceInput = document.getElementById('gymPriceInput');
+  const nextPayInput = document.getElementById('next_pay_input');
+  
+  // Fecha base siempre es HOY para nuevos registros (Inscripción oculta)
+  // Nota: Para editar cliente existente, deberíamos usar su fecha real, pero aquí asumimos lógica de "cobrar hoy" o "renovar desde hoy" si se cambia el plan.
+  const today = new Date(); 
+
+  // Función para calcular fecha
+  function calculateDate(planType) {
+    let date = new Date(); // Copia de hoy
+
+    if (planType === 'visit') {
+      date.setDate(date.getDate() + 1);
+    } else if (planType === 'week') {
+      date.setDate(date.getDate() + 7);
+    } else if (planType === 'month' || planType === 'couple') {
+      date.setMonth(date.getMonth() + 1);
+    } else if (planType === 'semester') {
+      date.setMonth(date.getMonth() + 6);
+    }
+    return date.toISOString().split('T')[0];
+  }
+
+  // Escuchar cambios en los botones de radio
+  planRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if(this.checked) {
+        // 1. Actualizar Precio
+        const price = this.getAttribute('data-price');
+        if(priceInput) priceInput.value = price + ".00";
+
+        // 2. Actualizar Fecha Automáticamente
+        const planType = this.getAttribute('data-type');
+        const newDateStr = calculateDate(planType);
+        
+        if(nextPayInput) {
+          nextPayInput.value = newDateStr;
+          // Efecto visual para indicar cambio
+          nextPayInput.style.borderColor = "var(--btn-color)";
+          setTimeout(() => nextPayInput.style.borderColor = "", 500);
+        }
+      }
+    });
+  });
+
+
+  // === LÓGICA DE CÁMARA (Sin cambios, se mantiene funcional) ===
   let stream = null;
   const video = document.getElementById('gymVideo');
   const canvas = document.getElementById('gymCanvas');
@@ -170,42 +266,13 @@
   const btnSnap = document.getElementById('btnSnap');
   const btnStop = document.getElementById('btnStop');
   const btnConfirm = document.getElementById('btnConfirmPhoto');
-  const realFile = document.getElementById('real_file');
-  const priceInput = document.getElementById('gymPriceInput');
-  const memSelect = document.getElementById('mem_select');
-  const nextPayInput = document.getElementById('next_pay_input');
-  const enrolledInput = document.getElementById('enrolled_input');
 
-  // === 1. LÓGICA DE PRECIOS Y FECHAS ===
-  if(memSelect) {
-    memSelect.addEventListener('change', function() {
-      // Precio
-      const txt = this.options[this.selectedIndex].text;
-      if(priceInput && txt.includes('$')) priceInput.value = parseFloat(txt.split('$')[1]).toFixed(2);
-
-      // Fecha Automática
-      const plan = this.value;
-      let date = (enrolledInput && enrolledInput.value) ? new Date(enrolledInput.value + "T12:00:00") : new Date();
-
-      if(plan === 'month' || plan === 'mes') date.setMonth(date.getMonth() + 1);
-      else if(plan === 'week' || plan === 'semana') date.setDate(date.getDate() + 7);
-      else if(plan === 'day' || plan === 'dia') date.setDate(date.getDate() + 1);
-
-      if(nextPayInput) nextPayInput.value = date.toISOString().split('T')[0];
-    });
-  }
-
-  // === 2. FUNCIONES DE CÁMARA MEJORADAS ===
   async function startCamera(deviceId = null) {
     try {
-      // Detener stream anterior si existe
       if (stream) stream.getTracks().forEach(t => t.stop());
-
-      // Permisos iniciales
       const initStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      initStream.getTracks().forEach(t => t.stop()); // Solo para pedir permiso
+      initStream.getTracks().forEach(t => t.stop());
 
-      // Llenar select de cámaras si está vacío
       if(select.options.length === 0) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const inputs = devices.filter(d => d.kind === 'videoinput');
@@ -219,57 +286,34 @@
         if(inputs.length > 1) select.style.display = 'block';
       }
 
-      // Configuración de resolución ideal (No forzar demasiado para evitar errores)
-      const constraints = { 
-        video: {
-          deviceId: deviceId ? { exact: deviceId } : undefined,
-          width: { ideal: 640 },  // Pedimos resolución baja/media para que sea rápido
-          height: { ideal: 480 }
-        }
-      };
-
+      const constraints = { video: { deviceId: deviceId ? { exact: deviceId } : undefined, width: { ideal: 640 }, height: { ideal: 480 } } };
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
-      
-      // Mostrar video y ocultar placeholder
       video.style.display = 'block';
       placeholder.style.display = 'none';
       preview.style.display = 'none';
-      
       await video.play();
 
       btnStart.style.display = 'none';
       actions.style.display = 'flex';
       btnConfirm.style.display = 'none';
-
     } catch(err) {
-      alert("⚠️ Error cámara: " + err.message + "\nPrueba usando localhost o HTTPS.");
+      alert("⚠️ Error cámara: " + err.message);
     }
   }
 
   function snap() {
     if(!stream) return;
-    
-    // Ajustar canvas al tamaño real del video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
-    
-    // Generar imagen
     preview.src = canvas.toDataURL('image/jpeg');
-    
-    // GUARDADO AUTOMÁTICO
     const hiddenInput = document.getElementById('photo_base64_input');
     if(hiddenInput) hiddenInput.value = preview.src;
-
-    // Cambiar vistas
     video.style.display = 'none';
     preview.style.display = 'block';
     actions.style.display = 'none';
-    
     btnConfirm.style.display = 'block'; 
-    
-    // Detener la cámara para ahorrar recursos
     stream.getTracks().forEach(t => t.stop());
   }
 
@@ -278,7 +322,6 @@
     video.style.display = 'none';
     preview.style.display = 'none';
     placeholder.style.display = 'block';
-    
     btnStart.style.display = 'block';
     actions.style.display = 'none';
     select.style.display = 'none';
@@ -290,6 +333,5 @@
   if(btnSnap) btnSnap.onclick = snap;
   if(btnStop) btnStop.onclick = stop;
   if(btnConfirm) btnConfirm.onclick = () => { btnConfirm.style.display = 'none'; select.style.display = 'none'; };
-
 })();
 </script>
