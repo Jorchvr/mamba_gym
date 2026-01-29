@@ -66,37 +66,60 @@
       <div class="card" style="margin-top:1rem;">
         <h3 class="card-title">Selecciona plan, precio y método de pago</h3>
 
-        <% prices = @prices %>
-
         <%= form_with url: memberships_checkout_path, method: :post, local: true, html: { id: "membership-form" } do |f| %>
           <%= hidden_field_tag :client_id, @client.id %>
 
           <div class="mb-3 plan-picker">
-            <label class="label label-strong">Plan</label>
+            <label class="label label-strong">Plan de Renovación</label>
 
-            <div class="segmented" role="radiogroup" aria-label="Plan">
-              <input class="segmented-input" type="radio" id="plan_day"   name="plan" value="day">
-              <label class="segmented-btn" for="plan_day">
-                Día <span class="btn-toggle-price">($<%= ('%.2f' % (prices[:day].to_i/100.0)) %>)</span>
-              </label>
+            <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+              
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_visit" name="plan" value="visit">
+                <label class="segmented-btn" for="plan_visit">
+                  Visita <br><span class="btn-toggle-price">$100</span>
+                </label>
+              </div>
 
-              <input class="segmented-input" type="radio" id="plan_week"  name="plan" value="week">
-              <label class="segmented-btn" for="plan_week">
-                Semana <span class="btn-toggle-price">($<%= ('%.2f' % (prices[:week].to_i/100.0)) %>)</span>
-              </label>
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_week" name="plan" value="week">
+                <label class="segmented-btn" for="plan_week">
+                  Semana <br><span class="btn-toggle-price">$200</span>
+                </label>
+              </div>
 
-              <input class="segmented-input" type="radio" id="plan_month_late" name="plan" value="month_late">
-              <label class="segmented-btn" for="plan_month_late">
-                Mes (atraso) <span class="btn-toggle-price">($<%= ('%.2f' % (prices[:month_late].to_i/100.0)) %>)</span>
-              </label>
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_month" name="plan" value="month" checked>
+                <label class="segmented-btn" for="plan_month">
+                  Mes <br><span class="btn-toggle-price">$550</span>
+                </label>
+              </div>
 
-              <input class="segmented-input" type="radio" id="plan_month_on_time" name="plan" value="month_on_time" checked>
-              <label class="segmented-btn" for="plan_month_on_time">
-                Mensualidad (puntual) <span class="btn-toggle-price">($<%= ('%.2f' % (prices[:month_on_time].to_i/100.0)) %>)</span>
-              </label>
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_couple" name="plan" value="couple">
+                <label class="segmented-btn" for="plan_couple">
+                  Pareja <br><span class="btn-toggle-price">$950</span>
+                </label>
+              </div>
 
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_semester" name="plan" value="semester">
+                <label class="segmented-btn" for="plan_semester">
+                  Semestre <br><span class="btn-toggle-price">$2300</span>
+                </label>
+              </div>
+
+              <div class="plan-option">
+                <input class="segmented-input" type="radio" id="plan_promo_open" name="plan" value="promo_open">
+                <label class="segmented-btn" for="plan_promo_open" style="border-color: var(--accent-color);">
+                  Promo <br><span class="btn-toggle-price">$100</span>
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;">
               <input class="segmented-input" type="radio" id="plan_custom" name="plan" value="custom">
-              <label class="segmented-btn segmented-btn--custom" for="plan_custom">Personalizado</label>
+              <label class="segmented-btn segmented-btn--custom" for="plan_custom" style="width: 100%; text-align: center;">Personalizado</label>
 
               <div id="custom_price_wrap" class="custom-price-wrap">
                 <div class="grid-2 gap">
@@ -112,18 +135,15 @@
                     <input type="text"
                            name="custom_description"
                            class="form-input form-input--xl"
-                           placeholder="Ej. Ajuste especial, promo, etc.">
+                           placeholder="Ej. Ajuste especial">
                   </div>
                 </div>
-                <small class="text-muted block" style="margin-top:.35rem;">
-                  Los pagos personalizados se guardan como venta del día con tu descripción.
-                </small>
               </div>
             </div>
           </div>
 
           <div class="mb-3" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
-            <label class="label label-strong">Fecha de Vencimiento (Próximo Pago)</label>
+            <label class="label label-strong">Nueva Fecha de Vencimiento</label>
             <div class="grid-2 gap">
               <div>
                 <input type="date" 
@@ -135,7 +155,7 @@
               </div>
               <div style="display:flex; align-items:center;">
                 <p class="text-muted" style="font-size: 0.9rem; line-height: 1.3;">
-                  Esta fecha se calcula automáticamente sumando tiempo a su fecha actual, pero <strong>puedes editarla manualmente</strong> si es necesario.
+                  Calculada automáticamente desde su fecha de corte anterior (o hoy).
                 </p>
               </div>
             </div>
@@ -174,10 +194,8 @@
     <% 
        base_calc = (@client && @client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current 
     %>
-    // Convertimos a string ISO para JS
     const baseDateStr = "<%= base_calc.strftime('%Y-%m-%d') %>"; 
 
-    // Función para sumar días
     function addDays(dateStr, days) {
       let parts = dateStr.split('-'); 
       let d = new Date(parts[0], parts[1] - 1, parts[2]); 
@@ -185,30 +203,31 @@
       return d.toISOString().split('T')[0];
     }
 
-    // Función para sumar 1 mes
-    function addMonth(dateStr) {
+    function addMonths(dateStr, months) {
       let parts = dateStr.split('-');
       let d = new Date(parts[0], parts[1] - 1, parts[2]);
-      d.setMonth(d.getMonth() + 1);
+      d.setMonth(d.getMonth() + months);
       return d.toISOString().split('T')[0];
     }
 
     planRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
         const val = e.target.value;
-        let newDate = baseDateStr; // Siempre partimos de la fecha base del cliente
+        let newDate = baseDateStr; 
 
-        if (val === 'day') {
-          newDate = addDays(baseDateStr, 1);
+        if (val === 'visit' || val === 'promo_open') {
+          // Asumiendo promo apertura es 1 mes. Si es visita es 1 día.
+          if(val === 'visit') newDate = addDays(baseDateStr, 1);
+          else newDate = addMonths(baseDateStr, 1);
         } else if (val === 'week') {
           newDate = addDays(baseDateStr, 7);
-        } else if (val.includes('month') || val === 'custom') {
-          newDate = addMonth(baseDateStr);
+        } else if (val === 'month' || val === 'couple') {
+          newDate = addMonths(baseDateStr, 1);
+        } else if (val === 'semester') {
+          newDate = addMonths(baseDateStr, 6);
         }
         
-        if (dateInput) {
-          dateInput.value = newDate;
-        }
+        if (dateInput) dateInput.value = newDate;
       });
     });
   });
