@@ -1,161 +1,127 @@
 class MembershipsController < ApplicationController
   before_action :authenticate_user!
 
-  # === 🟢 PRECIOS ACTUALIZADOS (En centavos) ===
+  # === 💰 LISTA MAESTRA DE PRECIOS (En Centavos) ===
+  # Esto es la "verdad absoluta". Lo que diga aquí es lo que se cobra.
   PRICES = {
-    "visit"      => 100_00,  # $100.00
-    "week"       => 200_00,  # $200.00
-    "month"      => 550_00,  # $550.00
-    "couple"     => 950_00,  # $950.00
-    "semester"   => 2300_00, # $2,300.00
-    "promo_open" => 100_00,  # $100.00
-    "promo_feb"  => 250_00   # $250.00
+    "visit"      => 100_00,   # $100.00
+    "week"       => 200_00,   # $200.00
+    "month"      => 550_00,   # $550.00
+    "couple"     => 950_00,   # $950.00
+    "semester"   => 2300_00,  # $2300.00
+    "promo_open" => 100_00,   # Promo Apertura $100
+    "promo_feb"  => 250_00    # Promo Febrero $250
   }.freeze
 
-  # GET /memberships?q=...
+  # GET /memberships
+  def index
+    # Redirige al new si intentan entrar al index directo, o maneja búsqueda aquí
+    redirect_to new_membership_path
+  end
+
+  # GET /memberships/new?q=...
   def new
     @query  = params[:q].to_s.strip
     @client = lookup_client(@query) if @query.present?
-    @prices = PRICES
 
-    # Calcular fecha sugerida inicial para la vista
-    if @client
-      # Base: la mayor entre Hoy y su vencimiento actual
-      base_date = [ @client.next_payment_on, Date.current ].compact.max
-      # Por defecto sugerimos 1 mes más, pero el JS lo cambiará según el botón
-      @suggested_next_payment = base_date + 1.month
-    end
+    # Pasamos los precios a la vista para pintarlos en los botones si es necesario
+    @prices = PRICES
   end
 
   # POST /memberships/checkout
   def checkout
     client = Client.find(params[:client_id])
 
-    plan = (params[:plan].presence || params[:membership_type].presence).to_s
-    pm   = params[:payment_method].to_s
-    payment_method = %w[cash transfer].include?(pm) ? pm : "cash"
+    # 1. Identificar el plan seleccionado (visit, week, month, etc.)
+    plan_key = params[:plan].to_s
 
-    # ¿Es precio personalizado?
-    custom_flag = (plan == "custom" || params[:use_custom_price].to_s == "1")
+    # 2. Obtener el precio desde la constante (SEGURIDAD: No confiamos en el HTML)
+    amount_cents = PRICES[plan_key]
 
-    amount_cents  = nil
-    plan_for_enum = nil     # valor para client.membership_type
-    meta_variant  = nil     # info extra para metadata
-
-    # ======= LÓGICA DE SELECCIÓN DE PLAN Y PRECIO =======
-    if custom_flag
-      amount_cents = parse_money_to_cents(params[:custom_price_mxn])
-      raise ArgumentError, "Monto personalizado inválido." if amount_cents.nil? || amount_cents <= 0
-
-      plan_for_enum = "month"     # Por defecto lo contamos como mes
-      meta_variant  = "custom"
-    else
-      # Buscar precio en la constante (asegurando string)
-      price = PRICES[plan]
-
-      if price.present?
-        amount_cents = price
-        # Mapear el botón seleccionado al ENUM del modelo Client
-        case plan
-        when "visit"      then plan_for_enum = "visit"
-        when "week"       then plan_for_enum = "week"
-        when "month"      then plan_for_enum = "month"
-        when "couple"     then plan_for_enum = "couple"
-        when "semester"   then plan_for_enum = "semester"
-        when "promo_open", "promo_feb"
-          plan_for_enum = "month" # Las promos suelen ser mensuales
-          meta_variant  = plan    # Guardamos qué promo fue
-        else
-          plan_for_enum = "month" # Fallback
-        end
-      else
-        return redirect_to memberships_path(q: client.id), alert: "Plan inválido o desconocido."
-      end
+    # Si el plan no existe en nuestra lista, error.
+    if amount_cents.nil?
+      return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Debes seleccionar un plan válido."
     end
 
-    new_next = nil
+    # 3. Calcular Fechas Automáticamente (Cálculo sagrado del servidor)
+    # Base: Si ya tenía fecha futura, sumamos desde ahí. Si estaba vencido, sumamos desde hoy.
+    base_date = [ client.next_payment_on, Date.current ].compact.max
+    new_expiration_date = calculate_expiration(base_date, plan_key)
 
-    ApplicationRecord.transaction do
-      # 1. Metadata para el historial de ventas
-      metadata = {}
-      metadata[:variant] = meta_variant if meta_variant.present?
+    # 4. Determinar método de pago
+    pm = params[:payment_method] == "transfer" ? "transfer" : "cash"
 
-      if custom_flag
-        metadata[:custom]      = true
-        metadata[:description] = params[:custom_description].to_s.presence
-      end
+    # 5. Mapear nombre del plan al ENUM del modelo Client
+    # El modelo solo entiende: day, week, month, couple, semester, visit
+    model_membership_type = map_plan_to_model(plan_key)
 
-      # 2. Registrar Venta
+    ActiveRecord::Base.transaction do
+      # A) Guardar Venta
       Sale.create!(
-        client:          client,
-        user:            current_user,
-        membership_type: plan_for_enum,
-        payment_method:  payment_method,
-        amount_cents:    amount_cents,
-        occurred_at:     Time.current,
-        metadata:        metadata
+        client: client,
+        user: current_user,
+        membership_type: model_membership_type,
+        payment_method: pm,
+        amount_cents: amount_cents,
+        occurred_at: Time.current,
+        metadata: { plan_original: plan_key } # Guardamos si fue promo_open, promo_feb, etc.
       )
 
-      # 3. Calcular Nueva Fecha de Vencimiento
-      # PRIORIDAD: Si el usuario mandó una fecha manual (desde el input date), usamos esa.
-      if params[:custom_next_payment_date].present?
-        new_next = Date.parse(params[:custom_next_payment_date])
-      else
-        # RESPALDO: Si no hay fecha manual, calculamos en el servidor
-        base_date = [ Date.current, client.next_payment_on ].compact.max
-
-        new_next = case plan
-        when "visit"      then base_date + 1.day
-        when "week"       then base_date + 1.week
-        when "semester"   then base_date + 6.months
-        else                   base_date + 1.month # Mes, Pareja, Promos
-        end
-      end
-
-      # 4. Actualizar Cliente
+      # B) Actualizar Cliente (Membresía y Fechas)
       client.update!(
-        membership_type: plan_for_enum, # Actualizamos su tipo de membresía actual
-        enrolled_on:     (client.enrolled_on || Date.current),
-        next_payment_on: new_next
+        membership_type: model_membership_type,
+        enrolled_on: (client.enrolled_on || Date.current),
+        next_payment_on: new_expiration_date
       )
     end
-
-    label = custom_flag ? "Personalizado" : plan.humanize.upcase
 
     redirect_to memberships_path(q: client.id),
-      notice: "✅ Cobro exitoso: #{label} ($#{format('%.2f', amount_cents / 100.0)}). Vence: #{new_next&.strftime('%d/%m/%Y')}."
+      notice: "✅ Cobrado: $#{amount_cents / 100}.00 (#{plan_key.humanize}). Vence: #{new_expiration_date.strftime('%d/%m/%Y')}"
 
   rescue ActiveRecord::RecordNotFound
-    redirect_to memberships_path, alert: "Cliente no encontrado."
-  rescue ActiveRecord::RecordInvalid, ArgumentError => e
-    redirect_to memberships_path(q: params[:client_id] || params[:q]),
-      alert: "Error al cobrar: #{e.message}"
+    redirect_to memberships_path, alert: "❌ Cliente no encontrado."
   rescue => e
-    redirect_to memberships_path(q: params[:client_id] || params[:q]),
-      alert: "Error inesperado: #{e.message}"
+    redirect_to memberships_path(q: params[:client_id]), alert: "❌ Error inesperado: #{e.message}"
   end
 
   private
 
-  # Busca por ID exacto o por nombre (primer match)
+  # Lógica de calendario estricta
+  def calculate_expiration(start_date, plan)
+    case plan
+    when "visit"
+      start_date + 1.day
+    when "week"
+      start_date + 1.week
+    when "month", "couple", "promo_open", "promo_feb"
+      start_date + 1.month
+    when "semester"
+      start_date + 6.months
+    else
+      start_date + 1.month # Fallback por seguridad
+    end
+  end
+
+  # Traduce "promo_open" -> "month" para que el modelo no se queje
+  def map_plan_to_model(plan)
+    case plan
+    when "visit"      then "visit"
+    when "week"       then "week"
+    when "month"      then "month"
+    when "couple"     then "couple"
+    when "semester"   then "semester"
+    when "promo_open", "promo_feb"
+      "month" # Las promos de dinero se consideran membresía mensual en el sistema
+    else
+      "month"
+    end
+  end
+
   def lookup_client(q)
     if q.to_i.to_s == q
       Client.find_by(id: q.to_i)
     else
       Client.where("LOWER(name) LIKE ?", "%#{q.downcase}%").first
     end
-  end
-
-  # Convierte "1,200.50" -> 120050
-  def parse_money_to_cents(input)
-    s = input.to_s.strip
-    return nil if s.blank?
-    s = s.gsub(/[^\d.,-]/, "")
-    if s.include?(",") && s.include?(".")
-      s = s.delete(",") # Asume formato 1,200.00
-    else
-      s = s.tr(",", ".") # Asume formato 1200,00
-    end
-    (s.to_f * 100).round
   end
 end
