@@ -42,19 +42,26 @@ class ReportsController < ApplicationController
 
     @money_by_method = { "cash" => cash_net, "transfer" => transfer_net }
 
-    # === MODIFICADO: Agrupación para ver nombres personalizados ===
+    # === MODIFICADO: Agrupación visual ===
     @sold_by_product = store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
       first_item = arr.first
       product = first_item.product
 
-      # PRIORIDAD: Nombre del item guardado > Nombre del producto > Fallback
-      display_name = first_item.name.presence || product&.name || "Producto ##{key}"
+      # Detectar si es el servicio genérico
+      is_generic = product&.name == "Servicio Griselle"
+
+      # Nombre: Si es genérico y no tiene nombre específico, poner "Venta Externa"
+      custom_name = first_item.respond_to?(:name) ? first_item.name : nil
+      display_name = custom_name.presence || (is_generic ? "Venta Externa" : product&.name) || "Producto ##{key}"
+
+      # Stock: Si es genérico, ocultamos el 999999
+      stock_display = is_generic ? "-" : product&.stock.to_i
 
       {
         product_name: display_name,
         sold_qty: arr.sum { |it| it.quantity.to_i },
         revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
-        remaining_stock: product&.stock.to_i
+        remaining_stock: stock_display # Usamos la variable limpia
       }
     end.sort_by { |h| -h[:sold_qty] }
   end
@@ -115,17 +122,26 @@ class ReportsController < ApplicationController
     @new_clients_today = Client.where(created_at: from..to).count
     @checkins_today    = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).count
 
-    # === MODIFICADO: Agrupación para ver nombres personalizados en el corte ===
+    # === MODIFICADO: Agrupación visual para el TICKET ===
     @sold_by_product = all_store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
       first_item = arr.first
       product = first_item.product
-      display_name = first_item.name.presence || product&.name || "Producto ##{key}"
+
+      # Detectar si es el servicio genérico
+      is_generic = product&.name == "Servicio Griselle"
+
+      # Nombre: Preferir "Clase privada" -> si no, "Venta Externa" -> si no, nombre producto
+      custom_name = first_item.respond_to?(:name) ? first_item.name : nil
+      display_name = custom_name.presence || (is_generic ? "Venta Externa" : product&.name) || "Producto ##{key}"
+
+      # Stock: Ocultar si es genérico
+      stock_display = is_generic ? "-" : product&.stock.to_i
 
       {
         product_name: display_name,
         sold_qty: arr.sum { |it| it.quantity.to_i },
         revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
-        stock_after: product&.stock.to_i
+        stock_after: stock_display
       }
     end.sort_by { |h| -h[:sold_qty] }
 
@@ -140,8 +156,16 @@ class ReportsController < ApplicationController
     store_sales.each do |ss|
       real_total = ss.store_sale_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
 
-      # === MODIFICADO: Mostrar nombres de items (Griselle) en lugar de Tienda #ID ===
-      item_names = ss.store_sale_items.map { |i| i.name.presence || i.product&.name || "Item" }.join(", ")
+      # === MODIFICADO: Mostrar "Venta Externa" en el listado de transacciones si es genérico ===
+      item_names = ss.store_sale_items.map { |i|
+        n = i.respond_to?(:name) ? i.name : nil
+        prod_name = i.product&.name
+
+        # Si tiene nombre propio usalo, si es "Servicio Griselle" cámbialo a "Venta Externa"
+        final_name = n.presence || (prod_name == "Servicio Griselle" ? "Venta Externa" : prod_name) || "Item"
+        final_name
+      }.join(", ")
+
       label_text = item_names.present? ? item_names.truncate(30) : "Tienda ##{ss.id}"
 
       @transactions << {
@@ -231,8 +255,10 @@ class ReportsController < ApplicationController
           ss.store_sale_items.each do |item|
             subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
 
-            # === MODIFICADO: Nombre correcto del servicio/producto para el Excel ===
-            item_name = item.name.presence || item.product&.name || "Desconocido"
+            # === MODIFICADO: Nombre correcto para Excel ===
+            custom_n = item.respond_to?(:name) ? item.name : nil
+            prod_name = item.product&.name
+            item_name = custom_n.presence || (prod_name == "Servicio Griselle" ? "Venta Externa" : prod_name) || "Desconocido"
 
             sheet.add_row [
               (ss.occurred_at || ss.created_at).strftime("%H:%M"),
