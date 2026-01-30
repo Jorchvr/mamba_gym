@@ -1,9 +1,7 @@
-# app/controllers/griselle_cart_controller.rb
 class GriselleCartController < ApplicationController
   before_action :authenticate_user!
-  # No hay restricción de superusuario, accesible para todos.
 
-  # Helpers simples para normalizar el carrito en sesión
+  # Helpers para el carrito en sesión
   def current_cart
     raw = session[:griselle_cart] || []
     raw = raw.is_a?(Array) ? raw : []
@@ -18,7 +16,6 @@ class GriselleCartController < ApplicationController
     @cart = current_cart
   end
 
-  # Solo usamos el flujo "custom" (el de tu formulario)
   def add
     if params[:id] == "custom"
       desc      = params[:description].to_s.strip
@@ -40,7 +37,7 @@ class GriselleCartController < ApplicationController
       save_cart!(cart)
       redirect_to griselle_cart_path, notice: "Agregado."
     else
-      # Si algún día reactivas botones rápidos por product_id, se tolera aquí:
+      # Lógica para productos por ID (si se llega a usar)
       pid = params[:id].to_i
       product = Product.find_by(id: pid)
       unless product
@@ -109,13 +106,11 @@ class GriselleCartController < ApplicationController
     payment_method = params[:payment_method].in?(%w[cash transfer]) ? params[:payment_method] : "cash"
 
     # --- FIX STOCK INFINITO ---
-    # Buscamos o creamos el producto genérico y aseguramos que tenga mucho stock
     generic_service = Product.find_or_create_by!(name: "Servicio Griselle") do |p|
       p.price_cents = 0
-      p.stock = 1000000 # Stock inicial alto
+      p.stock = 1000000
     end
 
-    # Si ya existía pero tenía poco stock (o 0), lo rellenamos
     if generic_service.stock < 5000
       generic_service.update_columns(stock: 1000000)
     end
@@ -123,12 +118,11 @@ class GriselleCartController < ApplicationController
 
     total_cents = 0
 
-    # Usamos transacción para revertir si algo falla
     ActiveRecord::Base.transaction do
       ss = StoreSale.create!(
         user: current_user,
         payment_method: payment_method,
-        total_cents: 0,           # se actualiza al final
+        total_cents: 0,
         occurred_at: Time.current
       )
 
@@ -139,13 +133,13 @@ class GriselleCartController < ApplicationController
 
         case l[:type]
         when "custom"
+          # AQUÍ ESTÁ EL CAMBIO CLAVE: Usamos 'name:' para que se guarde el texto personalizado
           ss.store_sale_items.create!(
             product_id:       generic_service.id,
             quantity:         qty,
             unit_price_cents: unit,
-            description:      l[:name]
+            name:             l[:name]
           )
-          # Descontamos del stock infinito para satisfacer la validación del modelo
           generic_service.decrement!(:stock, qty)
 
         when "product"
@@ -155,9 +149,9 @@ class GriselleCartController < ApplicationController
           ss.store_sale_items.create!(
             product_id:       product.id,
             quantity:         qty,
-            unit_price_cents: unit
+            unit_price_cents: unit,
+            name:             product.name # Guardamos también el nombre del producto por seguridad
           )
-          # Descontamos stock real del producto físico
           product.decrement!(:stock, qty)
         end
 

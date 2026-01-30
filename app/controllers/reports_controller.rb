@@ -231,7 +231,7 @@ class ReportsController < ApplicationController
           ss.store_sale_items.each do |item|
             subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
 
-            # Nombre correcto del servicio/producto para el Excel
+            # === MODIFICADO: Nombre correcto del servicio/producto para el Excel ===
             item_name = item.name.presence || item.product&.name || "Desconocido"
 
             sheet.add_row [
