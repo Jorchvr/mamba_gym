@@ -125,7 +125,6 @@
                 <input type="date" 
                        name="custom_next_payment_date" 
                        id="custom_next_payment_date"
-                       value="<%= @suggested_next_payment&.strftime('%Y-%m-%d') %>" 
                        class="form-input form-input--xl"
                        required>
               </div>
@@ -162,48 +161,63 @@
 </div>
 
 <script>
+  // Script Actualizado V6: Cálculo Automático al Cargar
   document.addEventListener("turbo:load", function() {
     const planRadios = document.querySelectorAll('input[name="plan"]');
     const dateInput  = document.getElementById('custom_next_payment_date');
     
     // Obtenemos la fecha base del cliente (o hoy si ya venció)
+    // Ruby nos da el string "YYYY-MM-DD"
     <% 
        base_calc = (@client && @client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current 
     %>
     const baseDateStr = "<%= base_calc.strftime('%Y-%m-%d') %>"; 
 
-    function addDays(dateStr, days) {
-      let parts = dateStr.split('-'); 
-      let d = new Date(parts[0], parts[1] - 1, parts[2]); 
-      d.setDate(d.getDate() + days);
-      return d.toISOString().split('T')[0];
+    // Función segura para formatear fecha local a YYYY-MM-DD
+    // Evita el error de "un día menos" por zonas horarias
+    function formatDateLocal(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
-    function addMonths(dateStr, months) {
-      let parts = dateStr.split('-');
-      let d = new Date(parts[0], parts[1] - 1, parts[2]);
-      d.setMonth(d.getMonth() + months);
-      return d.toISOString().split('T')[0];
+    function calculateExpiration(planValue) {
+      // Creamos la fecha base interpretando el string YYYY-MM-DD como fecha local (00:00 horas)
+      let parts = baseDateStr.split('-');
+      // new Date(year, monthIndex, day) -> Meses son 0-indexados en JS
+      let targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+      if (planValue === 'visit') {
+        targetDate.setDate(targetDate.getDate() + 1); // +1 Día
+      } else if (planValue === 'week') {
+        targetDate.setDate(targetDate.getDate() + 7); // +1 Semana
+      } else if (planValue === 'month' || planValue === 'couple' || planValue === 'promo_open' || planValue === 'promo_feb') {
+        targetDate.setMonth(targetDate.getMonth() + 1); // +1 Mes
+      } else if (planValue === 'semester') {
+        targetDate.setMonth(targetDate.getMonth() + 6); // +6 Meses
+      }
+
+      return formatDateLocal(targetDate);
     }
 
+    // 1. Escuchar cambios manuales (clic en botones)
     planRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
-        const val = e.target.value;
-        let newDate = baseDateStr; 
-
-        if (val === 'visit' || val === 'promo_open') {
-          if(val === 'visit') newDate = addDays(baseDateStr, 1);
-          else newDate = addMonths(baseDateStr, 1);
-        } else if (val === 'week') {
-          newDate = addDays(baseDateStr, 7);
-        } else if (val === 'month' || val === 'couple') {
-          newDate = addMonths(baseDateStr, 1);
-        } else if (val === 'semester') {
-          newDate = addMonths(baseDateStr, 6);
+        if (dateInput) {
+            dateInput.value = calculateExpiration(e.target.value);
+            // Pequeña animación visual
+            dateInput.style.borderColor = "var(--btn-color)";
+            setTimeout(() => dateInput.style.borderColor = "", 300);
         }
-        
-        if (dateInput) dateInput.value = newDate;
       });
     });
+
+    // 2. Ejecutar cálculo inicial AL CARGAR la página
+    // Busca cuál radio está "checked" por defecto (normalmente 'mes')
+    const currentChecked = document.querySelector('input[name="plan"]:checked');
+    if (currentChecked && dateInput) {
+        dateInput.value = calculateExpiration(currentChecked.value);
+    }
   });
 </script>
