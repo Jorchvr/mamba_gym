@@ -41,46 +41,46 @@
           <div class="mb-3">
             <h3 class="card-title">1. Selecciona el Plan</h3>
             
-            <div class="btn-toggle-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+            <div class="btn-toggle-group" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 20px !important;">
               
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_visit" name="plan" value="visit" data-price="100">
-                <label class="btn-toggle" for="plan_visit" style="width: 100%; display: block;">
+                <label class="btn-toggle" for="plan_visit" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
                   Visita <span class="btn-toggle-price">$100</span>
                 </label>
               </div>
 
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_week" name="plan" value="week" data-price="200">
-                <label class="btn-toggle" for="plan_week" style="width: 100%; display: block;">
+                <label class="btn-toggle" for="plan_week" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
                   Semana <span class="btn-toggle-price">$200</span>
                 </label>
               </div>
 
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_month" name="plan" value="month" data-price="550" checked>
-                <label class="btn-toggle" for="plan_month" style="width: 100%; display: block;">
+                <label class="btn-toggle" for="plan_month" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
                   Mes <span class="btn-toggle-price">$550</span>
                 </label>
               </div>
 
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_couple" name="plan" value="couple" data-price="950">
-                <label class="btn-toggle" for="plan_couple" style="width: 100%; display: block;">
+                <label class="btn-toggle" for="plan_couple" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
                   Pareja <span class="btn-toggle-price">$950</span>
                 </label>
               </div>
 
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_semester" name="plan" value="semester" data-price="2300">
-                <label class="btn-toggle" for="plan_semester" style="width: 100%; display: block;">
+                <label class="btn-toggle" for="plan_semester" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
                   Semestre <span class="btn-toggle-price">$2300</span>
                 </label>
               </div>
 
-              <div class="plan-option" style="position: relative;">
+              <div class="plan-option" style="width: 100%;">
                 <input class="segmented-input" type="radio" id="plan_promo_open" name="plan" value="promo_open" data-price="100">
-                <label class="btn-toggle" for="plan_promo_open" style="width: 100%; display: block; border-color: #D4AF37;">
+                <label class="btn-toggle" for="plan_promo_open" style="width: 100%; display: flex; justify-content: center; align-items: center; box-sizing: border-box; border-color: #D4AF37;">
                   Promo <span class="btn-toggle-price">$100</span>
                 </label>
               </div>
@@ -88,24 +88,24 @@
             </div>
           </div>
 
-          <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; border: 1px dashed rgba(255,255,255,0.1); text-align: center;">
-             <div style="text-transform: uppercase; font-size: 0.8rem; color: #888; margin-bottom: 10px; letter-spacing: 1px;">Resumen de Pago</div>
+          <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 2rem; margin: 2rem 0; border: 1px dashed rgba(255,255,255,0.1); text-align: center;">
+             <div style="text-transform: uppercase; font-size: 0.8rem; color: #888; margin-bottom: 15px; letter-spacing: 2px;">Resumen de Pago</div>
              
              <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div>
-                   <div style="font-size: 3rem; font-weight: 800; color: #fff; line-height: 1;">
+                   <div style="font-size: 3.5rem; font-weight: 800; color: #fff; line-height: 1;">
                      $<span id="display-total">0</span>
                    </div>
-                   <div id="display-plan-name" style="color: #D4AF37; font-weight: bold; margin-top: 5px; text-transform: uppercase;"></div>
+                   <div id="display-plan-name" style="color: #D4AF37; font-weight: bold; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;"></div>
                 </div>
 
                 <div style="text-align: left;">
-                   <label style="display: block; font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Nueva Fecha Vencimiento:</label>
+                   <label style="display: block; font-size: 0.9rem; color: #ccc; margin-bottom: 8px;">Nueva Fecha Vencimiento:</label>
                    <input type="date" 
                           name="custom_next_payment_date" 
                           id="custom_next_payment_date" 
                           class="form-input" 
-                          style="font-size: 1.1rem; text-align: center; background: #111; border: 1px solid #444;"
+                          style="font-size: 1.2rem; text-align: center; background: #111; border: 1px solid #444; width: auto; padding: 10px;"
                           required>
                 </div>
              </div>
@@ -132,8 +132,8 @@
              </div>
           </div>
 
-          <div style="margin-top: 2rem;">
-            <%= f.submit "✅ Confirmar y Cobrar", class: "btn btn-xl btn-primary", style: "width: 100%; cursor: pointer; padding: 1.2rem; font-size: 1.2rem;" %>
+          <div style="margin-top: 2.5rem;">
+            <%= f.submit "✅ Confirmar y Cobrar", class: "btn btn-xl btn-primary", style: "width: 100%; cursor: pointer; padding: 1.2rem; font-size: 1.3rem; font-weight: 800;" %>
           </div>
 
         <% end %>
@@ -147,73 +147,82 @@
 </div>
 
 <script>
-  document.addEventListener("turbo:load", function() {
-    const planRadios = document.querySelectorAll('input[name="plan"]');
-    const dateInput  = document.getElementById('custom_next_payment_date');
-    const displayTotal = document.getElementById('display-total');
-    const displayPlanName = document.getElementById('display-plan-name');
-    
-    // Fecha base desde Ruby
-    <% 
-       base_calc = (@client && @client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current 
-    %>
-    const baseDateStr = "<%= base_calc.strftime('%Y-%m-%d') %>"; 
+  // Aseguramos que el script corra tanto en carga normal como en Turbo Drive
+  ["turbo:load", "DOMContentLoaded"].forEach(event => {
+    document.addEventListener(event, function() {
+      
+      const planRadios = document.querySelectorAll('input[name="plan"]');
+      const dateInput  = document.getElementById('custom_next_payment_date');
+      const displayTotal = document.getElementById('display-total');
+      const displayPlanName = document.getElementById('display-plan-name');
+      
+      if (!planRadios.length || !dateInput) return; // Si no hay formulario, salir.
 
-    function formatDateLocal(dateObj) {
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
+      // Fecha base calculada en Ruby
+      <% 
+         if @client
+           base_calc = (@client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current 
+           base_date_str = base_calc.strftime('%Y-%m-%d')
+         else 
+           base_date_str = Date.current.strftime('%Y-%m-%d')
+         end
+      %>
+      const baseDateStr = "<%= base_date_str %>"; 
 
-    function calculateExpiration(planValue) {
-      let parts = baseDateStr.split('-');
-      let targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
-
-      if (planValue === 'visit') {
-        targetDate.setDate(targetDate.getDate() + 1);
-      } else if (planValue === 'week') {
-        targetDate.setDate(targetDate.getDate() + 7);
-      } else if (planValue === 'month' || planValue === 'couple' || planValue === 'promo_open' || planValue === 'promo_feb') {
-        targetDate.setMonth(targetDate.getMonth() + 1);
-      } else if (planValue === 'semester') {
-        targetDate.setMonth(targetDate.getMonth() + 6);
+      function formatDateLocal(dateObj) {
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
       }
-      return formatDateLocal(targetDate);
-    }
 
-    function updateSummary() {
-      const selected = document.querySelector('input[name="plan"]:checked');
-      if (selected) {
-        // 1. Calcular Fecha
-        if (dateInput) {
-            dateInput.value = calculateExpiration(selected.value);
-            // Animación sutil
-            dateInput.style.borderColor = "#D4AF37";
-            setTimeout(() => dateInput.style.borderColor = "#444", 300);
+      function calculateExpiration(planValue) {
+        let parts = baseDateStr.split('-');
+        let targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        if (planValue === 'visit') {
+          targetDate.setDate(targetDate.getDate() + 1);
+        } else if (planValue === 'week') {
+          targetDate.setDate(targetDate.getDate() + 7);
+        } else if (planValue === 'month' || planValue === 'couple' || planValue === 'promo_open' || planValue === 'promo_feb') {
+          targetDate.setMonth(targetDate.getMonth() + 1);
+        } else if (planValue === 'semester') {
+          targetDate.setMonth(targetDate.getMonth() + 6);
         }
-        
-        // 2. Actualizar Precio Visual
-        const price = selected.getAttribute('data-price');
-        if (displayTotal) displayTotal.innerText = price;
+        return formatDateLocal(targetDate);
+      }
 
-        // 3. Actualizar Nombre
-        const label = document.querySelector(`label[for="${selected.id}"]`);
-        if (displayPlanName && label) {
-           // Limpiar el texto (quitar el precio)
-           let text = label.innerText || label.textContent;
-           text = text.replace(/\$.*/, '').trim(); 
-           displayPlanName.innerText = text;
+      function updateSummary() {
+        const selected = document.querySelector('input[name="plan"]:checked');
+        if (selected) {
+          // 1. Calcular Fecha
+          if (dateInput) {
+              dateInput.value = calculateExpiration(selected.value);
+              dateInput.style.borderColor = "#D4AF37";
+              setTimeout(() => dateInput.style.borderColor = "#444", 300);
+          }
+          
+          // 2. Actualizar Precio Visual
+          const price = selected.getAttribute('data-price');
+          if (displayTotal) displayTotal.innerText = price;
+
+          // 3. Actualizar Nombre
+          const label = document.querySelector(`label[for="${selected.id}"]`);
+          if (displayPlanName && label) {
+             let text = label.innerText || label.textContent;
+             text = text.replace(/\$.*/, '').trim(); 
+             displayPlanName.innerText = text;
+          }
         }
       }
-    }
 
-    // Listeners para clic
-    planRadios.forEach(radio => {
-      radio.addEventListener('change', updateSummary);
-    });
+      // Listeners para clic
+      planRadios.forEach(radio => {
+        radio.addEventListener('change', updateSummary);
+      });
 
-    // Ejecutar al inicio
-    updateSummary();
+      // Ejecutar al inicio
+      updateSummary();
+    }, { once: true }); // Ensure logic runs once per event trigger
   });
 </script>

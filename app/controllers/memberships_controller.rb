@@ -13,7 +13,6 @@ class MembershipsController < ApplicationController
   }.freeze
 
   def index
-    # Si entran directo a /memberships, redirigir a /memberships/new
     redirect_to new_membership_path
   end
 
