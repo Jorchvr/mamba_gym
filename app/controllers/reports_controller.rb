@@ -7,7 +7,7 @@ class ReportsController < ApplicationController
   before_action :require_superuser!, only: [ :daily_export, :history, :daily_export_excel ]
 
   # ==========================
-  # HISTORIAL
+  # HISTORIAL (Tu código original intacto)
   # ==========================
   def history
     @date  = params[:date].present? ? (Date.parse(params[:date]) rescue Time.zone.today) : Time.zone.today
@@ -58,7 +58,7 @@ class ReportsController < ApplicationController
   end
 
   # ==========================
-  # CORTE DEL DÍA (TICKET)
+  # CORTE DEL DÍA (Tu código original intacto)
   # ==========================
   def closeout
     date = Time.zone.today
@@ -76,13 +76,10 @@ class ReportsController < ApplicationController
     expenses = Expense.where(user_id: current_user.id)
                       .where("occurred_at BETWEEN ? AND ?", from, to)
 
-    # 2. CÁLCULOS (Arreglados para sumar items reales)
-
-    # A) Ingresos Membresía
+    # 2. CÁLCULOS
     @member_cents = sales.where("amount_cents >= 0").sum(:amount_cents).to_i
     neg_member_cents = sales.where("amount_cents < 0").sum(:amount_cents).to_i
 
-    # B) Ingresos Tienda (Calculado item por item para evitar errores de BD)
     all_store_items = store_sales.flat_map { |ss| ss.store_sale_items }
 
     @store_cents = all_store_items.select { |i| i.unit_price_cents.to_i >= 0 }
@@ -91,14 +88,12 @@ class ReportsController < ApplicationController
     neg_store_cents = all_store_items.select { |i| i.unit_price_cents.to_i < 0 }
                                      .sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
 
-    # C) Totales
     @adjustments_cents = neg_member_cents + neg_store_cents
     @expenses_cents = expenses.sum(:amount_cents).to_i
 
     @total_cents = (@member_cents + @store_cents + @adjustments_cents) - @expenses_cents
     @ops_count   = sales.count + store_sales.count + expenses.count
 
-    # D) Métodos de Pago
     cash_mem = sales.where(payment_method: :cash).sum(:amount_cents).to_i
 
     cash_store_sales = store_sales.select { |s| s.payment_method == "cash" }
@@ -118,7 +113,6 @@ class ReportsController < ApplicationController
     @new_clients_today = Client.where(created_at: from..to).count
     @checkins_today    = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).count
 
-    # 3. Datos visuales de productos
     @sold_by_product = all_store_items.group_by(&:product_id).map do |pid, arr|
       product = arr.first&.product
       {
@@ -129,8 +123,6 @@ class ReportsController < ApplicationController
       }
     end.sort_by { |h| -h[:sold_qty] }
 
-    # 4. Transacciones (ESTO ERA LO QUE FALTABA)
-    # Sin esto, la parte de abajo del ticket salía vacía.
     @transactions = []
     sales.each do |s|
       @transactions << {
@@ -140,7 +132,6 @@ class ReportsController < ApplicationController
       }
     end
     store_sales.each do |ss|
-      # Calculamos el total real de esta venta específica
       real_total = ss.store_sale_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
       @transactions << {
         at: (ss.occurred_at || ss.created_at),
@@ -159,9 +150,140 @@ class ReportsController < ApplicationController
   end
 
   def daily_export; head :ok; end
-  def daily_export_excel; head :ok; end
+
+  # ==========================
+  # EXCEL DEL DÍA (ACTUALIZADO)
+  # ==========================
+  def daily_export_excel
+    # 1. Definir fecha y rango
+    target_date = params[:date].present? ? (Date.parse(params[:date]) rescue Time.zone.today) : Time.zone.today
+    from = target_date.beginning_of_day
+    to   = target_date.end_of_day
+
+    # 2. Consultar datos (Globales del día)
+    sales = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to).includes(:user, :client)
+    store_sales = StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", from, to).includes(:user, store_sale_items: :product)
+    expenses = Expense.where("occurred_at BETWEEN ? AND ?", from, to).includes(:user)
+
+    # 3. Preparar documento Excel
+    p = Axlsx::Package.new
+    wb = p.workbook
+
+    # Estilos
+    styles = wb.styles
+    header_style = styles.add_style(bg_color: "D4AF37", fg_color: "000000", b: true, alignment: { horizontal: :center })
+    title_style  = styles.add_style(b: true, sz: 14)
+    currency     = styles.add_style(format_code: "$#,##0.00")
+    date_format  = styles.add_style(format_code: "dd/mm/yyyy hh:mm")
+    bold         = styles.add_style(b: true)
+
+    # ------------------------------------------------
+    # HOJA 1: REPORTE DETALLADO
+    # ------------------------------------------------
+    wb.add_worksheet(name: "Reporte #{target_date}") do |sheet|
+      # --- RESUMEN FINANCIERO ---
+      sheet.add_row [ "REPORTE DEL DÍA", target_date.strftime("%d/%m/%Y") ], style: title_style
+      sheet.add_row [] # Espacio vacío
+
+      # Calcular totales para el resumen
+      total_membresias = sales.sum(:amount_cents)
+
+      # Calcular total tienda (sumando items)
+      all_items = store_sales.flat_map(&:store_sale_items)
+      total_tienda = all_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
+
+      total_gastos = expenses.sum(:amount_cents)
+      total_neto = (total_membresias + total_tienda) - total_gastos
+
+      sheet.add_row [ "RESUMEN FINANCIERO" ], style: bold
+      sheet.add_row [ "Ingresos Membresías", total_membresias / 100.0 ], style: [ nil, currency ]
+      sheet.add_row [ "Ingresos Tienda", total_tienda / 100.0 ], style: [ nil, currency ]
+      sheet.add_row [ "(-) Gastos Operativos", total_gastos / 100.0 ], style: [ nil, currency ]
+      sheet.add_row [ "TOTAL NETO", total_neto / 100.0 ], style: [ bold, currency ]
+      sheet.add_row []
+      sheet.add_row []
+
+      # --- SECCIÓN 1: MEMBRESÍAS ---
+      sheet.add_row [ "SECCIÓN 1: MEMBRESÍAS / VISITAS" ], style: title_style
+      sheet.add_row [ "Hora", "Cliente", "Concepto/Plan", "Usuario", "Método", "Monto" ], style: header_style
+
+      if sales.any?
+        sales.each do |s|
+          sheet.add_row [
+            (s.occurred_at || s.created_at).strftime("%H:%M"),
+            s.client&.name || "Eliminado",
+            s.membership_type&.humanize,
+            s.user&.name || s.user&.email,
+            translate_method(s.payment_method),
+            s.amount_cents / 100.0
+          ], style: [ nil, nil, nil, nil, nil, currency ]
+        end
+      else
+        sheet.add_row [ "Sin movimientos de membresía hoy" ]
+      end
+      sheet.add_row []
+      sheet.add_row []
+
+      # --- SECCIÓN 2: TIENDA ---
+      sheet.add_row [ "SECCIÓN 2: VENTAS DE TIENDA" ], style: title_style
+      sheet.add_row [ "Hora", "Producto", "Cantidad", "P. Unitario", "Subtotal", "Usuario", "Método" ], style: header_style
+
+      if store_sales.any?
+        store_sales.each do |ss|
+          ss.store_sale_items.each do |item|
+            subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
+            sheet.add_row [
+              (ss.occurred_at || ss.created_at).strftime("%H:%M"),
+              item.product&.name || "Producto borrado",
+              item.quantity,
+              item.unit_price_cents / 100.0,
+              subtotal,
+              ss.user&.name || ss.user&.email,
+              translate_method(ss.payment_method)
+            ], style: [ nil, nil, nil, currency, currency, nil, nil ]
+          end
+        end
+      else
+        sheet.add_row [ "Sin ventas en tienda hoy" ]
+      end
+      sheet.add_row []
+      sheet.add_row []
+
+      # --- SECCIÓN 3: GASTOS ---
+      sheet.add_row [ "SECCIÓN 3: GASTOS REGISTRADOS" ], style: title_style
+      sheet.add_row [ "Hora", "Descripción", "Responsable", "Monto" ], style: header_style
+
+      if expenses.any?
+        expenses.each do |ex|
+          sheet.add_row [
+            ex.occurred_at.strftime("%H:%M"),
+            ex.description,
+            ex.user&.name || ex.user&.email,
+            ex.amount_cents / 100.0
+          ], style: [ nil, nil, nil, currency ]
+        end
+      else
+        sheet.add_row [ "Sin gastos registrados hoy" ]
+      end
+    end
+
+    # Enviar archivo
+    send_data p.to_stream.read,
+              filename: "Reporte_Diario_#{target_date.strftime('%Y%m%d')}.xlsx",
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  end
 
   private
+
+  def translate_method(method)
+    case method.to_s
+    when "cash" then "Efectivo"
+    when "transfer" then "Transferencia"
+    when "card" then "Tarjeta"
+    else method
+    end
+  end
+
   def date_range_for(date, range)
     case range
     when :day  then [ date.beginning_of_day,  date.end_of_day ]
