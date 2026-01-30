@@ -42,26 +42,31 @@ class ReportsController < ApplicationController
 
     @money_by_method = { "cash" => cash_net, "transfer" => transfer_net }
 
-    # === MODIFICADO: Agrupación visual ===
-    @sold_by_product = store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
+    # === 🔥 FIX: Agrupación segura por ID y NOMBRE para que no desaparezcan ===
+    @sold_by_product = store_items.group_by { |i| [ i.product_id, i.name ] }.map do |keys, arr|
       first_item = arr.first
       product = first_item.product
-
-      # Detectar si es el servicio genérico
-      is_generic = product&.name == "Servicio Griselle"
-
-      # Nombre: Si es genérico y no tiene nombre específico, poner "Venta Externa"
       custom_name = first_item.respond_to?(:name) ? first_item.name : nil
-      display_name = custom_name.presence || (is_generic ? "Venta Externa" : product&.name) || "Producto ##{key}"
 
-      # Stock: Si es genérico, ocultamos el 999999
+      # Lógica de nombre: Si es el genérico, usar "Venta Externa" o el nombre custom
+      is_generic = (product&.name == "Servicio Griselle")
+
+      final_name = if custom_name.present?
+                     custom_name # "Clase de las 8"
+      elsif is_generic
+                     "Venta Externa"
+      else
+                     product&.name || "Producto Borrado"
+      end
+
+      # Stock: Ocultar si es genérico
       stock_display = is_generic ? "-" : product&.stock.to_i
 
       {
-        product_name: display_name,
+        product_name: final_name,
         sold_qty: arr.sum { |it| it.quantity.to_i },
         revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
-        remaining_stock: stock_display # Usamos la variable limpia
+        remaining_stock: stock_display
       }
     end.sort_by { |h| -h[:sold_qty] }
   end
@@ -73,7 +78,6 @@ class ReportsController < ApplicationController
     date = Time.zone.today
     from, to = date_range_for(date, :day)
 
-    # 1. Consultas
     sales = Sale.where(user_id: current_user.id)
                 .where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to)
                 .includes(:client)
@@ -85,7 +89,7 @@ class ReportsController < ApplicationController
     expenses = Expense.where(user_id: current_user.id)
                       .where("occurred_at BETWEEN ? AND ?", from, to)
 
-    # 2. CÁLCULOS
+    # Cálculos Financieros
     @member_cents = sales.where("amount_cents >= 0").sum(:amount_cents).to_i
     neg_member_cents = sales.where("amount_cents < 0").sum(:amount_cents).to_i
 
@@ -104,7 +108,6 @@ class ReportsController < ApplicationController
     @ops_count   = sales.count + store_sales.count + expenses.count
 
     cash_mem = sales.where(payment_method: :cash).sum(:amount_cents).to_i
-
     cash_store_sales = store_sales.select { |s| s.payment_method == "cash" }
     cash_store_items = cash_store_sales.flat_map(&:store_sale_items)
     cash_store = cash_store_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
@@ -122,29 +125,33 @@ class ReportsController < ApplicationController
     @new_clients_today = Client.where(created_at: from..to).count
     @checkins_today    = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).count
 
-    # === MODIFICADO: Agrupación visual para el TICKET ===
-    @sold_by_product = all_store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
+    # === 🔥 FIX: Agrupación visual en TICKET (Igual que History) ===
+    @sold_by_product = all_store_items.group_by { |i| [ i.product_id, i.name ] }.map do |keys, arr|
       first_item = arr.first
       product = first_item.product
-
-      # Detectar si es el servicio genérico
-      is_generic = product&.name == "Servicio Griselle"
-
-      # Nombre: Preferir "Clase privada" -> si no, "Venta Externa" -> si no, nombre producto
       custom_name = first_item.respond_to?(:name) ? first_item.name : nil
-      display_name = custom_name.presence || (is_generic ? "Venta Externa" : product&.name) || "Producto ##{key}"
 
-      # Stock: Ocultar si es genérico
+      is_generic = (product&.name == "Servicio Griselle")
+
+      final_name = if custom_name.present?
+                     custom_name
+      elsif is_generic
+                     "Venta Externa"
+      else
+                     product&.name || "Producto Borrado"
+      end
+
       stock_display = is_generic ? "-" : product&.stock.to_i
 
       {
-        product_name: display_name,
+        product_name: final_name,
         sold_qty: arr.sum { |it| it.quantity.to_i },
         revenue_cents: arr.sum { |it| it.unit_price_cents.to_i * it.quantity.to_i },
         stock_after: stock_display
       }
     end.sort_by { |h| -h[:sold_qty] }
 
+    # Transacciones
     @transactions = []
     sales.each do |s|
       @transactions << {
@@ -156,14 +163,19 @@ class ReportsController < ApplicationController
     store_sales.each do |ss|
       real_total = ss.store_sale_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
 
-      # === MODIFICADO: Mostrar "Venta Externa" en el listado de transacciones si es genérico ===
+      # === 🔥 FIX: Mostrar nombres correctos en la lista cronológica ===
       item_names = ss.store_sale_items.map { |i|
         n = i.respond_to?(:name) ? i.name : nil
         prod_name = i.product&.name
 
-        # Si tiene nombre propio usalo, si es "Servicio Griselle" cámbialo a "Venta Externa"
-        final_name = n.presence || (prod_name == "Servicio Griselle" ? "Venta Externa" : prod_name) || "Item"
-        final_name
+        # Prioridad: Nombre Custom > "Venta Externa" (si es genérico) > Nombre Producto
+        if n.present?
+          n
+        elsif prod_name == "Servicio Griselle"
+          "Venta Externa"
+        else
+          prod_name || "Item"
+        end
       }.join(", ")
 
       label_text = item_names.present? ? item_names.truncate(30) : "Tienda ##{ss.id}"
@@ -187,7 +199,7 @@ class ReportsController < ApplicationController
   def daily_export; head :ok; end
 
   # ==========================
-  # EXCEL DEL DÍA (AGREGADO)
+  # EXCEL DEL DÍA
   # ==========================
   def daily_export_excel
     target_date = params[:date].present? ? (Date.parse(params[:date]) rescue Time.zone.today) : Time.zone.today
@@ -217,7 +229,6 @@ class ReportsController < ApplicationController
       total_gastos = expenses.sum(:amount_cents)
       total_neto = (total_membresias + total_tienda) - total_gastos
 
-      # --- RESUMEN ---
       sheet.add_row [ "RESUMEN FINANCIERO" ], style: bold
       sheet.add_row [ "Ingresos Membresías", total_membresias / 100.0 ], style: [ nil, currency ]
       sheet.add_row [ "Ingresos Tienda / Ventas Externas", total_tienda / 100.0 ], style: [ nil, currency ]
@@ -226,74 +237,62 @@ class ReportsController < ApplicationController
       sheet.add_row []
       sheet.add_row []
 
-      # --- SECCIÓN 1: MEMBRESÍAS ---
       sheet.add_row [ "SECCIÓN 1: MEMBRESÍAS" ], style: title_style
       sheet.add_row [ "Hora", "Cliente", "Concepto/Plan", "Usuario", "Método", "Monto" ], style: header_style
-
-      if sales.any?
-        sales.each do |s|
-          sheet.add_row [
-            (s.occurred_at || s.created_at).strftime("%H:%M"),
-            s.client&.name || "Eliminado",
-            s.membership_type&.humanize,
-            s.user&.name || s.user&.email,
-            translate_method(s.payment_method),
-            s.amount_cents / 100.0
-          ], style: [ nil, nil, nil, nil, nil, currency ]
-        end
-      else
-        sheet.add_row [ "Sin movimientos de membresía" ]
+      sales.each do |s|
+        sheet.add_row [
+          (s.occurred_at || s.created_at).strftime("%H:%M"),
+          s.client&.name || "Eliminado",
+          s.membership_type&.humanize,
+          s.user&.name || s.user&.email,
+          translate_method(s.payment_method),
+          s.amount_cents / 100.0
+        ], style: [ nil, nil, nil, nil, nil, currency ]
       end
       sheet.add_row []
 
-      # --- SECCIÓN 2: TIENDA / GRISELLE ---
-      sheet.add_row [ "SECCIÓN 2: VENTAS TIENDA / CLASES" ], style: title_style
+      sheet.add_row [ "SECCIÓN 2: VENTAS EXTERNAS / TIENDA" ], style: title_style
       sheet.add_row [ "Hora", "Descripción / Producto", "Cant.", "P. Unitario", "Subtotal", "Usuario", "Método" ], style: header_style
+      store_sales.each do |ss|
+        ss.store_sale_items.each do |item|
+          subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
 
-      if store_sales.any?
-        store_sales.each do |ss|
-          ss.store_sale_items.each do |item|
-            subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
+          # === 🔥 FIX: Nombre correcto para EXCEL ===
+          custom_n = item.respond_to?(:name) ? item.name : nil
+          prod_name = item.product&.name
 
-            # === MODIFICADO: Nombre correcto para Excel ===
-            custom_n = item.respond_to?(:name) ? item.name : nil
-            prod_name = item.product&.name
-            item_name = custom_n.presence || (prod_name == "Servicio Griselle" ? "Venta Externa" : prod_name) || "Desconocido"
-
-            sheet.add_row [
-              (ss.occurred_at || ss.created_at).strftime("%H:%M"),
-              item_name,
-              item.quantity,
-              item.unit_price_cents / 100.0,
-              subtotal,
-              ss.user&.name || ss.user&.email,
-              translate_method(ss.payment_method)
-            ], style: [ nil, nil, nil, currency, currency, nil, nil ]
+          final_excel_name = if custom_n.present?
+                               custom_n
+          elsif prod_name == "Servicio Griselle"
+                               "Venta Externa"
+          else
+                               prod_name || "Desconocido"
           end
+
+          sheet.add_row [
+            (ss.occurred_at || ss.created_at).strftime("%H:%M"),
+            final_excel_name,
+            item.quantity,
+            item.unit_price_cents / 100.0,
+            subtotal,
+            ss.user&.name || ss.user&.email,
+            translate_method(ss.payment_method)
+          ], style: [ nil, nil, nil, currency, currency, nil, nil ]
         end
-      else
-        sheet.add_row [ "Sin ventas de tienda" ]
       end
       sheet.add_row []
 
-      # --- SECCIÓN 3: GASTOS ---
       sheet.add_row [ "SECCIÓN 3: GASTOS" ], style: title_style
       sheet.add_row [ "Hora", "Descripción", "Responsable", "Monto" ], style: header_style
-
-      if expenses.any?
-        expenses.each do |ex|
-          sheet.add_row [
-            ex.occurred_at.strftime("%H:%M"),
-            ex.description,
-            ex.user&.name || ex.user&.email,
-            ex.amount_cents / 100.0
-          ], style: [ nil, nil, nil, currency ]
-        end
-      else
-        sheet.add_row [ "Sin gastos registrados" ]
+      expenses.each do |ex|
+        sheet.add_row [
+          ex.occurred_at.strftime("%H:%M"),
+          ex.description,
+          ex.user&.name || ex.user&.email,
+          ex.amount_cents / 100.0
+        ], style: [ nil, nil, nil, currency ]
       end
     end
-
     send_data p.to_stream.read, filename: "Reporte_#{target_date.strftime('%Y%m%d')}.xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   end
 
