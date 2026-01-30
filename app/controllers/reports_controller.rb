@@ -21,10 +21,8 @@ class ReportsController < ApplicationController
     @check_ins = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).includes(:client, :user)
     @new_clients = Client.where(created_at: from..to).includes(:user)
 
-    # Cálculos seguros
+    # Cálculos
     sales_cents = @sales.sum(:amount_cents).to_i
-
-    # Calcular tienda sumando items reales
     store_items = @store_sales.flat_map(&:store_sale_items)
     store_cents = store_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
 
@@ -34,11 +32,9 @@ class ReportsController < ApplicationController
 
     # Métodos de pago
     cash_sales = @sales.where(payment_method: :cash).sum(:amount_cents).to_i
-
     cash_store_sales = @store_sales.select { |s| s.payment_method == "cash" }
     cash_store_items = cash_store_sales.flat_map(&:store_sale_items)
     cash_store = cash_store_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
-
     cash_net   = (cash_sales + cash_store) - expenses_cents
 
     transfer_sales = @sales.where(payment_method: :transfer).sum(:amount_cents).to_i
@@ -46,6 +42,7 @@ class ReportsController < ApplicationController
 
     @money_by_method = { "cash" => cash_net, "transfer" => transfer_net }
 
+    # Agrupación inteligente para productos vs servicios custom
     @sold_by_product = store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
       first_item = arr.first
       product = first_item.product
@@ -69,7 +66,6 @@ class ReportsController < ApplicationController
     date = Time.zone.today
     from, to = date_range_for(date, :day)
 
-    # 1. Consultas
     sales = Sale.where(user_id: current_user.id)
                 .where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to)
                 .includes(:client)
@@ -81,7 +77,6 @@ class ReportsController < ApplicationController
     expenses = Expense.where(user_id: current_user.id)
                       .where("occurred_at BETWEEN ? AND ?", from, to)
 
-    # 2. CÁLCULOS
     @member_cents = sales.where("amount_cents >= 0").sum(:amount_cents).to_i
     neg_member_cents = sales.where("amount_cents < 0").sum(:amount_cents).to_i
 
@@ -100,7 +95,6 @@ class ReportsController < ApplicationController
     @ops_count   = sales.count + store_sales.count + expenses.count
 
     cash_mem = sales.where(payment_method: :cash).sum(:amount_cents).to_i
-
     cash_store_sales = store_sales.select { |s| s.payment_method == "cash" }
     cash_store_items = cash_store_sales.flat_map(&:store_sale_items)
     cash_store = cash_store_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
@@ -118,7 +112,6 @@ class ReportsController < ApplicationController
     @new_clients_today = Client.where(created_at: from..to).count
     @checkins_today    = CheckIn.where("COALESCE(check_ins.occurred_at, check_ins.created_at) BETWEEN ? AND ?", from, to).count
 
-    # 3. Datos visuales de productos
     @sold_by_product = all_store_items.group_by { |i| i.product_id || "custom-#{i.name}" }.map do |key, arr|
       first_item = arr.first
       product = first_item.product
@@ -132,7 +125,6 @@ class ReportsController < ApplicationController
       }
     end.sort_by { |h| -h[:sold_qty] }
 
-    # 4. Transacciones
     @transactions = []
     sales.each do |s|
       @transactions << {
@@ -142,13 +134,15 @@ class ReportsController < ApplicationController
       }
     end
     store_sales.each do |ss|
-      # Calcular items para obtener nombres correctos
-      items_text = ss.store_sale_items.map { |i| i.name.presence || i.product&.name || "Item" }.join(", ")
       real_total = ss.store_sale_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
+
+      # Muestra los nombres de los items en el ticket
+      item_names = ss.store_sale_items.map { |i| i.name.presence || i.product&.name || "Item" }.join(", ")
+      label_text = item_names.present? ? item_names.truncate(30) : "Tienda ##{ss.id}"
 
       @transactions << {
         at: (ss.occurred_at || ss.created_at),
-        label: items_text.truncate(30),
+        label: label_text,
         amount_cents: real_total
       }
     end
@@ -165,20 +159,17 @@ class ReportsController < ApplicationController
   def daily_export; head :ok; end
 
   # ==========================
-  # EXCEL DEL DÍA
+  # EXCEL DEL DÍA (COMPLETO)
   # ==========================
   def daily_export_excel
-    # 1. Definir fecha
     target_date = params[:date].present? ? (Date.parse(params[:date]) rescue Time.zone.today) : Time.zone.today
     from = target_date.beginning_of_day
     to   = target_date.end_of_day
 
-    # 2. Consultar datos
     sales = Sale.where("COALESCE(sales.occurred_at, sales.created_at) BETWEEN ? AND ?", from, to).includes(:user, :client)
     store_sales = StoreSale.where("COALESCE(store_sales.occurred_at, store_sales.created_at) BETWEEN ? AND ?", from, to).includes(:user, store_sale_items: :product)
     expenses = Expense.where("occurred_at BETWEEN ? AND ?", from, to).includes(:user)
 
-    # 3. Generar Excel
     p = Axlsx::Package.new
     wb = p.workbook
 
@@ -192,10 +183,8 @@ class ReportsController < ApplicationController
       sheet.add_row [ "REPORTE DEL DÍA", target_date.strftime("%d/%m/%Y") ], style: title_style
       sheet.add_row []
 
-      # Calcular totales para el resumen
       total_membresias = sales.sum(:amount_cents)
 
-      # Tienda: sumar items individuales
       all_items = store_sales.flat_map(&:store_sale_items)
       total_tienda = all_items.sum { |i| i.unit_price_cents.to_i * i.quantity.to_i }
 
@@ -205,14 +194,14 @@ class ReportsController < ApplicationController
       # --- RESUMEN ---
       sheet.add_row [ "RESUMEN FINANCIERO" ], style: bold
       sheet.add_row [ "Ingresos Membresías", total_membresias / 100.0 ], style: [ nil, currency ]
-      sheet.add_row [ "Ingresos Tienda / Clases", total_tienda / 100.0 ], style: [ nil, currency ]
+      sheet.add_row [ "Ingresos Tienda / Ventas Externas", total_tienda / 100.0 ], style: [ nil, currency ]
       sheet.add_row [ "(-) Gastos Operativos", total_gastos / 100.0 ], style: [ nil, currency ]
       sheet.add_row [ "TOTAL NETO", total_neto / 100.0 ], style: [ bold, currency ]
       sheet.add_row []
       sheet.add_row []
 
       # --- SECCIÓN 1: MEMBRESÍAS ---
-      sheet.add_row [ "SECCIÓN 1: MEMBRESÍAS / VISITAS" ], style: title_style
+      sheet.add_row [ "SECCIÓN 1: MEMBRESÍAS" ], style: title_style
       sheet.add_row [ "Hora", "Cliente", "Concepto/Plan", "Usuario", "Método", "Monto" ], style: header_style
 
       if sales.any?
@@ -240,7 +229,7 @@ class ReportsController < ApplicationController
           ss.store_sale_items.each do |item|
             subtotal = (item.unit_price_cents.to_i * item.quantity.to_i) / 100.0
 
-            # 🔥 Corrección: Usar nombre del item si existe (Griselle) o nombre del producto
+            # Nombre correcto del servicio/producto
             item_name = item.name.presence || item.product&.name || "Desconocido"
 
             sheet.add_row [
