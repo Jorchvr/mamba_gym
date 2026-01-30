@@ -1,18 +1,19 @@
 class MembershipsController < ApplicationController
   before_action :authenticate_user!
 
-  # === 💰 LISTA MAESTRA DE PRECIOS (En Centavos) ===
+  # === 💰 LISTA DE PRECIOS ===
   PRICES = {
     "visit"      => 100_00,   # $100.00
     "week"       => 200_00,   # $200.00
     "month"      => 550_00,   # $550.00
     "couple"     => 950_00,   # $950.00
     "semester"   => 2300_00,  # $2300.00
-    "promo_open" => 100_00,   # Promo Apertura $100
-    "promo_feb"  => 250_00    # Promo Febrero $250
+    "promo_open" => 100_00,   # Promo $100
+    "promo_feb"  => 250_00    # Promo $250
   }.freeze
 
   def index
+    # Si entran directo a /memberships, redirigir a /memberships/new
     redirect_to new_membership_path
   end
 
@@ -28,17 +29,17 @@ class MembershipsController < ApplicationController
     amount_cents = PRICES[plan_key]
 
     if amount_cents.nil?
-      return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Debes seleccionar un plan válido."
+      return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Selecciona un plan válido."
     end
 
-    # Cálculo de fecha
+    # Cálculo de fechas
     base_date = [ client.next_payment_on, Date.current ].compact.max
     new_expiration_date = calculate_expiration(base_date, plan_key)
 
-    # Método de pago (Card / Cash)
+    # Método de pago
     pm = params[:payment_method] == "card" ? "card" : "cash"
 
-    # Mapeo a modelo
+    # Mapeo
     model_membership_type = map_plan_to_model(plan_key)
 
     ActiveRecord::Base.transaction do
@@ -65,37 +66,28 @@ class MembershipsController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     redirect_to memberships_path, alert: "❌ Cliente no encontrado."
   rescue => e
-    redirect_to memberships_path(q: params[:client_id]), alert: "❌ Error inesperado: #{e.message}"
+    redirect_to memberships_path(q: params[:client_id]), alert: "❌ Error: #{e.message}"
   end
 
   private
 
   def calculate_expiration(start_date, plan)
     case plan
-    when "visit"
-      start_date + 1.day
-    when "week"
-      start_date + 1.week
-    when "month", "couple", "promo_open", "promo_feb"
-      start_date + 1.month
-    when "semester"
-      start_date + 6.months
-    else
-      start_date + 1.month
+    when "visit"    then start_date + 1.day
+    when "week"     then start_date + 1.week
+    when "semester" then start_date + 6.months
+    else                 start_date + 1.month
     end
   end
 
   def map_plan_to_model(plan)
     case plan
-    when "visit"      then "visit"
-    when "week"       then "week"
-    when "month"      then "month"
-    when "couple"     then "couple"
-    when "semester"   then "semester"
-    when "promo_open", "promo_feb"
-      "month"
-    else
-      "month"
+    when "visit"    then "visit"
+    when "week"     then "week"
+    when "month"    then "month"
+    when "couple"   then "couple"
+    when "semester" then "semester"
+    else                 "month"
     end
   end
 
