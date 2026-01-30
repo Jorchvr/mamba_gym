@@ -13,6 +13,7 @@ class MembershipsController < ApplicationController
   }.freeze
 
   def index
+    # Redirigir siempre a 'new' para mostrar el buscador
     redirect_to new_membership_path
   end
 
@@ -31,14 +32,14 @@ class MembershipsController < ApplicationController
       return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Selecciona un plan válido."
     end
 
-    # Cálculo de fechas
+    # Cálculo de fechas (Lógica del servidor)
     base_date = [ client.next_payment_on, Date.current ].compact.max
     new_expiration_date = calculate_expiration(base_date, plan_key)
 
     # Método de pago
     pm = params[:payment_method] == "card" ? "card" : "cash"
 
-    # Mapeo
+    # Mapeo al modelo
     model_membership_type = map_plan_to_model(plan_key)
 
     ActiveRecord::Base.transaction do

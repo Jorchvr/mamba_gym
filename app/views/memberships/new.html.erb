@@ -39,67 +39,67 @@
           <%= hidden_field_tag :client_id, @client.id %>
 
           <div class="mb-3">
-            <h3 class="card-title">1. Selecciona el Plan</h3>
+            <h3 class="card-title" style="margin-bottom: 15px;">1. Selecciona el Plan</h3>
             
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; box-sizing: border-box;">
               
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_visit" name="plan" value="visit" data-price="100">
-                <label class="btn-toggle" for="plan_visit" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px;">
-                  <span style="font-size: 1.1rem;">Visita</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$100</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_visit" name="plan" value="visit" data-price="100" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_visit" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Visita</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$100</span>
                 </label>
               </div>
 
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_week" name="plan" value="week" data-price="200">
-                <label class="btn-toggle" for="plan_week" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px;">
-                  <span style="font-size: 1.1rem;">Semana</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$200</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_week" name="plan" value="week" data-price="200" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_week" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Semana</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$200</span>
                 </label>
               </div>
 
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_month" name="plan" value="month" data-price="550" checked>
-                <label class="btn-toggle" for="plan_month" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px;">
-                  <span style="font-size: 1.1rem;">Mes</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$550</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_month" name="plan" value="month" data-price="550" checked onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_month" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Mes</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$550</span>
                 </label>
               </div>
 
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_couple" name="plan" value="couple" data-price="950">
-                <label class="btn-toggle" for="plan_couple" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px;">
-                  <span style="font-size: 1.1rem;">Pareja</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$950</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_couple" name="plan" value="couple" data-price="950" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_couple" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Pareja</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$950</span>
                 </label>
               </div>
 
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_semester" name="plan" value="semester" data-price="2300">
-                <label class="btn-toggle" for="plan_semester" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px;">
-                  <span style="font-size: 1.1rem;">Semestre</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$2300</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_semester" name="plan" value="semester" data-price="2300" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_semester" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Semestre</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$2300</span>
                 </label>
               </div>
 
-              <div class="plan-wrapper">
-                <input class="segmented-input" type="radio" id="plan_promo_open" name="plan" value="promo_open" data-price="100">
-                <label class="btn-toggle" for="plan_promo_open" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 15px; border-color: #D4AF37;">
-                  <span style="font-size: 1.1rem;">Promo</span>
-                  <span class="btn-toggle-price" style="font-size: 1.2rem; color: #fff;">$100</span>
+              <div style="position: relative; height: 100%;">
+                <input class="segmented-input" type="radio" id="plan_promo_open" name="plan" value="promo_open" data-price="100" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_promo_open" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; box-sizing: border-box; border-color: #D4AF37;">
+                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Promo</span>
+                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$100</span>
                 </label>
               </div>
 
             </div>
           </div>
 
-          <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 2rem; margin: 2rem 0; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+          <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 2rem; margin: 2rem 0; border: 1px dashed rgba(255,255,255,0.1); text-align: center;">
              <div style="text-transform: uppercase; font-size: 0.85rem; color: #888; margin-bottom: 15px; letter-spacing: 2px;">Resumen de Pago</div>
              
              <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 40px;">
                 <div>
-                   <div style="font-size: 4rem; font-weight: 900; color: #fff; line-height: 1;">
+                   <div style="font-size: 4.5rem; font-weight: 900; color: #fff; line-height: 1;">
                      $<span id="display-total">0</span>
                    </div>
                    <div id="display-plan-name" style="color: #D4AF37; font-weight: 800; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;"></div>
@@ -154,99 +154,65 @@
 
 <script>
   (function() {
-    function initCalculator() {
-      // Elementos del DOM
-      const planRadios = document.querySelectorAll('input[name="plan"]');
-      const dateInput  = document.getElementById('custom_next_payment_date');
+    window.updateGymCalc = function() {
       const displayTotal = document.getElementById('display-total');
       const displayPlanName = document.getElementById('display-plan-name');
-      
-      // Si no existen los elementos, salimos (estamos en otra página o sin cliente)
-      if (!dateInput || !planRadios.length) return;
+      const dateInput  = document.getElementById('custom_next_payment_date');
+      const selectedRadio = document.querySelector('input[name="plan"]:checked');
 
-      // Datos desde Ruby
+      if (!selectedRadio || !dateInput) return;
+
+      // 1. Actualizar Precio
+      const price = selectedRadio.getAttribute('data-price');
+      if(displayTotal) displayTotal.innerText = price;
+
+      // 2. Actualizar Nombre
+      const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
+      if(displayPlanName && label) {
+        // Busca el span con la clase price para ignorarlo o toma el texto
+        let text = label.innerText;
+        // Limpiamos el precio del texto para que solo quede el nombre (ej: "Mes $550" -> "Mes")
+        text = text.replace(/\$.*/g, '').trim(); 
+        displayPlanName.innerText = text;
+      }
+
+      // 3. Calcular Fecha
+      // Obtenemos fecha base desde Ruby
       <% if @client %>
-        <% 
-           base_date_val = (@client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current 
-        %>
-        const baseDateStr = "<%= base_date_val.strftime('%Y-%m-%d') %>"; 
+        <% base_val = (@client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current %>
+        const baseDateStr = "<%= base_val.strftime('%Y-%m-%d') %>";
       <% else %>
         const baseDateStr = "<%= Date.current.strftime('%Y-%m-%d') %>";
       <% end %>
 
-      // Helpers de fecha
-      function formatDateLocal(dateObj) {
-          const year = dateObj.getFullYear();
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
+      let parts = baseDateStr.split('-');
+      let targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      const planValue = selectedRadio.value;
+
+      if (planValue === 'visit') {
+        targetDate.setDate(targetDate.getDate() + 1);
+      } else if (planValue === 'week') {
+        targetDate.setDate(targetDate.getDate() + 7);
+      } else if (planValue === 'semester') {
+        targetDate.setMonth(targetDate.getMonth() + 6);
+      } else {
+        targetDate.setMonth(targetDate.getMonth() + 1);
       }
 
-      function calculateExpiration(planValue) {
-        let parts = baseDateStr.split('-');
-        let targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      
+      dateInput.value = `${year}-${month}-${day}`;
+      
+      // Efecto visual
+      dateInput.style.borderColor = "#D4AF37";
+      setTimeout(() => dateInput.style.borderColor = "#444", 300);
+    };
 
-        if (planValue === 'visit') {
-          targetDate.setDate(targetDate.getDate() + 1);
-        } else if (planValue === 'week') {
-          targetDate.setDate(targetDate.getDate() + 7);
-        } else if (planValue === 'month' || planValue === 'couple' || planValue === 'promo_open' || planValue === 'promo_feb') {
-          targetDate.setMonth(targetDate.getMonth() + 1);
-        } else if (planValue === 'semester') {
-          targetDate.setMonth(targetDate.getMonth() + 6);
-        }
-        return formatDateLocal(targetDate);
-      }
-
-      function updateSummary() {
-        // Encontrar el radio seleccionado
-        let selected = null;
-        for (const radio of planRadios) {
-          if (radio.checked) {
-            selected = radio;
-            break;
-          }
-        }
-
-        if (selected) {
-          // 1. Fecha
-          dateInput.value = calculateExpiration(selected.value);
-          
-          // 2. Precio
-          const price = selected.getAttribute('data-price');
-          if (displayTotal) displayTotal.innerText = price;
-
-          // 3. Nombre (Texto del span dentro del label)
-          // El ID del radio es "plan_X", buscamos el label "for=plan_X"
-          const label = document.querySelector(`label[for="${selected.id}"]`);
-          if (displayPlanName && label) {
-             // Tomamos el primer span que suele tener el nombre
-             const spans = label.querySelectorAll('span');
-             if(spans.length > 0) {
-               displayPlanName.innerText = spans[0].innerText;
-             }
-          }
-        }
-      }
-
-      // Event Listeners
-      planRadios.forEach(radio => {
-        radio.addEventListener('change', updateSummary);
-        // Fix para que los labels sean clicables si el CSS los tapa
-        radio.style.display = 'none'; 
-      });
-
-      // Ejecutar inicial
-      updateSummary();
-    }
-
-    // Ejecutar inmediatamente si el DOM ya cargó, o esperar
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initCalculator);
-    } else {
-      initCalculator();
-    }
-    // Backup para Turbo Drive
-    document.addEventListener("turbo:load", initCalculator);
+    // Inicializar al cargar
+    document.addEventListener("turbo:load", window.updateGymCalc);
+    document.addEventListener("DOMContentLoaded", window.updateGymCalc);
+    setTimeout(window.updateGymCalc, 200);
   })();
 </script>
