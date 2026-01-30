@@ -1,6 +1,6 @@
 <%= stylesheet_link_tag "main_panel", media: "all", "data-turbo-track": "reload" %>
 
-<div class="panel-container" style="max-width: 700px; margin: 2rem auto; padding: 0 1rem;">
+<div class="panel-container" style="max-width: 750px; margin: 2rem auto; padding: 0 1rem;">
   
   <div class="header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h2 class="title" style="margin: 0; font-size: 1.8rem;">Clases (Griselle)</h2>
@@ -8,62 +8,65 @@
   </div>
 
   <% if flash[:cart_notice] %>
-    <div class="alert alert-success" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399;">
+    <div class="alert alert-success" style="margin-bottom: 1rem; padding: 1rem; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #34d399; font-weight: 600;">
       <%= flash[:cart_notice] %>
     </div>
   <% end %>
   <% if flash[:cart_alert] %>
-    <div class="alert alert-danger" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171;">
+    <div class="alert alert-danger" style="margin-bottom: 1rem; padding: 1rem; border-radius: 10px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; font-weight: 600;">
       <%= flash[:cart_alert] %>
     </div>
   <% end %>
 
-  <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
-    <h3 class="card-title" style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
-      ➕ Agregar Item / Clase
+  <div class="card" style="padding: 2rem; margin-bottom: 2rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;">
+    <h3 class="card-title" style="margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.2rem;">
+      ➕ Agregar Item / Clase Personalizada
     </h3>
 
     <%= form_with url: add_griselle_cart_path, method: :post, local: true do |f| %>
       <input type="hidden" name="id" value="custom" />
       
-      <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-        <div style="flex: 2; min-width: 250px;">
-          <label class="label" style="display: block; margin-bottom: 6px; color: #ccc;">Descripción</label>
-          <input type="text" name="description" placeholder="Ej. Clase privada, Paquete 5..." class="form-input" style="width: 100%;" required>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
+        
+        <div style="flex: 3; min-width: 280px;">
+          <label class="label" style="display: block; margin-bottom: 8px; color: #ccc; font-weight: 600; font-size: 0.95rem;">Descripción del Servicio</label>
+          <input type="text" name="description" placeholder="Ej. Clase privada, Paquete 5 clases..." class="form-input" style="width: 100%; height: 48px; font-size: 1rem;" required>
         </div>
         
-        <div style="flex: 1; min-width: 120px;">
-          <label class="label" style="display: block; margin-bottom: 6px; color: #ccc;">Monto (MXN)</label>
+        <div style="flex: 1; min-width: 140px;">
+          <label class="label" style="display: block; margin-bottom: 8px; color: #ccc; font-weight: 600; font-size: 0.95rem;">Monto (MXN)</label>
           <div style="position: relative;">
-            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #888;">$</span>
-            <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" class="form-input" style="width: 100%; padding-left: 25px;" required>
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; font-weight: bold;">$</span>
+            <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" class="form-input" style="width: 100%; height: 48px; padding-left: 25px; font-size: 1.1rem; font-weight: bold;" required>
           </div>
         </div>
 
         <div style="flex: 0 0 auto;">
-          <%= f.submit "Agregar al Carrito", class: "btn btn-primary", style: "height: 42px;" %>
+          <%= f.submit "Agregar al Carrito", class: "btn btn-primary", style: "height: 48px; padding: 0 2rem; font-size: 1rem; font-weight: 800;" %>
         </div>
       </div>
-      <p class="text-muted" style="margin-top: 8px; font-size: 0.85rem; opacity: 0.7;">
-        ℹ️ El monto ingresado se guardará en el sistema automáticamente.
+      
+      <p class="text-muted" style="margin-top: 12px; font-size: 0.85rem; opacity: 0.7;">
+        ℹ️ Escribe el nombre exacto del servicio para que aparezca en el corte del día.
       </p>
     <% end %>
   </div>
 
-  <div class="card" style="padding: 0; overflow: hidden; background: #1a1c21; border: 1px solid rgba(255,255,255,0.1);">
-    <div style="padding: 1.2rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
-      <h3 class="card-title" style="margin: 0;">🛒 Carrito de Compras</h3>
+  <div class="card" style="padding: 0; overflow: hidden; background: #1a1c21; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;">
+    <div style="padding: 1.2rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+      <h3 class="card-title" style="margin: 0; font-size: 1.1rem;">🛒 Carrito de Compras</h3>
     </div>
 
     <div style="padding: 1.5rem;">
       <% if @cart.blank? %>
         <div style="text-align: center; padding: 2rem; color: #666;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">🛍️</div>
           <p style="font-size: 1.1rem;">Tu carrito está vacío.</p>
         </div>
       <% else %>
         <% total_cents = 0 %>
         
-        <div class="cart-items" style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="cart-items" style="display: flex; flex-direction: column; gap: 12px;">
           <% @cart.each do |l| %>
             <% 
                item = l.is_a?(Array) ? l.last : l
@@ -76,58 +79,58 @@
                total_cents += line_cents 
             %>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
               
               <div style="flex: 1;">
-                <div style="font-weight: bold; font-size: 1.05rem; color: #fff;"><%= item[:name] || "Item" %></div>
+                <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 2px;"><%= item[:name] || "Item Personalizado" %></div>
                 <div style="color: #888; font-size: 0.9rem;">
                   $<%= (unit_cents/100.0).round(2) %> x <%= qty %>
                 </div>
               </div>
 
-              <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="font-weight: bold; font-size: 1.1rem; color: #D4AF37;">
+              <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="font-weight: bold; font-size: 1.2rem; color: #D4AF37;">
                   $<%= (line_cents/100.0).round(2) %>
                 </div>
                 
-                <div style="display: flex; gap: 5px;">
-                  <%= button_to "−", decrement_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-outline btn-sm", style: "width: 30px; padding: 0;", form: { data: { turbo: false } } %>
-                  <%= button_to "+", increment_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-outline btn-sm", style: "width: 30px; padding: 0;", form: { data: { turbo: false } } %>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                  <%= button_to "−", decrement_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-outline btn-sm", style: "width: 32px; height: 32px; padding: 0; display:grid; place-items:center;", form: { data: { turbo: false } } %>
+                  <%= button_to "+", increment_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-outline btn-sm", style: "width: 32px; height: 32px; padding: 0; display:grid; place-items:center;", form: { data: { turbo: false } } %>
                 </div>
                 
-                <%= button_to remove_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-danger btn-sm", style: "padding: 5px 10px;", form: { data: { turbo: false } } do %>
-                  🗑️
+                <%= button_to remove_griselle_cart_path, method: :post, params: { line_id: item[:id] }, class: "btn btn-danger btn-sm", style: "padding: 0.5rem; display:flex; align-items:center;", form: { data: { turbo: false } } do %>
+                  <span style="font-size: 1.2rem; line-height: 1;">🗑️</span>
                 <% end %>
               </div>
             </div>
           <% end %>
         </div>
 
-        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.2);">
+        <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.2);">
           <%= form_with url: checkout_griselle_cart_path, method: :post, local: true do |f| %>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
               
-              <div style="flex: 1; min-width: 200px;">
-                <label class="label" style="display: block; margin-bottom: 8px; color: #ccc;">Método de Pago:</label>
+              <div style="flex: 1; min-width: 250px;">
+                <label class="label" style="display: block; margin-bottom: 10px; color: #ccc;">Método de Pago:</label>
                 <div style="display: flex; gap: 15px;">
-                  <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <input type="radio" name="payment_method" value="cash" checked> 
-                    <span>💵 Efectivo</span>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="radio" name="payment_method" value="cash" checked style="accent-color: #D4AF37;"> 
+                    <span style="font-weight: 600;">💵 Efectivo</span>
                   </label>
-                  <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <input type="radio" name="payment_method" value="transfer"> 
-                    <span>🏦 Transferencia</span>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="radio" name="payment_method" value="transfer" style="accent-color: #D4AF37;"> 
+                    <span style="font-weight: 600;">🏦 Transferencia</span>
                   </label>
                 </div>
               </div>
 
               <div style="text-align: right;">
-                <div style="font-size: 0.9rem; color: #888; text-transform: uppercase;">Total a Pagar</div>
-                <div style="font-size: 2rem; font-weight: 800; color: #fff; line-height: 1.1; margin-bottom: 10px;">
+                <div style="font-size: 0.9rem; color: #888; text-transform: uppercase; margin-bottom: 5px;">Total a Pagar</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 15px;">
                   $<%= (total_cents/100.0).round(2) %>
                 </div>
-                <%= f.submit "✅ Cobrar Ahora", class: "btn btn-primary btn-lg", style: "width: 100%; font-weight: 800;" %>
+                <%= f.submit "✅ Cobrar Ahora", class: "btn btn-primary btn-lg", style: "width: 100%; font-weight: 800; padding: 1rem 2rem; font-size: 1.1rem;" %>
               </div>
 
             </div>
