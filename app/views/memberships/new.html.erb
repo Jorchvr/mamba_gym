@@ -3,16 +3,16 @@
 
 <div class="membership-page">
   
-  <div class="header-row" style="margin-bottom: 1.5rem; display:flex; justify-content:space-between; align-items:center;">
-    <h2 class="title">Cobrar mensualidad</h2>
-    <%= link_to "Inicio", authenticated_root_path, class: "btn" %>
+  <div class="header-row" style="margin-bottom: 1rem; display:flex; justify-content:space-between; align-items:center;">
+    <h2 class="title" style="font-size: 1.5rem;">Cobrar mensualidad</h2>
+    <%= link_to "Inicio", authenticated_root_path, class: "btn btn-sm" %>
   </div>
 
-  <div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card" style="margin-bottom: 1rem; padding: 1rem;">
     <%= form_with url: memberships_path, method: :get, local: true do |f| %>
       <div class="search-inline">
-        <%= f.text_field :q, value: params[:q], placeholder: "Buscar # Cliente o nombre", class: "form-input form-input--xl", autofocus: true %>
-        <%= f.submit "Buscar", class: "btn btn-accent btn-xl search-inline-btn" %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Buscar # Cliente o nombre", class: "form-input", autofocus: true %>
+        <%= f.submit "Buscar", class: "btn btn-accent search-inline-btn" %>
       </div>
     <% end %>
   </div>
@@ -20,150 +20,150 @@
   <% if @query.present? %>
     <% if @client.present? %>
       
-      <div class="card result-card" style="margin-bottom: 1.5rem;">
+      <div class="card result-card" style="margin-bottom: 1rem; padding: 1rem;">
         <div class="result-row">
           <div class="result-photo">
-            <%= client_photo_tag(@client, size: 120, classes: "client-photo--xl") %>
+            <%= client_photo_tag(@client, size: 80, classes: "client-photo--xl") %>
           </div>
           <div>
-            <h3 class="result-name"><%= @client.name %></h3>
-            <p class="result-meta">#<%= @client.id %> • <%= @client.membership_type&.humanize || "-" %></p>
-            <div class="kv"><span>Inscripción</span><span><%= @client.enrolled_on || "-" %></span></div>
-            <div class="kv"><span>Próximo pago</span><span><%= @client.next_payment_on || "-" %></span></div>
+            <h3 class="result-name" style="font-size: 1.3rem;"><%= @client.name %></h3>
+            <p class="result-meta" style="font-size: 0.9rem;">#<%= @client.id %> • <%= @client.membership_type&.humanize || "-" %></p>
+            <div class="kv" style="font-size: 0.85rem;"><span>Próximo pago</span><span><%= @client.next_payment_on || "-" %></span></div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" style="padding: 1.5rem;">
         <%= form_with url: memberships_checkout_path, method: :post, local: true, html: { id: "membership-form" } do |f| %>
           <%= hidden_field_tag :client_id, @client.id %>
 
           <div class="mb-3">
-            <h3 class="card-title" style="margin-bottom: 15px;">1. Selecciona el Plan</h3>
+            <h3 class="card-title" style="margin-bottom: 10px; font-size: 1rem;">1. Selecciona el Plan</h3>
             
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; box-sizing: border-box;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%;">
               
-              <div style="position: relative; height: 100%;">
+              <div style="position: relative;">
                 <input class="segmented-input" type="radio" id="plan_visit" name="plan" value="visit" data-price="100" onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_visit" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Visita</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$100</span>
+                <label class="btn-toggle" for="plan_visit" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px;">Visita</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$100</span>
                 </label>
               </div>
 
-              <div style="position: relative; height: 100%;">
+              <div style="position: relative;">
                 <input class="segmented-input" type="radio" id="plan_week" name="plan" value="week" data-price="200" onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_week" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Semana</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$200</span>
+                <label class="btn-toggle" for="plan_week" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px;">Semana</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$200</span>
                 </label>
               </div>
 
-              <div style="position: relative; height: 100%;">
+              <div style="position: relative;">
                 <input class="segmented-input" type="radio" id="plan_month" name="plan" value="month" data-price="550" checked onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_month" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Mes</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$550</span>
+                <label class="btn-toggle" for="plan_month" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px;">Mes</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$500</span>
                 </label>
               </div>
 
-              <div style="position: relative; height: 100%;">
+              <div style="position: relative;">
+                <input class="segmented-input" type="radio" id="plan_month_card" name="plan" value="month_card" data-price="550" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_month_card" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-color: #888;">
+                  <span style="font-size: 0.8rem; margin-bottom: 2px;">Mes Tarjeta</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$550</span>
+                </label>
+              </div>
+
+              <div style="position: relative;">
                 <input class="segmented-input" type="radio" id="plan_couple" name="plan" value="couple" data-price="950" onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_couple" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Pareja</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$950</span>
+                <label class="btn-toggle" for="plan_couple" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px;">Pareja</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$950</span>
                 </label>
               </div>
 
-              <div style="position: relative; height: 100%;">
+              <div style="position: relative;">
                 <input class="segmented-input" type="radio" id="plan_semester" name="plan" value="semester" data-price="2300" onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_semester" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Semestre</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$2300</span>
+                <label class="btn-toggle" for="plan_semester" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px;">Semestre</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$2300</span>
                 </label>
               </div>
 
-              <div style="position: relative; height: 100%;">
-                <input class="segmented-input" type="radio" id="plan_promo_feb" name="plan" value="promo_feb" data-price="250" onchange="window.updateGymCalc()">
-                <label class="btn-toggle" for="plan_promo_feb" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%; padding: 10px; margin: 0; border-color: #D4AF37;">
-                  <span style="font-size: 1.1rem; margin-bottom: 5px;">Promo Feb</span>
-                  <span class="btn-toggle-price" style="font-size: 1.3rem; color: #fff;">$250</span>
+              <div style="position: relative;">
+                <input class="segmented-input" type="radio" id="plan_promo_open" name="plan" value="promo_open" data-price="100" onchange="window.updateGymCalc()">
+                <label class="btn-toggle" for="plan_promo_open" style="height: 70px; padding: 5px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-color: #D4AF37;">
+                  <span style="font-size: 0.9rem; margin-bottom: 2px; color:#D4AF37;">Apertura</span>
+                  <span class="btn-toggle-price" style="font-size: 1.1rem; color: #fff;">$100</span>
                 </label>
               </div>
 
             </div>
           </div>
 
-          <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-              
+          <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 10px;">
               <div style="flex-grow: 1;">
-                 <input type="radio" id="plan_custom" name="plan" value="custom" onchange="window.updateGymCalc()" style="accent-color: #D4AF37; transform: scale(1.5); margin-right: 10px;">
-                 <label for="plan_custom" style="font-size: 1.2rem; font-weight: 600; cursor: pointer; color: #D4AF37;">Promoción del mes</label>
+                 <input type="radio" id="plan_custom" name="plan" value="custom" onchange="window.updateGymCalc()" style="accent-color: #D4AF37; margin-right: 5px;">
+                 <label for="plan_custom" style="font-size: 0.95rem; font-weight: 600; cursor: pointer; color: #D4AF37;">Promoción del mes</label>
               </div>
-
-              <div style="width: 200px;">
+              <div style="width: 120px;">
                 <div style="position: relative;">
-                  <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #888; font-weight: bold;">$</span>
+                  <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #888; font-size: 0.9rem;">$</span>
                   <input type="number" 
                          name="custom_amount" 
                          id="custom_amount_input"
                          placeholder="0.00" 
                          class="form-input" 
-                         style="width: 100%; height: 45px; padding-left: 25px; font-size: 1.2rem; font-weight: bold;"
+                         style="width: 100%; height: 35px; padding-left: 20px; font-size: 1rem; font-weight: bold;"
                          oninput="document.getElementById('plan_custom').checked = true; window.updateGymCalc();">
                 </div>
               </div>
-
             </div>
           </div>
 
-          <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 2rem; margin: 2rem 0; border: 1px dashed rgba(255,255,255,0.1); text-align: center;">
-             <div style="text-transform: uppercase; font-size: 0.85rem; color: #888; margin-bottom: 15px; letter-spacing: 2px;">Total a Cobrar</div>
-             
-             <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 40px;">
+          <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem; margin: 1rem 0; border: 1px dashed rgba(255,255,255,0.1); text-align: center;">
+             <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
                 <div>
-                   <div style="font-size: 4.5rem; font-weight: 900; color: #fff; line-height: 1;">
+                   <div style="font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;">
                      $<span id="display-total">0</span>
                    </div>
-                   <div id="display-plan-name" style="color: #D4AF37; font-weight: 800; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;"></div>
+                   <div id="display-plan-name" style="color: #D4AF37; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;"></div>
                 </div>
-
                 <div style="text-align: left;">
-                   <label style="display: block; font-size: 0.9rem; color: #ccc; margin-bottom: 8px;">Nueva Fecha Vencimiento:</label>
+                   <label style="display: block; font-size: 0.8rem; color: #ccc; margin-bottom: 4px;">Vencimiento:</label>
                    <input type="date" 
                           name="custom_next_payment_date" 
                           id="custom_next_payment_date" 
                           class="form-input" 
-                          style="font-size: 1.4rem; text-align: center; background: #000; border: 1px solid #444; color: #fff; padding: 10px; width: auto; border-radius: 8px;"
+                          style="font-size: 1rem; text-align: center; background: #000; border: 1px solid #444; color: #fff; padding: 5px; width: auto; border-radius: 6px;"
                           required>
                 </div>
              </div>
           </div>
 
           <div class="mb-3">
-             <h3 class="card-title">Método de Pago</h3>
              <div class="segmented segmented--2" role="radiogroup">
                <div style="position: relative; width: 100%;">
                  <input class="segmented-input" type="radio" id="pay_cash" name="payment_method" value="cash" checked>
-                 <label class="segmented-btn" for="pay_cash" style="width: 100%; justify-content: center;">💵 Efectivo</label>
+                 <label class="segmented-btn" for="pay_cash" style="width: 100%; justify-content: center; padding: 8px; font-size: 0.9rem;">💵 Efectivo</label>
                </div>
                <div style="position: relative; width: 100%;">
                  <input class="segmented-input" type="radio" id="pay_card" name="payment_method" value="card">
-                 <label class="segmented-btn" for="pay_card" style="width: 100%; justify-content: center;">💳 Tarjeta</label>
+                 <label class="segmented-btn" for="pay_card" style="width: 100%; justify-content: center; padding: 8px; font-size: 0.9rem;">💳 Tarjeta</label>
                </div>
              </div>
           </div>
 
-          <div style="margin-top: 2.5rem;">
-            <%= f.submit "✅ Confirmar y Cobrar", class: "btn btn-xl btn-primary", style: "width: 100%; cursor: pointer; padding: 1.2rem; font-size: 1.3rem; font-weight: 800;" %>
+          <div style="margin-top: 1.5rem;">
+            <%= f.submit "✅ Cobrar", class: "btn btn-primary", style: "width: 100%; cursor: pointer; padding: 1rem; font-size: 1.1rem; font-weight: 800;" %>
           </div>
 
         <% end %>
       </div>
     <% else %>
-      <div class="card" style="margin-top:1rem;">
-        <p class="text-muted">No se encontró ningún cliente con “<strong><%= @query %></strong>”.</p>
+      <div class="card" style="margin-top:1rem; padding:1rem;">
+        <p class="text-muted">No encontrado: “<strong><%= @query %></strong>”.</p>
       </div>
     <% end %>
   <% end %>
@@ -175,6 +175,8 @@
       const displayTotal = document.getElementById('display-total');
       const displayPlanName = document.getElementById('display-plan-name');
       const dateInput  = document.getElementById('custom_next_payment_date');
+      const payCardRadio = document.getElementById('pay_card');
+      const payCashRadio = document.getElementById('pay_cash');
       
       const selectedRadio = document.querySelector('input[name="plan"]:checked');
       if (!selectedRadio || !dateInput) return;
@@ -182,24 +184,32 @@
       let price = 0;
       let planName = "";
 
-      // Si es el custom (Promoción del mes)
+      // Lógica de Plan Custom
       if (selectedRadio.value === 'custom') {
         const customInput = document.getElementById('custom_amount_input');
         price = customInput.value || 0;
         planName = "Promoción del mes";
       } else {
-        // Si es un plan normal
         price = selectedRadio.getAttribute('data-price');
         const label = document.querySelector(`label[for="${selectedRadio.id}"]`);
         if(label) {
+          // Extraemos nombre quitando precio
           planName = label.innerText.replace(/\$.*/g, '').trim(); 
         }
+      }
+
+      // Auto-selección de método de pago si es "Mes Tarjeta"
+      if (selectedRadio.value === 'month_card') {
+        payCardRadio.checked = true;
+      } else {
+        // Opcional: Volver a cash por defecto si cambias de plan, 
+        // o dejarlo como estaba. Aquí lo dejamos como estaba o cash si estaba en card forzado.
       }
 
       if(displayTotal) displayTotal.innerText = price;
       if(displayPlanName) displayPlanName.innerText = planName;
 
-      // Calcular Fecha
+      // Calcular Fechas
       <% if @client %>
         <% base_val = (@client.next_payment_on && @client.next_payment_on > Date.current) ? @client.next_payment_on : Date.current %>
         const baseDateStr = "<%= base_val.strftime('%Y-%m-%d') %>";

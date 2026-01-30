@@ -1,14 +1,15 @@
 class MembershipsController < ApplicationController
   before_action :authenticate_user!
 
+  # === 💰 LISTA DE PRECIOS ACTUALIZADA ===
   PRICES = {
-    "visit"      => 100_00,
-    "week"       => 200_00,
-    "month"      => 550_00,
-    "couple"     => 950_00,
-    "semester"   => 2300_00,
-    "promo_open" => 100_00,
-    "promo_feb"  => 250_00
+    "visit"      => 100_00,   # $100
+    "week"       => 200_00,   # $200
+    "month"      => 500_00,   # $500 (Efectivo)
+    "month_card" => 550_00,   # $550 (Tarjeta)
+    "couple"     => 950_00,   # $950
+    "semester"   => 2300_00,  # $2300
+    "promo_open" => 100_00    # Apertura $100
   }.freeze
 
   def index
@@ -25,17 +26,14 @@ class MembershipsController < ApplicationController
     client = Client.find(params[:client_id])
     plan_key = params[:plan].to_s
 
-    # === LOGICA PRECIO PERSONALIZADO ===
+    # Lógica precio personalizado
     if plan_key == "custom"
-      # Convertir el input de texto (ej: "450.50") a centavos
       amount_str = params[:custom_amount].to_s.gsub(/[^0-9.]/, "")
       amount_cents = (amount_str.to_f * 100).to_i
-
       if amount_cents <= 0
-        return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Ingresa un monto válido para la promoción."
+        return redirect_to memberships_path(q: client.id), alert: "⚠️ Error: Ingresa un monto válido."
       end
     else
-      # Precio estándar de la lista
       amount_cents = PRICES[plan_key]
     end
 
@@ -46,7 +44,10 @@ class MembershipsController < ApplicationController
     base_date = [ client.next_payment_on, Date.current ].compact.max
     new_expiration_date = calculate_expiration(base_date, plan_key)
 
-    pm = params[:payment_method] == "card" ? "card" : "cash"
+    # Si seleccionó el botón específico de tarjeta O el radio button de tarjeta
+    force_card = (plan_key == "month_card")
+    pm = (force_card || params[:payment_method] == "card") ? "card" : "cash"
+
     model_membership_type = map_plan_to_model(plan_key)
 
     ActiveRecord::Base.transaction do
@@ -68,7 +69,7 @@ class MembershipsController < ApplicationController
     end
 
     redirect_to memberships_path(q: client.id),
-      notice: "✅ Cobrado: $#{amount_cents / 100.0} (#{plan_key.humanize}). Vence: #{new_expiration_date.strftime('%d/%m/%Y')}"
+      notice: "✅ Cobrado: $#{amount_cents / 100.0}. Vence: #{new_expiration_date.strftime('%d/%m/%Y')}"
 
   rescue ActiveRecord::RecordNotFound
     redirect_to memberships_path, alert: "❌ Cliente no encontrado."
@@ -80,22 +81,25 @@ class MembershipsController < ApplicationController
 
   def calculate_expiration(start_date, plan)
     case plan
-    when "visit"    then start_date + 1.day
-    when "week"     then start_date + 1.week
-    when "semester" then start_date + 6.months
-    else                 start_date + 1.month # Custom también da 1 mes por defecto
+    when "visit"      then start_date + 1.day
+    when "week"       then start_date + 1.week
+    when "semester"   then start_date + 6.months
+    when "promo_open" then start_date + 1.month # Apertura suele ser un mes
+    else                   start_date + 1.month # Mes, Tarjeta, Custom
     end
   end
 
   def map_plan_to_model(plan)
     case plan
-    when "visit"    then "visit"
-    when "week"     then "week"
-    when "month"    then "month"
-    when "couple"   then "couple"
-    when "semester" then "semester"
-    when "custom"   then "promo" # Guardamos como 'promo' en la BD
-    else                 "month"
+    when "visit"      then "visit"
+    when "week"       then "week"
+    when "month"      then "month"
+    when "month_card" then "month" # Se guarda como mes normal
+    when "couple"     then "couple"
+    when "semester"   then "semester"
+    when "promo_open" then "promo"
+    when "custom"     then "promo"
+    else                   "month"
     end
   end
 
