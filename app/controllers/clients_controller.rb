@@ -138,6 +138,7 @@ class ClientsController < ApplicationController
     @client = ::Client.new(client_params)
     @client.user = current_user
     plan = params.dig(:client, :membership_type).to_s.presence
+    promo_name = params[:custom_promo_name].presence
 
     unless plan.present?
       @client.errors.add(:membership_type, "debe seleccionarse")
@@ -145,7 +146,6 @@ class ClientsController < ApplicationController
     end
 
     # === 📸 PROCESAR FOTO DE CÁMARA (BASE64) ===
-    # Usamos el helper privado para no repetir código
     process_camera_photo if params[:client][:photo_base64].present?
     # ===========================================
 
@@ -161,9 +161,19 @@ class ClientsController < ApplicationController
       default_price    = default_registration_price_cents(plan)
       amount_cents     = (sent_price_cents && sent_price_cents > 0) ? sent_price_cents : default_price
 
+      # Lógica para guardar el nombre de la membresía en la venta (si es promo/especial)
+      sale_membership_type = (promo_name && [ "promo", "custom" ].include?(plan)) ? "PROMO: #{promo_name}" : plan
+
       pm = params.dig(:client, :payment_method).presence || "cash"
 
-      Sale.create!(user: current_user, client: @client, membership_type: plan, amount_cents: amount_cents, payment_method: pm, occurred_at: Time.current)
+      Sale.create!(
+        user: current_user,
+        client: @client,
+        membership_type: sale_membership_type,
+        amount_cents: amount_cents,
+        payment_method: pm,
+        occurred_at: Time.current
+      )
     end
     redirect_to @client, notice: "Cliente creado."
   rescue ActiveRecord::RecordInvalid => e
@@ -212,7 +222,16 @@ class ClientsController < ApplicationController
 
   def default_registration_price_cents(plan)
     return 0 if plan.blank?
-    Client::PRICES[plan.to_s] || 0
+    # Mantenemos compatibilidad con tus precios (incluyendo el nuevo mes de 500)
+    prices = {
+      "visit" => 10000,
+      "week" => 20000,
+      "month" => 55000,
+      "month_cash" => 50000,
+      "couple" => 95000,
+      "semester" => 230000
+    }
+    prices[plan.to_s] || 0
   end
 
   def parse_money_to_cents(input)
